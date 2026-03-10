@@ -1,0 +1,177 @@
+id: techniquemaker_pdu_generator
+label: Technique PDU Generator
+category: '[techniquemaker]'
+
+templates:
+  imports: from techniquemaker import techniquepdu
+  make: |-
+    techniquepdu(
+        technique=${technique},
+        sample_rate_hz=${sample_rate_hz},
+        bandwidth_hz=${bandwidth_hz},
+        technique_length_seconds=${technique_length_seconds},
+        interference_type=${interference_type},
+        symbol_rate_hz=${symbol_rate_hz},
+        rolloff=${rolloff},
+        sweep_hz=${sweep_hz},
+        technique_width_hz=${technique_width_hz},
+        chunks=${chunks},
+        frequencies_str=${frequencies_str},
+        tones=${tones},
+        sweep_range_hz=${sweep_range_hz},
+        modulated_frequency=${modulated_frequency},
+        song_name=${song_name},
+        start_freq_hz=${start_freq_hz},
+        end_freq_hz=${end_freq_hz},
+        hop_frequencies_str=${hop_frequencies_str},
+        hop_duration_seconds=${hop_duration_seconds}
+    )
+  callbacks:
+    - set_technique(${technique})
+    - set_sample_rate_hz(${sample_rate_hz})
+    - set_bandwidth_hz(${bandwidth_hz})
+    - set_technique_length_seconds(${technique_length_seconds})
+    - set_interference_type(${interference_type})
+    - set_symbol_rate_hz(${symbol_rate_hz})
+    - set_rolloff(${rolloff})
+    - set_sweep_hz(${sweep_hz})
+    - set_technique_width_hz(${technique_width_hz})
+    - set_chunks(${chunks})
+    - set_frequencies_str(${frequencies_str})
+    - set_tones(${tones})
+    - set_sweep_range_hz(${sweep_range_hz})
+    - set_modulated_frequency(${modulated_frequency})
+    - set_song_name(${song_name})
+    - set_start_freq_hz(${start_freq_hz})
+    - set_end_freq_hz(${end_freq_hz})
+    - set_hop_frequencies_str(${hop_frequencies_str})
+    - set_hop_duration_seconds(${hop_duration_seconds})
+
+parameters:
+- id: technique
+  label: Technique
+  dtype: enum
+  default: "'Narrowband Noise'"
+  options: ["'Narrowband Noise'", "'RRC Modulated Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'Cosine Tones'", "'Phasor Tones'", "'Swept Phasors'", "'Swept Cosines'", "'FM Cosine'", "'LFM Chirp'", "'FHSS Noise'", "'Song Maker'"]
+  option_labels: ['Narrowband Noise', 'RRC Modulated Noise', 'Swept Noise', 'Chunked Noise', 'Noise Tones', 'Cosine Tones', 'Phasor Tones', 'Swept Phasors', 'Swept Cosines', 'FM Cosine', 'LFM Chirp', 'FHSS Noise', 'Song Maker']
+
+- id: sample_rate_hz
+  label: Sample Rate (Hz)
+  dtype: float
+  default: '1000000'
+
+- id: bandwidth_hz
+  label: Bandwidth (Hz)
+  dtype: float
+  default: '100000'
+  hide: ${ 'none' if technique in ["'Narrowband Noise'", "'Swept Noise'", "'Noise Tones'", "'Song Maker'", "'FHSS Noise'"] else 'part' }
+
+- id: technique_length_seconds
+  label: Duration (sec)
+  dtype: float
+  default: '0.1'
+  hide: ${ 'none' if technique != "'Song Maker'" else 'part' }
+
+- id: interference_type
+  label: Interference Type
+  dtype: enum
+  default: "'complex'"
+  options: ["'complex'", "'real'", "'sinc'"]
+  option_labels: ['complex', 'real', 'sinc']
+  hide: ${ 'none' if technique in ["'Narrowband Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'FHSS Noise'"] else 'all' }
+
+- id: symbol_rate_hz
+  label: Symbol Rate (Hz)
+  dtype: float
+  default: '50000'
+  hide: ${ 'none' if technique == "'RRC Modulated Noise'" else 'all' }
+
+- id: rolloff
+  label: RRC Rolloff
+  dtype: float
+  default: '0.35'
+  hide: ${ 'none' if technique == "'RRC Modulated Noise'" else 'all' }
+
+- id: sweep_hz
+  label: Sweep Range (Hz)
+  dtype: float
+  default: '500000'
+  hide: ${ 'none' if technique in ["'Swept Noise'", "'Swept Phasors'", "'Swept Cosines'"] else 'all' }
+
+- id: technique_width_hz
+  label: Total Width (Hz)
+  dtype: float
+  default: '1000000'
+  hide: ${ 'none' if technique == "'Chunked Noise'" else 'all' }
+
+- id: chunks
+  label: Num Chunks
+  dtype: int
+  default: '5'
+  hide: ${ 'none' if technique == "'Chunked Noise'" else 'all' }
+
+- id: frequencies_str
+  label: Frequencies (space sep)
+  dtype: string
+  default: "'1000 2000 3000'"
+  hide: ${ 'none' if technique in ["'Noise Tones'", "'Cosine Tones'", "'Phasor Tones'"] else 'all' }
+
+- id: tones
+  label: Num Tones
+  dtype: int
+  default: '5'
+  hide: ${ 'none' if technique in ["'Swept Phasors'", "'Swept Cosines'"] else 'all' }
+
+- id: sweep_range_hz
+  label: FM Sweep Range (Hz)
+  dtype: float
+  default: '1000000'
+  hide: ${ 'none' if technique == "'FM Cosine'" else 'all' }
+
+- id: modulated_frequency
+  label: FM Mod Freq (Hz)
+  dtype: float
+  default: '1000'
+  hide: ${ 'none' if technique == "'FM Cosine'" else 'all' }
+
+- id: start_freq_hz
+  label: Start Freq (Hz)
+  dtype: float
+  default: '-100000'
+  hide: ${ 'none' if technique == "'LFM Chirp'" else 'all' }
+
+- id: end_freq_hz
+  label: End Freq (Hz)
+  dtype: float
+  default: '100000'
+  hide: ${ 'none' if technique == "'LFM Chirp'" else 'all' }
+
+- id: hop_frequencies_str
+  label: Hop Freqs (space sep)
+  dtype: string
+  default: "'-100000 0 100000'"
+  hide: ${ 'none' if technique == "'FHSS Noise'" else 'all' }
+
+- id: hop_duration_seconds
+  label: Hop Duration (sec)
+  dtype: float
+  default: '0.01'
+  hide: ${ 'none' if technique == "'FHSS Noise'" else 'all' }
+
+- id: song_name
+  label: Song Name
+  dtype: enum
+  default: "'Baby Shark'"
+  options: ["'Air Force Song'", "'Anchors Away'", "'Marine Hymn'", "'Baby Shark'", "'Pink Panther'", "'Star Wars'", "'Mission Impossible'", "'Annoying Tone'"]
+  option_labels: ['Air Force Song', 'Anchors Away', 'Marine Hymn', 'Baby Shark', 'Pink Panther', 'Star Wars', 'Mission Impossible', 'Annoying Tone']
+  hide: ${ 'none' if technique == "'Song Maker'" else 'all' }
+
+inputs:
+- label: trigger
+  domain: message
+
+outputs:
+- label: pdu
+  domain: message
+
+file_format: 1

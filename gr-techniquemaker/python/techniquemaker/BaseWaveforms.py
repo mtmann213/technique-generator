@@ -423,7 +423,53 @@ def FM_cosine(
     FM_modulated_phasor = np.exp(1j * 2 * np.pi * cum_phase_func)
     return FM_modulated_phasor
 
+def lfm_chirp(
+    start_freq_hz: float,
+    end_freq_hz: float,
+    sample_rate_hz: float,
+    technique_length_seconds: float
+) -> NDArray[np.complex128]:
+    """
+    Generates a Linear Frequency Modulation (LFM) chirp.
+    """
+    time = _create_time_array(sample_rate_hz, technique_length_seconds)
+    phi = 2 * np.pi * (start_freq_hz * time + 0.5 * (end_freq_hz - start_freq_hz) * time**2 / technique_length_seconds)
+    return np.exp(1j * phi)
 
+def fhss_noise(
+    hop_frequencies_str: str,
+    hop_duration_seconds: float,
+    bandwidth_hz: float,
+    sample_rate_hz: float,
+    technique_length_seconds: float,
+    interference_type: str = "complex"
+) -> NDArray[np.complex128]:
+    """
+    Generates a Frequency Hopping Spread Spectrum (FHSS) signal using narrowband noise.
+    """
+    try:
+        hop_freqs = [float(f) for f in hop_frequencies_str.split()]
+    except ValueError:
+        raise ValueError("Frequencies must be space-separated numbers.")
+    
+    time = _create_time_array(sample_rate_hz, technique_length_seconds)
+    total_samples = len(time)
+    samples_per_hop = max(1, math.floor(sample_rate_hz * hop_duration_seconds))
+    
+    base_noise = narrowband_noise_creator(bandwidth_hz, sample_rate_hz, technique_length_seconds, interference_type)
+    
+    shifter = np.zeros(total_samples, dtype=np.complex128)
+    num_hops = math.ceil(total_samples / samples_per_hop)
+    
+    for i in range(num_hops):
+        start_idx = i * samples_per_hop
+        end_idx = min((i + 1) * samples_per_hop, total_samples)
+        if start_idx >= total_samples: break
+        
+        freq = hop_freqs[i % len(hop_freqs)]
+        shifter[start_idx:end_idx] = np.exp(1j * 2 * np.pi * freq * time[start_idx:end_idx])
+        
+    return base_noise * shifter
 
 def songMaker(
     songName: Literal["Air Force Song", "Anchors Away","Marine Hymn","Baby Shark"],
@@ -462,19 +508,23 @@ def songMaker(
         G=G-J
         G=G/np.max(np.absolute(G))
         
-        I=np.array([])
+        I_parts = []
 
         for k in range(cyclesPerNote):
-            I=np.concatenate([I,G])
+            I_parts.append(G)
 
         E=round(bandwidth/(sampsPerSec/sampsWithSilence)/2)
-        F=np.zeros(sampsWithSilence)
-        F[0:E]=np.ones(E)
-        G=np.real(np.fft.fft(F))
-        G=G-np.mean(G)
-        G=G/np.max(G)
+        if sampsWithSilence > 0:
+            F=np.zeros(sampsWithSilence)
+            F[0:E]=np.ones(E)
+            G=np.real(np.fft.fft(F))
+            G=G-np.mean(G)
+            max_G = np.max(G)
+            if max_G != 0:
+                G=G/max_G
+            I_parts.append(G)
 
-        I=np.concatenate([I,G])
+        I=np.concatenate(I_parts) if I_parts else np.array([])
 
         if noteNumber==0:
             I=I*0
@@ -523,11 +573,15 @@ def songMaker(
     bandwidthHz=bandwidth_hz
     sampleRateHz=sample_rate_hz
 
-    Q=np.array([])
+    Q_parts = []
     for j in range(len(A)):
-        Q=np.concatenate([Q,noteMaker(A[j],B[j],BPMval,sampleRateHz,bandwidthHz)])
+        Q_parts.append(noteMaker(A[j],B[j],BPMval,sampleRateHz,bandwidthHz))
 
-    Q=Q/np.std(Q)
+    Q=np.concatenate(Q_parts) if Q_parts else np.array([])
+
+    std_Q = np.std(Q)
+    if std_Q != 0:
+        Q=Q/std_Q
 
     return Q
 
@@ -624,6 +678,26 @@ waveform_definitions = {
             {"name": "modulated_frequency", "title": "Modulated Frequency (Hz)", "type": "entry"},
             {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"},
             {"name": "technique_length_seconds", "title": "Technique Length (seconds)", "type": "entry"}
+        ]
+    },
+    "LFM Chirp": {
+        "func": lfm_chirp,
+        "params": [
+            {"name": "start_freq_hz", "title": "Start Freq (Hz)", "type": "entry"},
+            {"name": "end_freq_hz", "title": "End Freq (Hz)", "type": "entry"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"},
+            {"name": "technique_length_seconds", "title": "Technique Length (seconds)", "type": "entry"}
+        ]
+    },
+    "FHSS Noise": {
+        "func": fhss_noise,
+        "params": [
+            {"name": "hop_frequencies_str", "title": "Hop Freqs (space sep)", "type": "entry"},
+            {"name": "hop_duration_seconds", "title": "Hop Duration (sec)", "type": "entry"},
+            {"name": "bandwidth_hz", "title": "Chunk BW (Hz)", "type": "entry"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"},
+            {"name": "technique_length_seconds", "title": "Total Length (sec)", "type": "entry"},
+            {"name": "interference_type", "title": "Interference Type", "type": "options", "choices": ["complex", "real", "sinc"]}
         ]
     },
     "Song Maker": {

@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# GNU Radio Build artifacts
+gr-techniquemaker/build/
+gr-techniquemaker/python/techniquemaker/__init__.pyc
+gr-techniquemaker/python/techniquemaker/__init__.pyo
+
+# Local test outputs
+*.bin
+*.sigmf-meta
+*.sigmf-data
+
+# Project preservation
+BaseGui_ORIG.py
+BaseWaveforms_ORIG.py
