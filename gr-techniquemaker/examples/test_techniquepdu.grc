@@ -69,7 +69,7 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     msg: pmt.intern("trigger")
-    period: '1000'
+    period: '2000'
   states:
     bus_sink: false
     bus_source: false
@@ -215,19 +215,26 @@ blocks:
     bandwidth_hz: '50000'
     chunks: '5'
     comment: ''
+    cp_length: '256'
+    end_freq_hz: '100000'
+    fft_size: '1024'
     frequencies_str: '''10000 20000 -15000'''
+    hop_duration_seconds: '0.01'
+    hop_frequencies_str: '''-100000 0 100000'''
     interference_type: '''complex'''
     maxoutbuf: '0'
     minoutbuf: '0'
     modulated_frequency: '1000'
+    num_subcarriers: '600'
     rolloff: '0.35'
     sample_rate_hz: samp_rate
     song_name: '''Baby Shark'''
+    start_freq_hz: '-100000'
     sweep_hz: '400000'
     sweep_range_hz: '1000000'
     symbol_rate_hz: '50000'
-    technique: '''Phasor Tones'''
-    technique_length_seconds: '8'
+    technique: '''OFDM-Shaped Noise'''
+    technique_length_seconds: '2'
     technique_width_hz: '500000'
     tones: '5'
   states:

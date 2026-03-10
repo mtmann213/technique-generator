@@ -84,10 +84,10 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
         ##################################################
 
         self.techniquemaker_techniquepdu_0 = techniquepdu(
-            technique='Phasor Tones',
+            technique='OFDM-Shaped Noise',
             sample_rate_hz=samp_rate,
             bandwidth_hz=50000,
-            technique_length_seconds=8,
+            technique_length_seconds=2,
             interference_type='complex',
             symbol_rate_hz=50000,
             rolloff=0.35,
@@ -98,7 +98,14 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
             tones=5,
             sweep_range_hz=1000000,
             modulated_frequency=1000,
-            song_name='Baby Shark'
+            song_name='Baby Shark',
+            start_freq_hz=-100000,
+            end_freq_hz=100000,
+            hop_frequencies_str='-100000 0 100000',
+            hop_duration_seconds=0.01,
+            fft_size=1024,
+            num_subcarriers=600,
+            cp_length=256
         )
         self.qtgui_waterfall_sink_x_0 = qtgui.waterfall_sink_c(
             1024, #size
@@ -137,7 +144,7 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
         self.top_layout.addWidget(self._qtgui_waterfall_sink_x_0_win)
         self.pdu_pdu_to_stream_x_0 = pdu.pdu_to_stream_c(pdu.EARLY_BURST_APPEND, 64)
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
-        self.blocks_message_strobe_0 = blocks.message_strobe(pmt.intern("trigger"), 1000)
+        self.blocks_message_strobe_0 = blocks.message_strobe(pmt.intern("trigger"), 2000)
 
 
         ##################################################

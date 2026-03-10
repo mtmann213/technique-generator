@@ -44,3 +44,22 @@ if __name__ == "__main__":
     print("Generating FHSS Noise (Hops: -300k, 0, 300k)...")
     fhss = bw.fhss_noise("-300000 0 300000", 0.01, 50e3, samp_rate, duration)
     plot_technique(fhss, samp_rate, "FHSS Noise")
+    
+    print("Generating OFDM-Shaped Noise (1024 FFT, 600 Subcarriers)...")
+    ofdm = bw.ofdm_shaped_noise(1024, 600, 256, samp_rate, duration)
+    plot_technique(ofdm, samp_rate, "OFDM-Shaped Noise")
+
+    print("\n--- Testing Normalization Engine ---")
+    
+    # Test Peak Normalization
+    target_peak = 0.5
+    lfm_peak = bw.lfm_chirp(-200e3, 200e3, samp_rate, duration, target_value=target_peak, normalization_type="peak")
+    actual_peak = np.max(np.abs(lfm_peak))
+    print(f"LFM Chirp (Target Peak {target_peak}): Actual Peak = {actual_peak:.4f}")
+    
+    # Test RMS Normalization
+    target_rms = 0.707
+    noise_rms = bw.narrowband_noise_creator(100e3, samp_rate, duration, target_value=target_rms, normalization_type="rms")
+    actual_rms = np.sqrt(np.mean(np.abs(noise_rms)**2))
+    print(f"Narrowband Noise (Target RMS {target_rms}): Actual RMS = {actual_rms:.4f}")
+

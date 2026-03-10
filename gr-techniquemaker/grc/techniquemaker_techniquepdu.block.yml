@@ -24,7 +24,12 @@ templates:
         start_freq_hz=${start_freq_hz},
         end_freq_hz=${end_freq_hz},
         hop_frequencies_str=${hop_frequencies_str},
-        hop_duration_seconds=${hop_duration_seconds}
+        hop_duration_seconds=${hop_duration_seconds},
+        fft_size=${fft_size},
+        num_subcarriers=${num_subcarriers},
+        cp_length=${cp_length},
+        target_value=${target_value},
+        normalization_type=${normalization_type}
     )
   callbacks:
     - set_technique(${technique})
@@ -46,14 +51,19 @@ templates:
     - set_end_freq_hz(${end_freq_hz})
     - set_hop_frequencies_str(${hop_frequencies_str})
     - set_hop_duration_seconds(${hop_duration_seconds})
+    - set_fft_size(${fft_size})
+    - set_num_subcarriers(${num_subcarriers})
+    - set_cp_length(${cp_length})
+    - set_target_value(${target_value})
+    - set_normalization_type(${normalization_type})
 
 parameters:
 - id: technique
   label: Technique
   dtype: enum
   default: "'Narrowband Noise'"
-  options: ["'Narrowband Noise'", "'RRC Modulated Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'Cosine Tones'", "'Phasor Tones'", "'Swept Phasors'", "'Swept Cosines'", "'FM Cosine'", "'LFM Chirp'", "'FHSS Noise'", "'Song Maker'"]
-  option_labels: ['Narrowband Noise', 'RRC Modulated Noise', 'Swept Noise', 'Chunked Noise', 'Noise Tones', 'Cosine Tones', 'Phasor Tones', 'Swept Phasors', 'Swept Cosines', 'FM Cosine', 'LFM Chirp', 'FHSS Noise', 'Song Maker']
+  options: ["'Narrowband Noise'", "'RRC Modulated Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'Cosine Tones'", "'Phasor Tones'", "'Swept Phasors'", "'Swept Cosines'", "'FM Cosine'", "'LFM Chirp'", "'FHSS Noise'", "'OFDM-Shaped Noise'", "'Song Maker'"]
+  option_labels: ['Narrowband Noise', 'RRC Modulated Noise', 'Swept Noise', 'Chunked Noise', 'Noise Tones', 'Cosine Tones', 'Phasor Tones', 'Swept Phasors', 'Swept Cosines', 'FM Cosine', 'LFM Chirp', 'FHSS Noise', 'OFDM-Shaped Noise', 'Song Maker']
 
 - id: sample_rate_hz
   label: Sample Rate (Hz)
@@ -157,6 +167,36 @@ parameters:
   dtype: float
   default: '0.01'
   hide: ${ 'none' if technique == "'FHSS Noise'" else 'all' }
+
+- id: fft_size
+  label: FFT Size
+  dtype: int
+  default: '1024'
+  hide: ${ 'none' if technique == "'OFDM-Shaped Noise'" else 'all' }
+
+- id: num_subcarriers
+  label: Num Subcarriers
+  dtype: int
+  default: '600'
+  hide: ${ 'none' if technique == "'OFDM-Shaped Noise'" else 'all' }
+
+- id: cp_length
+  label: CP Length
+  dtype: int
+  default: '256'
+  hide: ${ 'none' if technique == "'OFDM-Shaped Noise'" else 'all' }
+
+- id: target_value
+  label: Target Level
+  dtype: float
+  default: '1.0'
+
+- id: normalization_type
+  label: Norm Type
+  dtype: enum
+  default: "'peak'"
+  options: ["'peak'", "'rms'"]
+  option_labels: ['Peak', 'RMS']
 
 - id: song_name
   label: Song Name

@@ -33,7 +33,12 @@ class techniquepdu(gr.sync_block):
                  start_freq_hz=-100e3,
                  end_freq_hz=100e3,
                  hop_frequencies_str='-100000 0 100000',
-                 hop_duration_seconds=0.01):
+                 hop_duration_seconds=0.01,
+                 fft_size=1024,
+                 num_subcarriers=600,
+                 cp_length=256,
+                 target_value=1.0,
+                 normalization_type='peak'):
         
         gr.sync_block.__init__(self,
             name="techniquepdu",
@@ -59,6 +64,11 @@ class techniquepdu(gr.sync_block):
         self.end_freq_hz = end_freq_hz
         self.hop_frequencies_str = hop_frequencies_str
         self.hop_duration_seconds = hop_duration_seconds
+        self.fft_size = fft_size
+        self.num_subcarriers = num_subcarriers
+        self.cp_length = cp_length
+        self.target_value = target_value
+        self.normalization_type = normalization_type
 
         # Message ports
         self.message_port_register_in(pmt.intern("trigger"))
@@ -84,7 +94,6 @@ class techniquepdu(gr.sync_block):
                 # Special cases for non-matching names
                 if name == 'songName': params[name] = self.song_name
                 if name == 'technique_length_seconds':
-                    # Use specific length for FHSS if provided, else default
                     params[name] = self.technique_length_seconds
 
             samples = func(**params)
@@ -92,6 +101,8 @@ class techniquepdu(gr.sync_block):
 
             meta = pmt.make_dict()
             meta = pmt.dict_add(meta, pmt.intern("sample_rate"), pmt.from_double(self.sample_rate_hz))
+            meta = pmt.dict_add(meta, pmt.intern("target_value"), pmt.from_double(self.target_value))
+            meta = pmt.dict_add(meta, pmt.intern("normalization_type"), pmt.intern(self.normalization_type))
             
             samples_pmt = pmt.init_c32vector(len(samples), samples)
             pdu = pmt.cons(meta, samples_pmt)
@@ -120,3 +131,8 @@ class techniquepdu(gr.sync_block):
     def set_end_freq_hz(self, v): self.end_freq_hz = v
     def set_hop_frequencies_str(self, v): self.hop_frequencies_str = v
     def set_hop_duration_seconds(self, v): self.hop_duration_seconds = v
+    def set_fft_size(self, v): self.fft_size = int(v)
+    def set_num_subcarriers(self, v): self.num_subcarriers = int(v)
+    def set_cp_length(self, v): self.cp_length = int(v)
+    def set_target_value(self, v): self.target_value = float(v)
+    def set_normalization_type(self, v): self.normalization_type = v
