@@ -1,20 +1,21 @@
 # Changelog: TechniqueMaker Improvements
 
-## [2026-03-11] - Protocol-Aware Analysis & Interdiction
+## [2026-03-11] - UI Refinement & Advanced Protocol Gating
 
 ### 🦅 Predator Reactive Analysis Console
-- **Adaptive Bandwidth Sculpting:** Integrated real-time -10dB occupied bandwidth measurement to automatically match the target signal's width.
-- **Preamble Sabotage:** Implemented timing-gated interdiction that targets only the synchronization window of detected signals (Invisible Mode).
-- **Clock-Pull Drift:** Added linear frequency ramping to disrupt receiver frequency tracking loops and PLLs.
-- **Stability Frame Stutter:** Added periodic interdiction logic to force receiver stability counter resets.
-- **Named Preset Manager:** Implemented a multi-preset system with persistent JSON storage for rapid scenario switching.
-- **Professional Terminology:** Completely scrubbed all aggressive language, replacing it with technical terms (**Interdiction**, **Signal Template**, **Tracking**, **Gating**).
+- **Refined Targeting UI:** Renamed "Freq Snipe" to **Manual** mode for improved technical clarity.
+- **Clock-Pull Precision:** Replaced the frequency drift slider with a precise numeric entry field (Hz/s).
+- **Hydra Telemetry:** Added a dynamic label to the Hydra slider to show current simultaneous target count.
+- **Advanced Stutter Gating:** 
+    - Added **Burst Frames** control to specify the number of consecutive frames to interdict.
+    - Implemented **Clean Count Randomization** to defeat adaptive receiver algorithms.
+- **UI Bugfixes:** Resolved layout issues and ensured proper widget scaling for the waterfall display.
 
-### 🚀 DSP & Signal Synthesis
-- **Correlator Confusion:** Added a new Signal Template based on randomized Zadoff-Chu sequences to stress software-defined timing scanners.
-- **Synchronized Core:** Unified `BaseWaveforms.py` across the root project and GNU Radio OOT module.
-- **Stateful Integration:** Refined phase integration math to handle frequency ramps (Clock-Pull) without phase jumps.
+### 🚀 DSP & Logic
+- **Stutter Logic V2:** Refactored the `techniquepdu` block to support multi-frame bursts and randomized cycle lengths.
+- **Parameter Validation:** Added protection against invalid inputs in the console's numeric fields.
 
-### 🏗️ Tooling
-- **Unified Launcher:** Enhanced `TechniqueMaker.py` with improved permission handling and executable flags.
-- **Documentation Suite:** Refreshed `README.md`, `TECHNIQUES.md`, and `FUTURE_PLANS.md` to reflect the transition to a professional SIGINT suite.
+### 🏗️ Architecture & Deployment
+- **Dockerization:** Implemented a unified `Dockerfile` and helper scripts (`run_docker.sh`, `bundle_offline.sh`) for portable and air-gapped deployment.
+- **Terminology Finalization:** Completed the transition from aggressive to professional SIGINT/EW terminology across all documentation and UI components.
+- **Master Guide:** Updated `TECHNIQUES.md` with detailed mechanical explanations of advanced interdiction strategies.

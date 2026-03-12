@@ -38,6 +38,8 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.clock_pull = 0.0
         self.stutter_enabled = False
         self.stutter_clean = 3
+        self.stutter_burst = 1
+        self.stutter_randomize = False
         self.frame_dur = 40.0
         self.is_recording = False
         self.presets = {}
@@ -79,7 +81,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         # Tracking & Protocol
         target_box = Qt.QGroupBox("Tracking & Protocol")
         target_grid = Qt.QGridLayout(); target_box.setLayout(target_grid)
-        self.auto_radio = Qt.QRadioButton("Auto Track"); self.auto_radio.setChecked(True); self.auto_radio.toggled.connect(self.on_mode_change); self.manual_radio = Qt.QRadioButton("Freq Snipe")
+        self.auto_radio = Qt.QRadioButton("Auto Track"); self.auto_radio.setChecked(True); self.auto_radio.toggled.connect(self.on_mode_change); self.manual_radio = Qt.QRadioButton("Manual")
         target_grid.addWidget(self.auto_radio, 0, 0); target_grid.addWidget(self.manual_radio, 0, 1)
         self.manual_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.manual_slider.setRange(-1000000, 1000000); self.manual_slider.setEnabled(False); self.manual_slider.valueChanged.connect(self.on_manual_freq_change); self.manual_label = Qt.QLabel("Offset: 0 kHz"); target_grid.addWidget(self.manual_label, 1, 0); target_grid.addWidget(self.manual_slider, 1, 1)
         
@@ -90,17 +92,32 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
         # Parameters
         self.sab_input = Qt.QLineEdit(str(self.sabotage_duration)); self.sab_input.editingFinished.connect(self.on_sab_duration_change); target_grid.addWidget(Qt.QLabel("Sabotage (ms):"), 5, 0); target_grid.addWidget(self.sab_input, 5, 1)
-        self.stutter_input = Qt.QLineEdit(str(self.stutter_clean)); self.stutter_input.editingFinished.connect(self.on_stutter_clean_change); target_grid.addWidget(Qt.QLabel("Clean Frames:"), 6, 0); target_grid.addWidget(self.stutter_input, 6, 1)
-        self.frame_input = Qt.QLineEdit(str(self.frame_dur)); self.frame_input.editingFinished.connect(self.on_frame_dur_change); target_grid.addWidget(Qt.QLabel("Frame Dur (ms):"), 7, 0); target_grid.addWidget(self.frame_input, 7, 1)
         
-        # Clock Pull Slider
-        self.pull_label = Qt.QLabel(f"Clock-Pull: {self.clock_pull:.1f} Hz/s")
-        self.pull_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.pull_slider.setRange(-50000, 50000); self.pull_slider.setValue(0)
-        self.pull_slider.valueChanged.connect(self.on_pull_change)
-        target_grid.addWidget(self.pull_label, 8, 0); target_grid.addWidget(self.pull_slider, 8, 1)
+        # Stutter Details
+        self.stutter_clean_input = Qt.QLineEdit(str(self.stutter_clean)); self.stutter_clean_input.editingFinished.connect(self.on_stutter_clean_change)
+        target_grid.addWidget(Qt.QLabel("Clean Frames:"), 6, 0); target_grid.addWidget(self.stutter_clean_input, 6, 1)
+        
+        self.stutter_burst_input = Qt.QLineEdit(str(self.stutter_burst)); self.stutter_burst_input.editingFinished.connect(self.on_stutter_burst_change)
+        target_grid.addWidget(Qt.QLabel("Burst Frames:"), 7, 0); target_grid.addWidget(self.stutter_burst_input, 7, 1)
+        
+        self.stutter_rand_cb = Qt.QCheckBox("Randomize Clean Count"); self.stutter_rand_cb.toggled.connect(self.on_stutter_rand_toggle)
+        target_grid.addWidget(self.stutter_rand_cb, 8, 0, 1, 2)
 
-        self.targets_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.targets_slider.setRange(1, 8); self.targets_slider.setValue(1); self.targets_slider.valueChanged.connect(self.on_targets_change); target_grid.addWidget(Qt.QLabel("Hydra:"), 9, 0); target_grid.addWidget(self.targets_slider, 9, 1)
-        self.thresh_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.thresh_slider.setRange(-120, 0); self.thresh_slider.setValue(-45); self.thresh_slider.valueChanged.connect(self.on_threshold_change); self.thresh_label = Qt.QLabel("Thresh: -45 dB"); target_grid.addWidget(self.thresh_label, 10, 0); target_grid.addWidget(self.thresh_slider, 10, 1)
+        self.frame_input = Qt.QLineEdit(str(self.frame_dur)); self.frame_input.editingFinished.connect(self.on_frame_dur_change); target_grid.addWidget(Qt.QLabel("Frame Dur (ms):"), 9, 0); target_grid.addWidget(self.frame_input, 9, 1)
+        
+        # Clock Pull Numeric Entry
+        target_grid.addWidget(Qt.QLabel("Clock-Pull (Hz/s):"), 10, 0)
+        self.pull_input = Qt.QLineEdit(str(self.clock_pull))
+        self.pull_input.editingFinished.connect(self.on_pull_input_change)
+        target_grid.addWidget(self.pull_input, 10, 1)
+
+        # Hydra with Value Label
+        self.targets_label = Qt.QLabel(f"Hydra Count: {self.num_targets}")
+        self.targets_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.targets_slider.setRange(1, 8); self.targets_slider.setValue(self.num_targets)
+        self.targets_slider.valueChanged.connect(self.on_targets_change)
+        target_grid.addWidget(self.targets_label, 11, 0); target_grid.addWidget(self.targets_slider, 11, 1)
+        
+        self.thresh_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.thresh_slider.setRange(-120, 0); self.thresh_slider.setValue(-45); self.thresh_slider.valueChanged.connect(self.on_threshold_change); self.thresh_label = Qt.QLabel("Thresh: -45 dB"); target_grid.addWidget(self.thresh_label, 12, 0); target_grid.addWidget(self.thresh_slider, 12, 1)
         self.scroll_layout.addWidget(target_box)
 
         # Template Selection
@@ -114,6 +131,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.tx_gain_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.tx_gain_slider.setRange(0, 89); self.tx_gain_slider.setValue(50); self.tx_gain_slider.valueChanged.connect(self.on_tx_gain_change); hw_layout.addRow("TX Gain", self.tx_gain_slider)
         self.scroll_layout.addWidget(hw_box)
 
+        # Tuning
+        freq_box = Qt.QGroupBox("Radio Tuning"); freq_layout = Qt.QHBoxLayout(); freq_box.setLayout(freq_layout); freq_layout.addWidget(Qt.QLabel("Freq (Hz):")); self.freq_input = Qt.QLineEdit(str(int(self.center_freq))); self.freq_input.returnPressed.connect(self.on_freq_change); freq_layout.addWidget(self.freq_input); self.scroll_layout.addWidget(freq_box)
+
         # --- CENTER: Waterfall ---
         self.waterfall = qtgui.waterfall_sink_c(1024, window.WIN_BLACKMAN_hARRIS, self.center_freq, self.samp_rate, "Spectral Analysis Zone", 1)
         self.waterfall.set_intensity_range(-120, 20); self.pyqt_widget = sip.wrapinstance(self.waterfall.qwidget(), Qt.QWidget); self.main_split.addWidget(self.pyqt_widget, stretch=5)
@@ -124,7 +144,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         # --- Blocks ---
         self.source = uhd.usrp_source(",".join(("", f"serial={self.serial}")), uhd.stream_args(cpu_format="fc32", args='', channels=list(range(1)))); self.source.set_samp_rate(self.samp_rate); self.source.set_center_freq(self.center_freq, 0); self.source.set_gain(self.rx_gain, 0)
         self.interdictor = techniquepdu(
-            technique='Reactive Jammer', warhead_technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, frame_duration_ms=self.frame_dur, output_mode='Continuous (Stream)'
+            technique='Reactive Jammer', warhead_technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Continuous (Stream)'
         )
         self.sink = uhd.usrp_sink(",".join(("", f"serial={self.serial}")), uhd.stream_args(cpu_format="fc32", args='', channels=list(range(1)))); self.sink.set_samp_rate(self.samp_rate); self.sink.set_center_freq(self.center_freq, 0); self.sink.set_gain(self.tx_gain, 0)
         self.file_sink = blocks.file_sink(gr.sizeof_gr_complex, "session.bin", False); self.file_sink.set_unbuffered(True)
@@ -132,37 +152,36 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.connect(self.source, self.interdictor); self.connect(self.interdictor, self.sink); self.connect(self.source, self.waterfall)
         self.update_dynamic_params(); self.load_presets_from_file(); self.timer = QtCore.QTimer(); self.timer.timeout.connect(self.check_detections); self.timer.start(100)
 
-    def on_pull_change(self, val): self.clock_pull = float(val); self.pull_label.setText(f"Clock-Pull: {self.clock_pull:.1f} Hz/s"); self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
+    def on_pull_input_change(self):
+        try: self.clock_pull = float(self.pull_input.text()); self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
+        except: pass
     def on_adapt_toggle(self, checked): self.adaptive_bw = checked; self.interdictor.set_adaptive_bw(checked)
     def on_sab_toggle(self, checked): self.preamble_sabotage = checked; self.interdictor.set_preamble_sabotage(checked)
     def on_sab_duration_change(self):
-        try:
-            self.sabotage_duration = float(self.sab_input.text())
-            self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
+        try: self.sabotage_duration = float(self.sab_input.text()); self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
         except: pass
     def on_stutter_toggle(self, checked): self.stutter_enabled = checked; self.interdictor.set_stutter_enabled(checked)
     def on_stutter_clean_change(self):
-        try:
-            self.stutter_clean = int(self.stutter_input.text())
-            self.interdictor.set_stutter_clean_count(self.stutter_clean)
+        try: self.stutter_clean = int(self.stutter_clean_input.text()); self.interdictor.set_stutter_clean_count(self.stutter_clean)
         except: pass
+    def on_stutter_burst_change(self):
+        try: self.stutter_burst = int(self.stutter_burst_input.text()); self.interdictor.set_stutter_burst_count(self.stutter_burst)
+        except: pass
+    def on_stutter_rand_toggle(self, checked): self.stutter_randomize = checked; self.interdictor.set_stutter_randomize(checked)
     def on_frame_dur_change(self):
-        try:
-            self.frame_dur = float(self.frame_input.text())
-            self.interdictor.set_frame_duration_ms(self.frame_dur)
+        try: self.frame_dur = float(self.frame_input.text()); self.interdictor.set_frame_duration_ms(self.frame_dur)
         except: pass
     def load_presets_from_file(self):
         if os.path.exists(self.preset_file):
             try:
                 with open(self.preset_file, 'r') as f:
                     self.presets = json.load(f)
-            except:
-                self.presets = {}
+            except: self.presets = {}
         self.preset_combo.clear(); self.preset_combo.addItems(list(self.presets.keys()))
     def save_current_preset(self):
         name, ok = QtWidgets.QInputDialog.getText(self, "Save Preset", "Enter Preset Name:")
         if ok and name:
-            self.presets[name] = {"rx_gain": self.rx_gain, "tx_gain": self.tx_gain, "threshold": self.threshold, "template": self.template, "num_targets": self.num_targets, "center_freq": self.center_freq, "adaptive_bw": self.adaptive_bw, "preamble_sabotage": self.preamble_sabotage, "clock_pull": self.clock_pull, "stutter_enabled": self.stutter_enabled, "stutter_clean": self.stutter_clean, "frame_dur": self.frame_dur}
+            self.presets[name] = {"rx_gain": self.rx_gain, "tx_gain": self.tx_gain, "threshold": self.threshold, "template": self.template, "num_targets": self.num_targets, "center_freq": self.center_freq, "adaptive_bw": self.adaptive_bw, "preamble_sabotage": self.preamble_sabotage, "clock_pull": self.clock_pull, "stutter_enabled": self.stutter_enabled, "stutter_clean": self.stutter_clean, "stutter_burst": self.stutter_burst, "stutter_randomize": self.stutter_randomize, "frame_dur": self.frame_dur}
             with open(self.preset_file, 'w') as f:
                 json.dump(self.presets, f, indent=4)
             self.load_presets_from_file(); self.preset_combo.setCurrentText(name)
@@ -175,7 +194,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.load_presets_from_file()
     def load_selected_preset(self, name):
         if name in self.presets:
-            p = self.presets[name]; self.rx_gain = p.get("rx_gain", 40); self.rx_gain_slider.setValue(self.rx_gain); self.tx_gain = p.get("tx_gain", 50); self.tx_gain_slider.setValue(self.tx_gain); self.threshold = p.get("threshold", -45); self.thresh_slider.setValue(int(self.threshold)); self.num_targets = p.get("num_targets", 1); self.targets_slider.setValue(self.num_targets); self.center_freq = p.get("center_freq", 915e6); self.template = p.get("template", "Narrowband Noise"); self.adaptive_bw = p.get("adaptive_bw", False); self.adapt_cb.setChecked(self.adaptive_bw); self.preamble_sabotage = p.get("preamble_sabotage", False); self.sab_cb.setChecked(self.preamble_sabotage); self.clock_pull = p.get("clock_pull", 0.0); self.pull_slider.setValue(int(self.clock_pull)); self.stutter_enabled = p.get("stutter_enabled", False); self.stutter_cb.setChecked(self.stutter_enabled); self.stutter_clean = p.get("stutter_clean", 3); self.stutter_input.setText(str(self.stutter_clean)); self.frame_dur = p.get("frame_dur", 40.0); self.frame_input.setText(str(self.frame_dur)); self.template_combo.setCurrentText(self.template)
+            p = self.presets[name]; self.rx_gain = p.get("rx_gain", 40); self.rx_gain_slider.setValue(self.rx_gain); self.tx_gain = p.get("tx_gain", 50); self.tx_gain_slider.setValue(self.tx_gain); self.threshold = p.get("threshold", -45); self.thresh_slider.setValue(int(self.threshold)); self.num_targets = p.get("num_targets", 1); self.targets_slider.setValue(self.num_targets); self.center_freq = p.get("center_freq", 915e6); self.template = p.get("template", "Narrowband Noise"); self.adaptive_bw = p.get("adaptive_bw", False); self.adapt_cb.setChecked(self.adaptive_bw); self.preamble_sabotage = p.get("preamble_sabotage", False); self.sab_cb.setChecked(self.preamble_sabotage); self.clock_pull = p.get("clock_pull", 0.0); self.pull_input.setText(str(self.clock_pull)); self.stutter_enabled = p.get("stutter_enabled", False); self.stutter_cb.setChecked(self.stutter_enabled); self.stutter_clean = p.get("stutter_clean", 3); self.stutter_clean_input.setText(str(self.stutter_clean)); self.stutter_burst = p.get("stutter_burst", 1); self.stutter_burst_input.setText(str(self.stutter_burst)); self.stutter_randomize = p.get("stutter_randomize", False); self.stutter_rand_cb.setChecked(self.stutter_randomize); self.frame_dur = p.get("frame_dur", 40.0); self.frame_input.setText(str(self.frame_dur)); self.template_combo.setCurrentText(self.template)
     def check_detections(self):
         if not self.interdiction_enabled: self.label.setText("STBY (CEASE OUTPUT)"); self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: gray; background-color: black; padding: 10px; border: 2px solid #0F0;"); return
         if self.manual_mode: self.label.setText(f"MANUAL SNIPE: {self.manual_freq/1e3:.1f} kHz"); self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: orange; background-color: black; padding: 10px; border: 2px solid white;")
@@ -194,7 +213,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if checked:
             ts = int(time.time()); self.lock(); self.file_sink.open(f"analysis_{ts}.sigmf-data"); self.connect(self.source, self.file_sink); self.unlock(); json.dump({"global": {"core:sample_rate": self.samp_rate, "core:version": "1.0.0", "core:datatype": "cf32_le"}, "captures": [{"core:sample_start": 0, "core:frequency": self.center_freq}]}, open(f"analysis_{ts}.sigmf-meta", 'w'), indent=4); self.record_btn.setText("LOGGING..."); self.record_btn.setStyleSheet("background-color: #A00; color: white;")
         else: self.lock(); self.disconnect(self.source, self.file_sink); self.file_sink.close(); self.unlock(); self.record_btn.setText("LOG SESSION"); self.record_btn.setStyleSheet("background-color: #333; color: white;")
-    def on_targets_change(self, val): self.num_targets = val; self.interdictor.set_num_targets(self.num_targets)
+    def on_targets_change(self, val): self.num_targets = val; self.targets_label.setText(f"Hydra Count: {val}"); self.interdictor.set_num_targets(self.num_targets)
     def on_mode_change(self): self.manual_mode = self.manual_radio.isChecked(); self.interdictor.set_manual_mode(self.manual_mode); self.manual_slider.setEnabled(self.manual_mode); self.thresh_slider.setEnabled(not self.manual_mode)
     def on_manual_freq_change(self, val): self.manual_freq = float(val); self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz"); self.interdictor.set_manual_freq(self.manual_freq)
     def update_dynamic_params(self):
@@ -226,6 +245,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
     def on_threshold_change(self, value): self.threshold = value; self.thresh_label.setText(f"Thresh: {value} dB"); self.interdictor.set_reactive_threshold_db(value)
     def on_rx_gain_change(self, value): self.source.set_gain(value, 0)
     def on_tx_gain_change(self, value): self.sink.set_gain(value, 0)
+    def on_freq_change(self):
+        try: self.center_freq = float(self.freq_input.text()); self.source.set_center_freq(self.center_freq, 0); self.sink.set_center_freq(self.center_freq, 0); self.waterfall.set_frequency_range(self.center_freq, self.samp_rate)
+        except: pass
     def stop_all(self): self.stop(); self.wait()
 
 if __name__ == '__main__':

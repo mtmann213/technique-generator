@@ -48,7 +48,8 @@ These logic-based modes control **when** and **how** the templates are applied t
 
 ### 3. Stability Frame Stutter (State-Machine Attack)
 *   **Mechanism:** Periodic frame erasure.
-*   **Logic:** Allows $X$ frames to pass through cleanly, then pulses a burst to destroy the $(X+1)$th frame.
+*   **Logic:** Allows $X$ frames to pass through cleanly (**Clean Frames**), then pulses a burst to destroy the next $Y$ frames (**Burst Frames**).
+*   **Randomization:** If enabled, the number of clean frames is randomized between 1 and $X$ for each cycle, preventing the receiver's AGC or FEC logic from adapting to a fixed pattern.
 *   **Impact:** Targets the **Link Layer State Machine**. Tactical links require $N$ consecutive clean frames to declare a "Stable" link. By resetting the stability counter to zero every few frames, the link stays in a perpetual acquisition state.
 
 ### 4. Adaptive Bandwidth Sculpting

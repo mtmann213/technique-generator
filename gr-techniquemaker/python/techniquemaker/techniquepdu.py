@@ -9,6 +9,7 @@
 import numpy as np
 from gnuradio import gr
 import pmt
+import random
 from scipy import signal
 from . import BaseWaveforms
 
@@ -58,6 +59,8 @@ class techniquepdu(gr.sync_block):
                  clock_pull_drift_hz_s=0.0,
                  stutter_enabled=False,
                  stutter_clean_count=3,
+                 stutter_burst_count=1,
+                 stutter_randomize=False,
                  frame_duration_ms=40.0,
                  enable_command_port=False,
                  output_mode='Continuous (Stream)'):
@@ -107,6 +110,8 @@ class techniquepdu(gr.sync_block):
         self.clock_pull_drift_hz_s = clock_pull_drift_hz_s
         self.stutter_enabled = stutter_enabled
         self.stutter_clean_count = int(stutter_clean_count)
+        self.stutter_burst_count = int(stutter_burst_count)
+        self.stutter_randomize = bool(stutter_randomize)
         self.frame_duration_ms = frame_duration_ms
         self.enable_command_port = enable_command_port
         self.output_mode = output_mode
@@ -123,7 +128,8 @@ class techniquepdu(gr.sync_block):
         self._dwell_counter = 0
         self._sabotage_counter = 0
         self._drift_time = 0.0 
-        self._stutter_timer = 0.0 # Time since start of current stutter cycle
+        self._stutter_timer = 0.0
+        self._current_cycle_clean = self.stutter_clean_count
         self._last_report_freqs = []
 
         self.message_port_register_in(pmt.intern("trigger"))
@@ -192,6 +198,12 @@ class techniquepdu(gr.sync_block):
                         self._dwell_counter = int(self.reactive_dwell_ms * self.sample_rate_hz / 1000.0)
                         self._sabotage_counter = int(self.sabotage_duration_ms * self.sample_rate_hz / 1000.0)
                         self._drift_time = 0.0; self._stutter_timer = 0.0
+                        # Randomize next clean count if enabled
+                        if self.stutter_randomize:
+                            self._current_cycle_clean = random.randint(1, max(1, self.stutter_clean_count))
+                        else:
+                            self._current_cycle_clean = self.stutter_clean_count
+                        
                         if len(new_targets) != len(self._last_report_freqs):
                             self._last_report_freqs = new_targets
 
@@ -201,18 +213,16 @@ class techniquepdu(gr.sync_block):
         if not self.interdiction_enabled or (is_reactive and self._dwell_counter <= 0):
             out[:] = 0; self._dwell_counter -= n; return n
 
-        # Gating Logic: Preamble Sabotage takes precedence, then Stutter
         gate_open = True
-        
         if is_reactive and self.preamble_sabotage:
             if self._sabotage_counter <= 0: gate_open = False
         
         elif is_reactive and self.stutter_enabled:
-            # Calculate frame index: frame = floor(t / T_frame)
             frame_idx = int(self._stutter_timer * 1000.0 / self.frame_duration_ms)
-            cycle_len = self.stutter_clean_count + 1
-            # We only burst on the LAST frame of the cycle
-            if (frame_idx % cycle_len) != self.stutter_clean_count: gate_open = False
+            cycle_len = self._current_cycle_clean + self.stutter_burst_count
+            rel_idx = frame_idx % cycle_len
+            # Burst if we are in the last 'stutter_burst_count' frames of the cycle
+            if rel_idx < self._current_cycle_clean: gate_open = False
 
         if not gate_open:
             out[:] = 0; self._dwell_counter -= n; self._stutter_timer += n / self.sample_rate_hz; return n
@@ -266,7 +276,9 @@ class techniquepdu(gr.sync_block):
                 k_p = pmt.vector_ref(keys, i); k = pmt.symbol_to_string(k_p)
                 v_p = pmt.dict_ref(msg, k_p, pmt.PMT_NIL); s = f"set_{k}"
                 if hasattr(self, s):
-                    val = pmt.to_double(v_p) if (pmt.is_real(v_p) or pmt.is_integer(v_p)) else (pmt.to_bool(v_p) if pmt.is_bool(v_p) else pmt.symbol_to_string(v_p))
+                    if pmt.is_bool(v_p): val = pmt.to_bool(v_p)
+                    elif pmt.is_real(v_p) or pmt.is_integer(v_p): val = pmt.to_double(v_p)
+                    else: val = pmt.symbol_to_string(v_p)
                     getattr(self, s)(val)
             self._need_regen = True
         except Exception as e: print(f"Error: {e}")
@@ -316,6 +328,8 @@ class techniquepdu(gr.sync_block):
     def set_clock_pull_drift_hz_s(self, v): self.clock_pull_drift_hz_s = float(v)
     def set_stutter_enabled(self, v): self.stutter_enabled = bool(v)
     def set_stutter_clean_count(self, v): self.stutter_clean_count = int(v)
+    def set_stutter_burst_count(self, v): self.stutter_burst_count = int(v)
+    def set_stutter_randomize(self, v): self.stutter_randomize = bool(v)
     def set_frame_duration_ms(self, v): self.frame_duration_ms = float(v)
     def set_enable_command_port(self, v): self.enable_command_port = bool(v)
     def set_output_mode(self, v): self.output_mode = str(v); self._need_regen = True
