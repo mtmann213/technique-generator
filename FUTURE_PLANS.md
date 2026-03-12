@@ -6,9 +6,9 @@ To transform TechniqueMaker into an intelligent, adaptive RF Analysis suite capa
 ---
 
 ## 1. Tactical Portability & Deployment
-- [ ] **Dockerization:** Create a unified `Dockerfile` containing the entire GNU Radio/UHD environment to ensure "one-command" setup on any machine.
-- [ ] **USB/X11 Passthrough:** Implement automated scripts to handle SDR hardware mounting and GUI forwarding from within the container.
-- [ ] **Air-Gap Support:** Create an "Offline Bundle" script that exports the Docker environment into a single portable `.tar` file for deployment on non-networked field laptops.
+- [x] **Dockerization:** Create a unified `Dockerfile` containing the entire GNU Radio/UHD environment to ensure "one-command" setup on any machine.
+- [x] **USB/X11 Passthrough:** Implement automated scripts to handle SDR hardware mounting and GUI forwarding from within the container.
+- [x] **Air-Gap Support:** Create an "Offline Bundle" script that exports the Docker environment into a single portable `.tar` file for deployment on non-networked field laptops.
 
 ## 2. Protocol-Aware Interdiction (Hardcore)
 - [ ] **Differential Subcarrier "Erasure" (Comb Attack):** Implement a high-precision multi-tone template that places spikes exactly on every other OFDM subcarrier to destroy differential references.
