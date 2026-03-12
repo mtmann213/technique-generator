@@ -1,29 +1,32 @@
 # TechniqueMaker: Future Development Roadmap
 
-This document outlines the planned enhancements and feature requests for the TechniqueMaker project, categorized by functional area.
+## 🎯 High-Level Vision
+To transform TechniqueMaker into an intelligent, adaptive RF Analysis suite capable of autonomous signal identification and pre-emptive interdiction against modern tactical links.
 
-## 1. GNU Radio OOT Block (gr-techniquemaker)
-- [ ] **Dynamic Reconfiguration:** Add a "command" message port to `techniquepdu` to allow real-time parameter updates (BW, technique, etc.) via PMT dictionaries.
-- [ ] **Streaming Mode Toggle:** Implement a "Loop" parameter to allow the block to output a continuous stream of the generated technique instead of just one-shot PDUs.
-- [ ] **Tag-Based Triggering:** Add the ability to trigger a PDU burst based on Stream Tags (e.g., `tx_sob`) for precise timing synchronization.
-- [ ] **Hardware Abstraction Layer:** Create a helper block to map metadata from PDUs directly to USRP UHD sink commands (frequency, gain, etc.).
+---
 
-## 2. DSP & Waveform Generation (`BaseWaveforms.py`)
-- [ ] **Advanced Techniques:**
-    - **LFM Chirp:** Standard Linear Frequency Modulation for radar/sync testing.
-    - **OFDM-Shaped Noise:** Noise masked to match specific subcarrier and cyclic prefix structures.
-    - **Frequency Hopping (FHSS):** A technique that generates a sequence of hops based on a seed or list.
-- [ ] **Normalization Engine:** Implement a global "Target RMS" or "Peak Amplitude" parameter across all techniques to ensure consistent power levels.
-- [ ] **Spectral Shaping:** Add a post-generation pulse-shaping or LPF stage to all techniques to minimize spectral regrowth.
-- [ ] **Optimization:** Refactor `songMaker` and `swept_phasors` to use list-based collection instead of `np.concatenate` in loops to eliminate memory copy bottlenecks.
+## 1. Protocol-Aware Interdiction (Hardcore)
+- [ ] **Differential Subcarrier "Erasure" (Comb Attack):** Implement a high-precision multi-tone template that places spikes exactly on every other OFDM subcarrier to destroy differential references.
+- [ ] **Cyclic Prefix "Echo" (Multipath Spoof):** Add a delay-and-replay template that mimics a perfect multipath reflection slightly longer than the target's CP to force Inter-Symbol Interference (ISI).
+- [ ] **Adaptive "Stutter" Tuning:** Automatically detect the target's frame duration and stability requirements to optimize the stutter cycle for maximum disruption with minimum power.
 
-## 3. GUI & Tooling (`BaseGui.py`)
-- [ ] **Visual Preview:** Integrate a `matplotlib` or `pyqtgraph` window to show the FFT and Time Domain plot before saving.
-- [ ] **SigMF Metadata Expansion:** Automatically include all generation parameters (technique name, BW, symbol rate) in the `.sigmf-meta` "annotations" or "global" fields.
-- [ ] **Batch Generator:** Create a CLI tool to generate large datasets of signals with randomized parameters for machine learning training.
-- [ ] **Validation Layer:** Improve `infer_type_from_string` with explicit bounds checking for numeric fields (e.g., BW > 0).
+## 2. Intelligence & Machine Learning
+- [ ] **Predictive Pattern Engine:** Upgrade the tracker to solve hop sequences (PRNG cracking) and jump to the next frequency *before* the target arrives.
+- [ ] **On-Device CNN Classifier:** Integrate a real-time signal classifier to automatically label signals (WiFi, LFM, DF-OFDM) on the waterfall.
+- [ ] **Signal Fingerprinting:** Identify specific radio hardware based on subtle spectral artifacts (IQ imbalance, phase noise).
 
-## 4. Documentation & Testing
-- [ ] **QA Test Suite:** Expand `qa_techniquepdu.py` to include automated signal integrity checks (e.g., verifying the generated BW matches the requested BW).
-- [ ] **Installation Script:** Create a simple `install.sh` to handle the `cmake`, `make install`, and `ldconfig` steps for the OOT module.
-- [ ] **Technique Reference Guide:** A markdown file explaining the math and use cases for each available signal technique.
+## 3. Advanced User Interface
+- [ ] **Audio "Sonar" Feedback:** Play real-time audio pings that change pitch based on target frequency offsets for hands-free situational awareness.
+- [ ] **Headless Web Command Center:** Replace the PyQt5 GUI with a WebSocket-based HTML5 dashboard for remote deployment on embedded Linux devices.
+- [ ] **Integrated Constellation Sink:** Add a demodulation window to the console to measure EVM and visually confirm interdiction impact on constellation points.
+
+---
+
+## ✅ Completed Milestones
+- [x] **Adaptive Bandwidth Sculpting:** Automatic -10dB occupied bandwidth measurement and template resizing.
+- [x] **Preamble Sabotage:** Timing-precise interdiction targeting only the synchronization window (Invisible Mode).
+- [x] **Clock-Pull Drift:** Linear frequency ramping to drag target tracking loops out of lock.
+- [x] **Stability Frame Stutter:** Periodic interdiction designed to reset receiver stability counters.
+- [x] **Multi-Target Hydra:** Simultaneous tracking and interdiction of up to 8 targets.
+- [x] **Correlator Confusion:** Zadoff-Chu based synchronization-stressing synthesis.
+- [x] **Named Preset Manager:** Persistent scenario storage and rapid switching.

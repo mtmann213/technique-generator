@@ -1,0 +1,9 @@
+{
+    "rx_gain": 40,
+    "tx_gain": 50,
+    "threshold": -45,
+    "warhead": "Narrowband Noise",
+    "num_targets": 1,
+    "dwell": 400,
+    "center_freq": 915000000.0
+}

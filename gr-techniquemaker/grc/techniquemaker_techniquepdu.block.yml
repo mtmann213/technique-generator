@@ -14,6 +14,8 @@ templates:
         symbol_rate_hz=${symbol_rate_hz},
         rolloff=${rolloff},
         sweep_hz=${sweep_hz},
+        sweep_type=${sweep_type},
+        sweep_rate_hz_s=${sweep_rate_hz_s},
         technique_width_hz=${technique_width_hz},
         chunks=${chunks},
         frequencies_str=${frequencies_str},
@@ -29,7 +31,12 @@ templates:
         num_subcarriers=${num_subcarriers},
         cp_length=${cp_length},
         target_value=${target_value},
-        normalization_type=${normalization_type}
+        normalization_type=${normalization_type},
+        filter_type=${filter_type},
+        reactive_threshold_db=${reactive_threshold_db},
+        reactive_dwell_ms=${reactive_dwell_ms},
+        enable_command_port=${enable_command_port},
+        output_mode=${output_mode}
     )
   callbacks:
     - set_technique(${technique})
@@ -40,6 +47,8 @@ templates:
     - set_symbol_rate_hz(${symbol_rate_hz})
     - set_rolloff(${rolloff})
     - set_sweep_hz(${sweep_hz})
+    - set_sweep_type(${sweep_type})
+    - set_sweep_rate_hz_s(${sweep_rate_hz_s})
     - set_technique_width_hz(${technique_width_hz})
     - set_chunks(${chunks})
     - set_frequencies_str(${frequencies_str})
@@ -56,14 +65,26 @@ templates:
     - set_cp_length(${cp_length})
     - set_target_value(${target_value})
     - set_normalization_type(${normalization_type})
+    - set_filter_type(${filter_type})
+    - set_reactive_threshold_db(${reactive_threshold_db})
+    - set_reactive_dwell_ms(${reactive_dwell_ms})
+    - set_enable_command_port(${enable_command_port})
+    - set_output_mode(${output_mode})
 
 parameters:
 - id: technique
   label: Technique
   dtype: enum
   default: "'Narrowband Noise'"
-  options: ["'Narrowband Noise'", "'RRC Modulated Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'Cosine Tones'", "'Phasor Tones'", "'Swept Phasors'", "'Swept Cosines'", "'FM Cosine'", "'LFM Chirp'", "'FHSS Noise'", "'OFDM-Shaped Noise'", "'Song Maker'"]
-  option_labels: ['Narrowband Noise', 'RRC Modulated Noise', 'Swept Noise', 'Chunked Noise', 'Noise Tones', 'Cosine Tones', 'Phasor Tones', 'Swept Phasors', 'Swept Cosines', 'FM Cosine', 'LFM Chirp', 'FHSS Noise', 'OFDM-Shaped Noise', 'Song Maker']
+  options: ["'Narrowband Noise'", "'RRC Modulated Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'Cosine Tones'", "'Phasor Tones'", "'Swept Phasors'", "'Swept Cosines'", "'FM Cosine'", "'LFM Chirp'", "'FHSS Noise'", "'OFDM-Shaped Noise'", "'Song Maker'", "'Reactive Jammer'"]
+  option_labels: ['Narrowband Noise', 'RRC Modulated Noise', 'Swept Noise', 'Chunked Noise', 'Noise Tones', 'Cosine Tones', 'Phasor Tones', 'Swept Phasors', 'Swept Cosines', 'FM Cosine', 'LFM Chirp', 'FHSS Noise', 'OFDM-Shaped Noise', 'Song Maker', 'Reactive Jammer']
+
+- id: output_mode
+  label: Output Mode
+  dtype: enum
+  default: "'Burst (PDU)'"
+  options: ["'Burst (PDU)'", "'Continuous (Stream)'"]
+  option_labels: ['Burst (PDU)', 'Continuous (Stream)']
 
 - id: sample_rate_hz
   label: Sample Rate (Hz)
@@ -74,12 +95,12 @@ parameters:
   label: Bandwidth (Hz)
   dtype: float
   default: '100000'
-  hide: ${ 'none' if technique in ["'Narrowband Noise'", "'Swept Noise'", "'Noise Tones'", "'Song Maker'", "'FHSS Noise'"] else 'part' }
+  hide: ${ 'none' if technique in ["'Narrowband Noise'", "'Swept Noise'", "'Noise Tones'", "'Song Maker'", "'FHSS Noise'", "'Reactive Jammer'"] else 'part' }
 
 - id: technique_length_seconds
   label: Duration (sec)
   dtype: float
-  default: '0.1'
+  default: '1.0'
   hide: ${ 'none' if technique != "'Song Maker'" else 'part' }
 
 - id: interference_type
@@ -88,7 +109,7 @@ parameters:
   default: "'complex'"
   options: ["'complex'", "'real'", "'sinc'"]
   option_labels: ['complex', 'real', 'sinc']
-  hide: ${ 'none' if technique in ["'Narrowband Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'FHSS Noise'"] else 'all' }
+  hide: ${ 'none' if technique in ["'Narrowband Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'FHSS Noise'", "'Reactive Jammer'"] else 'all' }
 
 - id: symbol_rate_hz
   label: Symbol Rate (Hz)
@@ -100,13 +121,27 @@ parameters:
   label: RRC Rolloff
   dtype: float
   default: '0.35'
-  hide: ${ 'none' if technique == "'RRC Modulated Noise'" else 'all' }
+  hide: ${ 'none' if technique in ["'RRC Modulated Noise'"] else 'all' }
 
 - id: sweep_hz
   label: Sweep Range (Hz)
   dtype: float
   default: '500000'
   hide: ${ 'none' if technique in ["'Swept Noise'", "'Swept Phasors'", "'Swept Cosines'"] else 'all' }
+
+- id: sweep_type
+  label: Sweep Type
+  dtype: enum
+  default: "'sawtooth'"
+  options: ["'sawtooth'", "'triangle'"]
+  option_labels: ['Sawtooth (Jump)', 'Triangle (Continuous)']
+  hide: ${ 'none' if technique == "'Swept Noise'" else 'all' }
+
+- id: sweep_rate_hz_s
+  label: Sweep Rate (Hz/s)
+  dtype: float
+  default: '100000'
+  hide: ${ 'none' if technique == "'Swept Noise'" else 'all' }
 
 - id: technique_width_hz
   label: Total Width (Hz)
@@ -198,20 +233,58 @@ parameters:
   options: ["'peak'", "'rms'"]
   option_labels: ['Peak', 'RMS']
 
+- id: filter_type
+  label: Filter Type
+  dtype: enum
+  default: "'none'"
+  options: ["'none'", "'rectangular'", "'rrc'"]
+  option_labels: ['None', 'Rectangular (Brickwall)', 'Root-Raised Cosine']
+
+- id: reactive_threshold_db
+  label: Detect Threshold (dB)
+  dtype: float
+  default: '-40.0'
+  hide: ${ 'none' if technique == "'Reactive Jammer'" else 'all' }
+
+- id: reactive_dwell_ms
+  label: Dwell Time (ms)
+  dtype: float
+  default: '100.0'
+  hide: ${ 'none' if technique == "'Reactive Jammer'" else 'all' }
+
 - id: song_name
   label: Song Name
   dtype: enum
   default: "'Baby Shark'"
-  options: ["'Air Force Song'", "'Anchors Away'", "'Marine Hymn'", "'Baby Shark'", "'Pink Panther'", "'Star Wars'", "'Mission Impossible'", "'Annoying Tone'"]
-  option_labels: ['Air Force Song', 'Anchors Away', 'Marine Hymn', 'Baby Shark', 'Pink Panther', 'Star Wars', 'Mission Impossible', 'Annoying Tone']
+  options: ["'Air Force Song'", "'Anchors Away'", "'Marine Hymn'", "'Army Song'", "'Baby Shark'", "'Pink Panther'", "'Star Wars'", "'Mission Impossible'", "'Annoying Tone'"]
+  option_labels: ['Air Force Song', 'Anchors Away', 'Marine Hymn', 'Army Song', 'Baby Shark', 'Pink Panther', 'Star Wars', 'Mission Impossible', 'Annoying Tone']
   hide: ${ 'none' if technique == "'Song Maker'" else 'all' }
 
+- id: enable_command_port
+  label: Enable Commands
+  dtype: bool
+  default: 'False'
+
 inputs:
+- label: in
+  domain: stream
+  dtype: complex
+  optional: true
 - label: trigger
   domain: message
+  optional: true
+- label: command
+  domain: message
+  optional: true
+  hide: ${ 'none' if enable_command_port else 'all' }
 
 outputs:
+- label: out
+  domain: stream
+  dtype: complex
+  optional: true
 - label: pdu
   domain: message
+  optional: true
 
 file_format: 1

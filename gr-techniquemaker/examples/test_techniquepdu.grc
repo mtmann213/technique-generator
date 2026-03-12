@@ -69,12 +69,12 @@ blocks:
     maxoutbuf: '0'
     minoutbuf: '0'
     msg: pmt.intern("trigger")
-    period: '2000'
+    period: '1000'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [32, 144.0]
+    coordinate: [48, 188.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle2_0
@@ -95,20 +95,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [872, 256.0]
-    rotation: 0
-    state: enabled
-- name: import_0
-  id: import
-  parameters:
-    alias: ''
-    comment: ''
-    imports: import techniquemaker
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [280, 12.0]
+    coordinate: [880, 384.0]
     rotation: 0
     state: enabled
 - name: pdu_pdu_to_stream_x_0
@@ -126,9 +113,9 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [632, 264.0]
+    coordinate: [688, 256.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: qtgui_waterfall_sink_x_0
   id: qtgui_waterfall_sink_x
   parameters:
@@ -187,7 +174,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1096, 240.0]
+    coordinate: [1048, 256.0]
     rotation: 0
     state: enabled
 - name: snippet_0
@@ -212,36 +199,43 @@ blocks:
   parameters:
     affinity: ''
     alias: ''
-    bandwidth_hz: '50000'
+    bandwidth_hz: '200000'
     chunks: '5'
     comment: ''
     cp_length: '256'
+    enable_command_port: 'False'
     end_freq_hz: '100000'
     fft_size: '1024'
-    frequencies_str: '''10000 20000 -15000'''
+    filter_type: '''none'''
+    frequencies_str: '''1000 2000 3000'''
     hop_duration_seconds: '0.01'
     hop_frequencies_str: '''-100000 0 100000'''
-    interference_type: '''complex'''
+    interference_type: '''sinc'''
     maxoutbuf: '0'
     minoutbuf: '0'
     modulated_frequency: '1000'
+    normalization_type: '''rms'''
     num_subcarriers: '600'
+    output_mode: '''Continuous (Stream)'''
     rolloff: '0.35'
     sample_rate_hz: samp_rate
     song_name: '''Baby Shark'''
     start_freq_hz: '-100000'
-    sweep_hz: '400000'
+    sweep_hz: '500000'
     sweep_range_hz: '1000000'
+    sweep_rate_hz_s: '100000'
+    sweep_type: '''triangle'''
     symbol_rate_hz: '50000'
-    technique: '''OFDM-Shaped Noise'''
-    technique_length_seconds: '2'
-    technique_width_hz: '500000'
+    target_value: '1.0'
+    technique: '''Swept Noise'''
+    technique_length_seconds: '1.0'
+    technique_width_hz: '1000000'
     tones: '5'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [320, 160.0]
+    coordinate: [344, 116.0]
     rotation: 0
     state: enabled
 
@@ -249,6 +243,7 @@ connections:
 - [blocks_message_strobe_0, strobe, techniquemaker_techniquepdu_0, trigger]
 - [blocks_throttle2_0, '0', qtgui_waterfall_sink_x_0, '0']
 - [pdu_pdu_to_stream_x_0, '0', blocks_throttle2_0, '0']
+- [techniquemaker_techniquepdu_0, '0', blocks_throttle2_0, '0']
 - [techniquemaker_techniquepdu_0, pdu, blocks_message_debug_0, print]
 - [techniquemaker_techniquepdu_0, pdu, pdu_pdu_to_stream_x_0, pdus]
 

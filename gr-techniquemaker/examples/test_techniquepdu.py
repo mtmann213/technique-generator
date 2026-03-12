@@ -22,10 +22,8 @@ from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-from gnuradio import pdu
 from techniquemaker import techniquepdu
 import sip
-import techniquemaker
 
 
 def snipfcn_snippet_0(self):
@@ -84,17 +82,19 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
         ##################################################
 
         self.techniquemaker_techniquepdu_0 = techniquepdu(
-            technique='OFDM-Shaped Noise',
+            technique='Swept Noise',
             sample_rate_hz=samp_rate,
-            bandwidth_hz=50000,
-            technique_length_seconds=2,
-            interference_type='complex',
+            bandwidth_hz=200000,
+            technique_length_seconds=1.0,
+            interference_type='sinc',
             symbol_rate_hz=50000,
             rolloff=0.35,
-            sweep_hz=400000,
-            technique_width_hz=500000,
+            sweep_hz=500000,
+            sweep_type='triangle',
+            sweep_rate_hz_s=100000,
+            technique_width_hz=1000000,
             chunks=5,
-            frequencies_str='10000 20000 -15000',
+            frequencies_str='1000 2000 3000',
             tones=5,
             sweep_range_hz=1000000,
             modulated_frequency=1000,
@@ -105,7 +105,12 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
             hop_duration_seconds=0.01,
             fft_size=1024,
             num_subcarriers=600,
-            cp_length=256
+            cp_length=256,
+            target_value=1.0,
+            normalization_type='rms',
+            filter_type='none',
+            enable_command_port=False,
+            output_mode='Continuous (Stream)'
         )
         self.qtgui_waterfall_sink_x_0 = qtgui.waterfall_sink_c(
             1024, #size
@@ -142,18 +147,16 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
         self._qtgui_waterfall_sink_x_0_win = sip.wrapinstance(self.qtgui_waterfall_sink_x_0.qwidget(), Qt.QWidget)
 
         self.top_layout.addWidget(self._qtgui_waterfall_sink_x_0_win)
-        self.pdu_pdu_to_stream_x_0 = pdu.pdu_to_stream_c(pdu.EARLY_BURST_APPEND, 64)
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
-        self.blocks_message_strobe_0 = blocks.message_strobe(pmt.intern("trigger"), 2000)
+        self.blocks_message_strobe_0 = blocks.message_strobe(pmt.intern("trigger"), 1000)
 
 
         ##################################################
         # Connections
         ##################################################
         self.msg_connect((self.blocks_message_strobe_0, 'strobe'), (self.techniquemaker_techniquepdu_0, 'trigger'))
-        self.msg_connect((self.techniquemaker_techniquepdu_0, 'pdu'), (self.pdu_pdu_to_stream_x_0, 'pdus'))
         self.connect((self.blocks_throttle2_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
-        self.connect((self.pdu_pdu_to_stream_x_0, 0), (self.blocks_throttle2_0, 0))
+        self.connect((self.techniquemaker_techniquepdu_0, 0), (self.blocks_throttle2_0, 0))
 
 
     def closeEvent(self, event):
