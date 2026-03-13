@@ -44,11 +44,23 @@ The target machine must have the Docker Engine installed. If it does not, you mu
     # You should see 'techniquemaker' in the list.
     ```
 
-### Step B: Launch the Console
+### Step B: Launch the Tools
 The `run_docker.sh` script automatically detects your USRP and sets up GUI forwarding.
+
+**Launch Predator Console:**
 ```bash
 chmod +x run_docker.sh
 ./run_docker.sh predator
+```
+
+**Launch RF System Calibrator:**
+```bash
+./run_docker.sh calibrate
+```
+
+**Launch Standalone GUI:**
+```bash
+./run_docker.sh gui
 ```
 
 ---
