@@ -52,7 +52,13 @@ These logic-based modes control **when** and **how** the templates are applied t
 *   **Randomization:** If enabled, the number of clean frames is randomized between 1 and $X$ for each cycle, preventing the receiver's AGC or FEC logic from adapting to a fixed pattern.
 *   **Impact:** Targets the **Link Layer State Machine**. Tactical links require $N$ consecutive clean frames to declare a "Stable" link. By resetting the stability counter to zero every few frames, the link stays in a perpetual acquisition state.
 
-### 4. Adaptive Bandwidth Sculpting
+### 4. RF Chain Calibration (System Characterization)
+*   **Mechanism:** Automated Full-Matrix Sweep (Frequency vs. USRP Gain).
+*   **Target:** The physical hardware chain (USRP -> Power Amplifier -> Attenuators).
+*   **Output:** Generates a lookup table used by the Predator console to translate relative USRP gain settings into actual estimated output power in **dBm**.
+*   **Integration:** Supports Signal Hound BB60D via SoapySDR for high-accuracy peak power measurement.
+
+### 5. Adaptive Bandwidth Sculpting
 *   **Mechanism:** Real-time spectral edge detection.
 *   **Logic:** Measures the **-10dB Occupied Bandwidth** of the detected signal and resizes the FIR filter of the template to match.
 *   **Impact:** Concentrates 100% of the SDR's transmit power exactly within the target's channel, maximizing **Power Spectral Density** and defeating wideband filtering.

@@ -27,11 +27,12 @@ def main():
 Examples:
   ./TechniqueMaker.py gui          # Launch the standalone GUI
   ./TechniqueMaker.py predator     # Launch the Predator Jammer Console
+  ./TechniqueMaker.py calibrate    # Launch the RF System Calibrator
   ./TechniqueMaker.py batch        # Run the AI Dataset Generator
   ./TechniqueMaker.py install      # Run the OOT installation script
         """
     )
-    parser.add_argument("mode", choices=["gui", "predator", "batch", "install"], help="What to launch")
+    parser.add_argument("mode", choices=["gui", "predator", "calibrate", "batch", "install"], help="What to launch")
     parser.add_argument("--args", nargs=argparse.REMAINDER, help="Additional arguments for the sub-command")
 
     args = parser.parse_args()
@@ -45,6 +46,10 @@ Examples:
     elif args.mode == "predator":
         print("--- Launching Predator Jammer Console ---")
         subprocess.run([sys.executable, "PredatorJammer.py"], env=env, cwd=current_dir)
+
+    elif args.mode == "calibrate":
+        print("--- Launching RF System Calibrator ---")
+        subprocess.run([sys.executable, "SystemCalibrator.py"], env=env, cwd=current_dir)
     
     elif args.mode == "batch":
         print("--- Launching AI Batch Generator ---")

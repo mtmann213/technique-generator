@@ -11,6 +11,7 @@ To transform TechniqueMaker into an intelligent, adaptive RF Analysis suite capa
 - [x] **Air-Gap Support:** Create an "Offline Bundle" script that exports the Docker environment into a single portable `.tar` file for deployment on non-networked field laptops.
 
 ## 2. Protocol-Aware Interdiction (Hardcore)
+- [x] **System Calibration Utility:** Automated Freq/Gain sweep tool for PA characterization with Signal Hound support.
 - [ ] **Differential Subcarrier "Erasure" (Comb Attack):** Implement a high-precision multi-tone template that places spikes exactly on every other OFDM subcarrier to destroy differential references.
 - [ ] **Cyclic Prefix "Echo" (Multipath Spoof):** Add a delay-and-replay template that mimics a perfect multipath reflection slightly longer than the target's CP to force Inter-Symbol Interference (ISI).
 - [ ] **Adaptive "Stutter" Tuning:** Automatically detect the target's frame duration and stability requirements to optimize the stutter cycle.

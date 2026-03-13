@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y \
     python3-sip-dev \
     python3-pmt \
     python3-pip \
+    python3-soapysdr \
+    soapysdr-tools \
     cmake \
     git \
     liborc-0.4-dev \
