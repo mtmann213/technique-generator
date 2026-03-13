@@ -1,29 +1,20 @@
 # Changelog: TechniqueMaker Improvements
 
-## [2026-03-12] - RF Calibration & Precision Interdiction
+## [2026-03-13] - Precision Calibration & Smart Interpolation
+
+### 🛠️ RF System Calibrator (Precision Engine)
+- **Smart 2D Interpolation:** Implemented row-wise linear extrapolation with `scipy.interpolate` to fill gaps in frequency and power ranges.
+- **Monotonic Filtering:** Added logic to ignore measurement noise and saturation points, ensuring a clean Gain-to-Power mapping.
+- **Stability Averaging:** Integrated 5-snapshot averaging and increased settling times (0.5s) for rock-solid USRP-to-USRP loopback measurements.
+- **Multi-Hardware Support:** Added native support for USRP (UHD) closed-loop receivers, Signal Hound (Soapy) auto-mode, and Spike (Manual) high-accuracy mode.
+- **Operational Analytics:** Added an "Operational View" that displays the required USRP Gain for a target dBm output across the frequency spectrum.
+- **Data Explorer:** Added a spreadsheet-style table window and CSV export for easy calibration data review.
+- **Calibrator Presets:** Persistent save/load system for hardware sweep configurations.
 
 ### 🦅 Predator Reactive Analysis Console
-- **Calibrated Power Display:** Now shows real-time "Est. Output: XX.X dBm" mapped from calibration data.
-- **Refined Targeting UI:** Renamed "Freq Snipe" to **Manual** mode for improved technical clarity.
-- **Clock-Pull Precision:** Replaced the frequency drift slider with a precise numeric entry field (Hz/s) for exact frequency ramping.
-- **Hydra Telemetry:** Added a dynamic value label to the Hydra slider to show current simultaneous target count.
-- **Advanced Stutter Gating:** 
-    - Added **Burst Frames** control to specify the exact number of consecutive frames to destroy.
-    - Implemented **Clean Count Randomization** toggle to defeat adaptive receiver state machines.
+- **Integrated Calibration Display:** Added real-time "Estimated Output (dBm)" telemetry mapped from the `calibration_matrix.json`.
+- **UI Refinements:** Fixed syntax errors in plotting logic and ensured proper widget scaling for the calibrated power display.
 
-### 🛠️ RF System Calibrator (New Tool)
-- **Manual Entry (Spike) Mode:** Automated USRP sweep logic paired with manual power entry from Spike software for maximum accuracy.
-- **SoapySDR (Auto) Mode:** Integration with Signal Hound BB60D for fully autonomous characterization.
-- **Technique Comparison:** New analysis mode to measure PAPR and power offsets for all 15 synthesis templates relative to a CW tone.
-- **Analytics:** Generates real-time heatmaps of PA flatness and compression points.
-
-### 🚀 DSP & GNU Radio Block
-- **Adaptive Bandwidth Sculpting:** Integrated real-time -10dB occupied bandwidth measurement to automatically match interdiction signals to targets.
-- **Preamble Sabotage (Invisible Mode):** Implemented timing-gated interdiction targeting only the synchronization window (default 20ms).
-- **Stutter Logic V2:** Refactored the `techniquepdu` block to support multi-frame bursts and randomized clean-cycle lengths.
-- **Synthesis-Integrated Transmitter:** The calibration engine now uses the real interdiction block for 1:1 waveform accuracy.
-
-### 🏗️ Deployment & Portability
-- **Tactical Dockerization:** Fully updated `Dockerfile` including `SoapySDR` and all protocol analysis dependencies.
-- **Air-Gap Support:** Enhanced `DOCKER_INSTRUCTIONS.md` with "Surgical Update" guides for disconnected field laptops.
-- **Professional Terminology:** Finalized transition to SIGINT/EW standards across all modules.
+### 🏗️ Architecture & Infrastructure
+- **Dependency Update:** Updated `Dockerfile` and `TechniqueMaker.py` to support `scipy` interpolation and `SoapySDR` requirements.
+- **Documentation Sync:** Refreshed `TECHNIQUES.md` and `README.md` with detailed calibration and characterization workflows.

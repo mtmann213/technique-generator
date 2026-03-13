@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from scipy.interpolate import griddata
+from scipy.interpolate import interp1d
 from techniquemaker import techniquepdu, BaseWaveforms
 
 # Optional SoapySDR import
@@ -37,10 +37,12 @@ class TableWindow(Qt.QWidget):
             for j, p in enumerate(p_targets):
                 val = gain_matrix[i, j]
                 item = Qt.QTableWidgetItem(f"{val:.2f}" if not np.isnan(val) else "---")
-                if np.isnan(val): item.setBackground(Qt.QColor(60, 60, 60))
-                else:
+                if not np.isnan(val):
+                    # Color coding: Green for low gain, Red for high gain
                     alpha = min(255, max(0, int((val - 30) / 40 * 255)))
-                    item.setForeground(Qt.QColor(255, 255 - alpha, 255 - alpha))
+                    item.setBackground(Qt.QColor(alpha, 255 - alpha, 50, 100))
+                else:
+                    item.setBackground(Qt.QColor(60, 60, 60))
                 self.table.setItem(i, j, item)
         layout.addWidget(self.table)
         btn = Qt.QPushButton("Close"); btn.clicked.connect(self.close); layout.addWidget(btn)
@@ -76,14 +78,13 @@ class SystemCalibrator(Qt.QWidget):
         self.results = {}; self.is_running = False; self.tb = None; self.rb = None; self.sdr = None
         self.presets = {}; self.preset_file = "calibrator_presets.json"
         
-        # --- UI Layout ---
         self.layout = Qt.QHBoxLayout(self)
         self.left_panel = Qt.QVBoxLayout()
         self.scroll = QtWidgets.QScrollArea(); self.scroll.setWidgetResizable(True)
         self.scroll_content = Qt.QWidget(); self.scroll_layout = Qt.QVBoxLayout(self.scroll_content)
         self.scroll.setWidget(self.scroll_content); self.left_panel.addWidget(self.scroll)
 
-        # Session Presets
+        # Presets
         preset_box = Qt.QGroupBox("Session Presets")
         preset_grid = Qt.QGridLayout(); preset_box.setLayout(preset_grid)
         self.preset_combo = Qt.QComboBox(); self.preset_combo.currentTextChanged.connect(self.load_selected_preset)
@@ -92,20 +93,25 @@ class SystemCalibrator(Qt.QWidget):
         self.del_btn = Qt.QPushButton("Delete"); self.del_btn.clicked.connect(self.delete_current_preset); preset_grid.addWidget(self.del_btn, 1, 1)
         self.scroll_layout.addWidget(preset_box)
 
-        # Hardware & Sweep Setup
-        hw_box = Qt.QGroupBox("Hardware & Sweep Setup")
+        # Hardware Setup
+        hw_box = Qt.QGroupBox("Hardware Configuration")
         hw_layout = Qt.QFormLayout(); hw_box.setLayout(hw_layout)
         self.tx_serial = Qt.QLineEdit("3457480"); hw_layout.addRow("TX Serial:", self.tx_serial)
         self.rx_mode = Qt.QComboBox(); self.rx_mode.addItems(["USRP (UHD)", "Signal Hound (Soapy)", "Manual Entry (Spike)"]); hw_layout.addRow("Receiver:", self.rx_mode)
         self.rx_serial = Qt.QLineEdit("3457464"); hw_layout.addRow("RX Serial:", self.rx_serial)
         self.atten_ext = Qt.QLineEdit("30"); hw_layout.addRow("Ext Atten (dB):", self.atten_ext)
-        self.f_start = Qt.QLineEdit("900e6"); self.f_stop = Qt.QLineEdit("930e6"); self.f_step = Qt.QLineEdit("5e6")
-        hw_layout.addRow("Freq Start:", self.f_start); hw_layout.addRow("Freq Stop:", self.f_stop); hw_layout.addRow("Freq Step:", self.f_step)
-        self.g_start = Qt.QLineEdit("30"); self.g_stop = Qt.QLineEdit("70"); self.g_step = Qt.QLineEdit("5")
-        hw_layout.addRow("TX Gain Start:", self.g_start); hw_layout.addRow("TX Gain Stop:", self.g_stop); hw_layout.addRow("TX Gain Step:", self.g_step)
         self.scroll_layout.addWidget(hw_box)
 
-        # Operational View Config
+        # Sweep Setup
+        sw_box = Qt.QGroupBox("Sweep Range")
+        sw_layout = Qt.QFormLayout(); sw_box.setLayout(sw_layout)
+        self.f_start = Qt.QLineEdit("900e6"); self.f_stop = Qt.QLineEdit("930e6"); self.f_step = Qt.QLineEdit("5e6")
+        sw_layout.addRow("Freq Start:", self.f_start); sw_layout.addRow("Freq Stop:", self.f_stop); sw_layout.addRow("Freq Step:", self.f_step)
+        self.g_start = Qt.QLineEdit("30"); self.g_stop = Qt.QLineEdit("70"); self.g_step = Qt.QLineEdit("5")
+        sw_layout.addRow("TX Gain Start:", self.g_start); sw_layout.addRow("TX Gain Stop:", self.g_stop); sw_layout.addRow("TX Gain Step:", self.g_step)
+        self.scroll_layout.addWidget(sw_box)
+
+        # Operational Analytics
         ana_box = Qt.QGroupBox("Operational Table Settings")
         ana_layout = Qt.QFormLayout(); ana_box.setLayout(ana_layout)
         self.p_start = Qt.QLineEdit("-20"); self.p_stop = Qt.QLineEdit("30"); self.p_step = Qt.QLineEdit("5")
@@ -130,6 +136,8 @@ class SystemCalibrator(Qt.QWidget):
         self.figure = plt.figure(figsize=(10, 12)); self.canvas = FigureCanvas(self.figure); self.layout.addWidget(self.canvas, stretch=2)
         self.timer = QtCore.QTimer(); self.timer.timeout.connect(self.run_auto_step)
         self.load_presets_from_file()
+
+    def log(self, msg): self.log_area.append(f"[{time.strftime('%H:%M:%S')}] {msg}")
 
     def load_presets_from_file(self):
         if os.path.exists(self.preset_file):
@@ -163,20 +171,15 @@ class SystemCalibrator(Qt.QWidget):
             self.g_start.setText(p.get("g_start", "")); self.g_stop.setText(p.get("g_stop", "")); self.g_step.setText(p.get("g_step", ""))
             self.p_start.setText(p.get("p_start", "-20")); self.p_stop.setText(p.get("p_stop", "30")); self.p_step.setText(p.get("p_step", "5"))
 
-    def log(self, msg): self.log_area.append(f"[{time.strftime('%H:%M:%S')}] {msg}")
-
     def toggle_calibration(self):
         if self.is_running: self.stop_calibration()
         else: self.start_calibration()
 
     def start_calibration(self):
         try:
-            # Inclusive Freq Gen
             fs, fe, fstep = float(eval(self.f_start.text())), float(eval(self.f_stop.text())), float(eval(self.f_step.text()))
             num_f = int(round((fe - fs) / fstep)) + 1
             self.sweep_freqs = np.linspace(fs, fe, num_f)
-            
-            # Inclusive Gain Gen
             gs, ge, gstep = float(self.g_start.text()), float(self.g_stop.text()), float(self.g_step.text())
             num_g = int(round((ge - gs) / gstep)) + 1
             self.sweep_gains = np.linspace(gs, ge, num_g)
@@ -184,7 +187,7 @@ class SystemCalibrator(Qt.QWidget):
             self.current_step = 0; self.results = {}
             self.tb = TransmitBlock(serial=self.tx_serial.text(), technique="Phasor Tones"); self.tb.start()
             if self.rx_mode.currentText() == "USRP (UHD)":
-                self.rb = ReceiveBlock(serial=self.rx_serial.text()); self.rb.start(); self.timer.start(800)
+                self.rb = ReceiveBlock(serial=self.rx_serial.text()); self.rb.start(); self.timer.start(1000)
             self.is_running = True; self.start_btn.setText("STOP"); self.progress.setMaximum(len(self.sweep_freqs) * len(self.sweep_gains))
         except Exception as e: self.log(f"ERROR: {e}"); traceback.print_exc(); self.stop_calibration()
 
@@ -201,10 +204,17 @@ class SystemCalibrator(Qt.QWidget):
         if f_idx >= len(self.sweep_freqs): self.finish_calibration(); return
         freq = self.sweep_freqs[f_idx]; gain = self.sweep_gains[g_idx]
         self.tb.set_freq(freq); self.tb.set_gain(gain)
-        measured_db = -100
-        if self.rb:
-            self.rb.set_freq(freq); time.sleep(0.3); samples = self.rb.get_data()
-            if samples is not None: measured_db = 10 * np.log10(np.abs(np.fft.fft(samples))**2 / len(samples) + 1e-12).max()
+        
+        # Stability Improvement: Multiple snapshots + longer settling
+        measurements = []
+        time.sleep(0.5) # Increased settling
+        for _ in range(5):
+            if self.rb:
+                self.rb.set_freq(freq); time.sleep(0.1)
+                samples = self.rb.get_data()
+                if samples is not None: measurements.append(10 * np.log10(np.abs(np.fft.fft(samples))**2 / len(samples) + 1e-12).max())
+        
+        measured_db = np.mean(measurements) if measurements else -100
         actual_dbm = measured_db + float(self.atten_ext.text())
         if freq not in self.results: self.results[freq] = {}
         self.results[freq][gain] = actual_dbm
@@ -213,36 +223,45 @@ class SystemCalibrator(Qt.QWidget):
         if self.current_step % 10 == 0: self.update_plot()
 
     def get_operational_data(self):
-        points = []; values = []
-        for f in self.results:
-            for g in self.results[f]:
-                points.append((f, self.results[f][g])); values.append(g)
-        if len(points) < 3: return sorted(self.results.keys()), [], np.array([])
         f_list = sorted(self.results.keys())
+        if not f_list: return [], [], np.array([])
         ps, pe, pstep = float(self.p_start.text()), float(self.p_stop.text()), float(self.p_step.text())
         num_p = int(round((pe - ps) / pstep)) + 1
         p_targets = np.linspace(ps, pe, num_p)
-        grid_f, grid_p = np.meshgrid(f_list, p_targets)
-        gain_matrix = griddata(points, values, (grid_f, grid_p), method='linear')
-        return f_list, p_targets, gain_matrix.T
+        gain_matrix = np.zeros((len(f_list), len(p_targets)))
+        
+        for i, f in enumerate(f_list):
+            g_measured = sorted(self.results[f].keys())
+            p_measured = [self.results[f][g] for g in g_measured]
+            
+            # Enforce Monotonicity & Clean Data
+            clean_g = []; clean_p = []
+            last_p = -200
+            for g, p in zip(g_measured, p_measured):
+                if p > last_p: # Must be increasing power
+                    clean_g.append(g); clean_p.append(p); last_p = p
+            
+            if len(clean_p) < 2:
+                gain_matrix[i, :] = np.nan
+                continue
+                
+            f_interp = interp1d(clean_p, clean_g, kind='linear', fill_value="extrapolate")
+            gain_matrix[i, :] = np.clip(f_interp(p_targets), 0, 90)
+            
+        return f_list, p_targets, gain_matrix
 
     def update_plot(self):
         self.figure.clear()
-        if not self.results:
-            return
+        if not self.results: return
         ax = self.figure.add_subplot(111)
         if "Operational" in self.view_select.currentText():
             f_list, p_targets, gain_matrix = self.get_operational_data()
-            if len(p_targets) == 0 or gain_matrix.size == 0:
-                return
+            if len(p_targets) == 0 or gain_matrix.size == 0: return
             im = ax.imshow(gain_matrix, aspect='auto', extent=[p_targets[0], p_targets[-1], f_list[0]/1e6, f_list[-1]/1e6], origin='lower', cmap='gnuplot2')
-            ax.set_xlabel("Target Power (dBm)")
-            ax.set_title("Operational Table (2D Interpolated)")
-            self.figure.colorbar(im, label="Required Gain (dB)")
+            ax.set_xlabel("Target Power (dBm)"); ax.set_title("Operational View (Monotonic Filtered)")
+            self.figure.colorbar(im, label="Gain (dB)")
         else:
-            f_list = sorted(self.results.keys())
-            g_sweep = sorted(self.sweep_gains)
-            data = np.zeros((len(f_list), len(g_sweep)))
+            f_list = sorted(self.results.keys()); g_sweep = sorted(self.sweep_gains); data = np.zeros((len(f_list), len(g_sweep)))
             for i, f in enumerate(f_list):
                 for j, g in enumerate(g_sweep): data[i, j] = self.results[f].get(g, -100)
             im = ax.imshow(data, aspect='auto', extent=[g_sweep[0], g_sweep[-1], f_list[0]/1e6, f_list[-1]/1e6], origin='lower', cmap='plasma')
