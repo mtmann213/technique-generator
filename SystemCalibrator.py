@@ -12,6 +12,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from scipy.interpolate import griddata
 from techniquemaker import techniquepdu, BaseWaveforms
 
 # Optional SoapySDR import
@@ -26,7 +27,7 @@ class TableWindow(Qt.QWidget):
     def __init__(self, f_list, p_targets, gain_matrix):
         super().__init__()
         self.setWindowTitle("Operational Gain Table")
-        self.resize(800, 600)
+        self.resize(950, 750)
         layout = Qt.QVBoxLayout(self)
         self.table = Qt.QTableWidget()
         self.table.setRowCount(len(f_list)); self.table.setColumnCount(len(p_targets))
@@ -35,8 +36,11 @@ class TableWindow(Qt.QWidget):
         for i, f in enumerate(f_list):
             for j, p in enumerate(p_targets):
                 val = gain_matrix[i, j]
-                item = Qt.QTableWidgetItem(f"{val:.2f}" if not np.isnan(val) else "N/A")
-                if np.isnan(val): item.setBackground(Qt.QColor(100, 0, 0))
+                item = Qt.QTableWidgetItem(f"{val:.2f}" if not np.isnan(val) else "---")
+                if np.isnan(val): item.setBackground(Qt.QColor(60, 60, 60))
+                else:
+                    alpha = min(255, max(0, int((val - 30) / 40 * 255)))
+                    item.setForeground(Qt.QColor(255, 255 - alpha, 255 - alpha))
                 self.table.setItem(i, j, item)
         layout.addWidget(self.table)
         btn = Qt.QPushButton("Close"); btn.clicked.connect(self.close); layout.addWidget(btn)
@@ -67,7 +71,7 @@ class ReceiveBlock(gr.top_block):
 class SystemCalibrator(Qt.QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("TechniqueMaker: RF System Calibrator")
+        self.setWindowTitle("TechniqueMaker: RF System Calibrator (Precision Engine)")
         self.resize(1300, 950)
         self.results = {}; self.is_running = False; self.tb = None; self.rb = None; self.sdr = None
         self.presets = {}; self.preset_file = "calibrator_presets.json"
@@ -79,7 +83,7 @@ class SystemCalibrator(Qt.QWidget):
         self.scroll_content = Qt.QWidget(); self.scroll_layout = Qt.QVBoxLayout(self.scroll_content)
         self.scroll.setWidget(self.scroll_content); self.left_panel.addWidget(self.scroll)
 
-        # Presets
+        # Session Presets
         preset_box = Qt.QGroupBox("Session Presets")
         preset_grid = Qt.QGridLayout(); preset_box.setLayout(preset_grid)
         self.preset_combo = Qt.QComboBox(); self.preset_combo.currentTextChanged.connect(self.load_selected_preset)
@@ -88,7 +92,7 @@ class SystemCalibrator(Qt.QWidget):
         self.del_btn = Qt.QPushButton("Delete"); self.del_btn.clicked.connect(self.delete_current_preset); preset_grid.addWidget(self.del_btn, 1, 1)
         self.scroll_layout.addWidget(preset_box)
 
-        # Hardware & Sweep
+        # Hardware & Sweep Setup
         hw_box = Qt.QGroupBox("Hardware & Sweep Setup")
         hw_layout = Qt.QFormLayout(); hw_box.setLayout(hw_layout)
         self.tx_serial = Qt.QLineEdit("3457480"); hw_layout.addRow("TX Serial:", self.tx_serial)
@@ -167,10 +171,18 @@ class SystemCalibrator(Qt.QWidget):
 
     def start_calibration(self):
         try:
-            self.sweep_freqs = np.arange(float(eval(self.f_start.text())), float(eval(self.f_stop.text())) + 1, float(eval(self.f_step.text())))
-            self.sweep_gains = np.arange(float(self.g_start.text()), float(self.g_stop.text()) + 1, float(self.g_step.text()))
+            # Inclusive Freq Gen
+            fs, fe, fstep = float(eval(self.f_start.text())), float(eval(self.f_stop.text())), float(eval(self.f_step.text()))
+            num_f = int(round((fe - fs) / fstep)) + 1
+            self.sweep_freqs = np.linspace(fs, fe, num_f)
+            
+            # Inclusive Gain Gen
+            gs, ge, gstep = float(self.g_start.text()), float(self.g_stop.text()), float(self.g_step.text())
+            num_g = int(round((ge - gs) / gstep)) + 1
+            self.sweep_gains = np.linspace(gs, ge, num_g)
+            
             self.current_step = 0; self.results = {}
-            self.tb = TransmitBlock(serial=self.tx_serial.text()); self.tb.start()
+            self.tb = TransmitBlock(serial=self.tx_serial.text(), technique="Phasor Tones"); self.tb.start()
             if self.rx_mode.currentText() == "USRP (UHD)":
                 self.rb = ReceiveBlock(serial=self.rx_serial.text()); self.rb.start(); self.timer.start(800)
             self.is_running = True; self.start_btn.setText("STOP"); self.progress.setMaximum(len(self.sweep_freqs) * len(self.sweep_gains))
@@ -201,27 +213,39 @@ class SystemCalibrator(Qt.QWidget):
         if self.current_step % 10 == 0: self.update_plot()
 
     def get_operational_data(self):
-        f_list = sorted(self.results.keys()); g_sweep = sorted(self.sweep_gains)
-        p_targets = np.arange(float(self.p_start.text()), float(self.p_stop.text()) + 1, float(self.p_step.text()))
-        gain_matrix = np.zeros((len(f_list), len(p_targets)))
-        for i, f in enumerate(f_list):
-            measured_powers = [self.results[f][g] for g in g_sweep]
-            gain_matrix[i, :] = np.interp(p_targets, measured_powers, g_sweep, left=np.nan, right=np.nan)
-        return f_list, p_targets, gain_matrix
+        points = []; values = []
+        for f in self.results:
+            for g in self.results[f]:
+                points.append((f, self.results[f][g])); values.append(g)
+        if len(points) < 3: return sorted(self.results.keys()), [], np.array([])
+        f_list = sorted(self.results.keys())
+        ps, pe, pstep = float(self.p_start.text()), float(self.p_stop.text()), float(self.p_step.text())
+        num_p = int(round((pe - ps) / pstep)) + 1
+        p_targets = np.linspace(ps, pe, num_p)
+        grid_f, grid_p = np.meshgrid(f_list, p_targets)
+        gain_matrix = griddata(points, values, (grid_f, grid_p), method='linear')
+        return f_list, p_targets, gain_matrix.T
 
     def update_plot(self):
         self.figure.clear()
-        if not self.results: return
+        if not self.results:
+            return
         ax = self.figure.add_subplot(111)
         if "Operational" in self.view_select.currentText():
             f_list, p_targets, gain_matrix = self.get_operational_data()
-            im = ax.imshow(gain_matrix, aspect='auto', extent=[p_targets[0], p_targets[-1], f_list[-1]/1e6, f_list[0]/1e6], cmap='gnuplot2')
-            ax.set_xlabel("Target Power (dBm)"); self.figure.colorbar(im, label="Required Gain (dB)")
+            if len(p_targets) == 0 or gain_matrix.size == 0:
+                return
+            im = ax.imshow(gain_matrix, aspect='auto', extent=[p_targets[0], p_targets[-1], f_list[0]/1e6, f_list[-1]/1e6], origin='lower', cmap='gnuplot2')
+            ax.set_xlabel("Target Power (dBm)")
+            ax.set_title("Operational Table (2D Interpolated)")
+            self.figure.colorbar(im, label="Required Gain (dB)")
         else:
-            f_list = sorted(self.results.keys()); g_sweep = sorted(self.sweep_gains); data = np.zeros((len(f_list), len(g_sweep)))
+            f_list = sorted(self.results.keys())
+            g_sweep = sorted(self.sweep_gains)
+            data = np.zeros((len(f_list), len(g_sweep)))
             for i, f in enumerate(f_list):
                 for j, g in enumerate(g_sweep): data[i, j] = self.results[f].get(g, -100)
-            im = ax.imshow(data, aspect='auto', extent=[g_sweep[0], g_sweep[-1], f_list[-1]/1e6, f_list[0]/1e6], cmap='plasma')
+            im = ax.imshow(data, aspect='auto', extent=[g_sweep[0], g_sweep[-1], f_list[0]/1e6, f_list[-1]/1e6], origin='lower', cmap='plasma')
             ax.set_xlabel("USRP Gain (dB)"); self.figure.colorbar(im, label="Measured dBm")
         ax.set_ylabel("Frequency (MHz)"); self.canvas.draw()
 
@@ -233,12 +257,11 @@ class SystemCalibrator(Qt.QWidget):
     def export_csv(self):
         if not self.results: return
         f_list, p_targets, gain_matrix = self.get_operational_data()
-        path, _ = Qt.QFileDialog.getSaveFileName(self, "Export Table", "calibration_table.csv", "CSV Files (*.csv)")
+        path, _ = Qt.QFileDialog.getSaveFileName(self, "Export Table", "cal_table.csv", "CSV Files (*.csv)")
         if path:
             with open(path, 'w', newline='') as f:
                 writer = csv.writer(f); writer.writerow(["Freq (MHz) \\ Target dBm"] + [f"{p} dBm" for p in p_targets])
                 for i, freq in enumerate(f_list): writer.writerow([f"{freq/1e6:.2f}"] + list(gain_matrix[i, :]))
-            self.log(f"CSV Exported: {path}")
 
     def finish_calibration(self):
         self.stop_calibration(); save_data = {"matrix": {str(k): v for k, v in self.results.items()}, "p_range": [float(self.p_start.text()), float(self.p_stop.text()), float(self.p_step.text())]}
