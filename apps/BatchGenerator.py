@@ -4,7 +4,7 @@ import json
 import time
 import random
 import numpy as np
-from BaseWaveforms import waveform_definitions
+from techniquemaker.BaseWaveforms import waveform_definitions
 
 def generate_dataset(output_dir="dataset", samples_per_tech=100, fs=2e6, duration=0.1):
     """

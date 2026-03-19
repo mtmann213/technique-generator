@@ -15,12 +15,12 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
     def __init__(self):
         gr.top_block.__init__(self, "Predator Reactive Analysis Console")
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("Predator Reactive Analysis Console: USRP 3457480")
+        self.setWindowTitle("Predator Reactive Analysis Console: USRP 34573DD")
 
         # --- Parameters ---
         self.samp_rate = 2e6  
         self.center_freq = 915e6 
-        self.serial = "3457480"
+        self.serial = "34573DD"
         self.rx_gain = 40
         self.tx_gain = 50
         self.target_level = 0.5
@@ -43,7 +43,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.frame_dur = 40.0
         self.is_recording = False
         self.presets = {}
-        self.preset_file = "predator_presets.json"
+        self.preset_file = "config/predator_presets.json"
         self.cal_data = {}
         self.load_calibration()
 
@@ -142,9 +142,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.timer = QtCore.QTimer(); self.timer.timeout.connect(self.check_detections); self.timer.start(100)
 
     def load_calibration(self):
-        if os.path.exists("calibration_matrix.json"):
+        if os.path.exists("config/calibration_matrix.json"):
             try:
-                with open("calibration_matrix.json", "r") as f:
+                with open("config/calibration_matrix.json", "r") as f:
                     raw = json.load(f)
                     self.cal_data = {float(k): {float(gk): gv for gk, gv in v.items()} for k, v in raw.items()}
             except: self.cal_data = {}

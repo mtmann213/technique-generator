@@ -6,7 +6,7 @@ import json
 import hashlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import BaseWaveforms
+from techniquemaker import BaseWaveforms
 
 # --- File Writing Functions ---
 

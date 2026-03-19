@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 # 1. Add the OOT module to the path so we can import the latest BaseWaveforms
 sys.path.append(os.path.abspath("./gr-techniquemaker/python/techniquemaker"))
-import BaseWaveforms as bw
+from techniquemaker import BaseWaveforms as bw
 
 def plot_technique(samples, sample_rate, title):
     """Utility to plot time and freq domain."""

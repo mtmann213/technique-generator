@@ -41,19 +41,19 @@ Examples:
 
     if args.mode == "gui":
         print("--- Launching TechniqueMaker GUI ---")
-        subprocess.run([sys.executable, "BaseGui.py"], env=env, cwd=current_dir)
+        subprocess.run([sys.executable, "apps/BaseGui.py"], env=env, cwd=current_dir)
     
     elif args.mode == "predator":
         print("--- Launching Predator Jammer Console ---")
-        subprocess.run([sys.executable, "PredatorJammer.py"], env=env, cwd=current_dir)
+        subprocess.run([sys.executable, "apps/PredatorJammer.py"], env=env, cwd=current_dir)
 
     elif args.mode == "calibrate":
         print("--- Launching RF System Calibrator ---")
-        subprocess.run([sys.executable, "SystemCalibrator.py"], env=env, cwd=current_dir)
+        subprocess.run([sys.executable, "apps/SystemCalibrator.py"], env=env, cwd=current_dir)
     
     elif args.mode == "batch":
         print("--- Launching AI Batch Generator ---")
-        cmd = [sys.executable, "BatchGenerator.py"]
+        cmd = [sys.executable, "apps/BatchGenerator.py"]
         if args.args: cmd.extend(args.args)
         subprocess.run(cmd, env=env, cwd=current_dir)
     

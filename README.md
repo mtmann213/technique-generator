@@ -41,10 +41,10 @@ TechniqueMaker includes a high-performance **OOT Module** (`gr-techniquemaker`).
 
 ## 🏗️ Project Structure
 *   `TechniqueMaker.py`: Master launcher.
-*   `PredatorJammer.py`: Reactive analysis and interdiction console.
-*   `BaseWaveforms.py`: Core DSP engine (15 Signal Templates).
-*   `DOCKER_INSTRUCTIONS.md`: Complete guide for portable and air-gapped deployment.
-*   `TECHNIQUES.md`: Mathematical and tactical reference for all synthesis algorithms.
+*   `apps/`: Core applications (`PredatorJammer.py`, `SystemCalibrator.py`, `BaseGui.py`).
+*   `docs/`: Documentation (`TECHNIQUES.md`, `DOCKER_INSTRUCTIONS.md`, etc.).
+*   `gr-techniquemaker/`: High-performance GNU Radio OOT Module.
+*   `config/`: User presets and calibration matrices.
 
 ## 🛠️ Requirements
 *   **OS:** Linux (Ubuntu 22.04 recommended)
