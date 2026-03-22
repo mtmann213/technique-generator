@@ -1,63 +1,54 @@
-# Developer Instruction: Reproduce "TechniqueMaker" Tactical RF Suite
+# Developer Instruction: Reproduce "TechniqueMaker" - Unified Python RF Suite
 
 ## 1. Project Vision
-Create a professional-grade SIGINT and reactive interdiction suite capable of real-time spectral analysis, multi-target tracking (Hydra), and surgical channel denial. The suite must be high-performance (C++ core) with a responsive PyQt5 GUI and support air-gapped deployment via Docker.
+Create a professional-grade SIGINT and reactive interdiction suite optimized for **Ettus Research USRPs (UHD)**. The system must be a "Single-Install" Python application that performs real-time spectral analysis, autonomous multi-target interdiction (Hydra), and persistent channel denial (Sticky Trap) without requiring custom C++ OOT modules.
 
 ## 2. System Architecture
-The project uses a **Bilingual OOT (Out-Of-Tree) Module Architecture**:
-*   **Core Engine:** A C++ GNU Radio block (`interdictor_cpp`) for high-bandwidth DSP.
-*   **Fallback/Experimentation:** A Python `sync_block` (`techniquepdu`) mirroring the C++ logic.
-*   **Frontend:** PyQt5-based applications (`PredatorJammer`, `SystemCalibrator`) that dynamically load the C++ core or fall back to Python.
-*   **Configuration:** Centralized `system_config.json` for hardware abstraction.
+*   **Direct Hardware Interface:** Use the `uhd` library (`uhd.usrp_source`, `uhd.usrp_sink`) for native Ettus device control.
+*   **DSP Core:** A custom Python `gr.sync_block` (the "Interdictor") that contains all reactive logic, FFT detection, and multi-signal synthesis.
+*   **Waveform Engine:** A vectorized NumPy library defining 15 surgical templates (LFM Chirps, OFDM Noise, Differential Comb, etc.).
+*   **Frontend:** A high-performance PyQt5 tabbed GUI for real-time waterfall analysis and tactical control.
 
 ## 3. Directory Structure
 ```text
 TechniqueMaker/
-├── TechniqueMaker.py         # Master CLI launcher & Path injector
-├── apps/                     # Professional PyQt5 Applications
-│   ├── PredatorJammer.py     # Main Reactive Console
-│   ├── SystemCalibrator.py   # RF Chain Characterization tool
-│   └── core_utils.py         # ConfigManager & safe parsing
-├── config/                   # Persistent JSON/CSV data
-├── gr-techniquemaker/        # GNU Radio OOT Module (C++ & Python)
-│   ├── lib/                  # Native C++ work() loops & detectors
-│   ├── python/               # DSP Template Library (BaseWaveforms.py)
-│   └── grc/                  # Block YAML bindings
-└── scripts/                  # Install & Docker infrastructure
+├── TechniqueMaker.py         # Master entry point
+├── apps/
+│   ├── PredatorJammer.py     # Main Tactical Console (UHD Integrated)
+│   ├── WaveformEngine.py     # Vectorized DSP templates (NumPy)
+│   └── core_utils.py         # Config & Hardware Discovery
+├── config/
+│   ├── system_config.json    # Hardware serials & RF defaults
+│   └── presets.json          # Mission scenarios
+└── docs/                     # Mathematical & tactical guides
 ```
 
-## 4. Key Mathematical Implementations
+## 4. Tactical Logic Implementation
 
-### 4.1 Hydra Auto-Surgical Detector (C++)
-Implement a windowed FFT pipeline in the `work()` loop:
-1.  Fill circular buffer -> Windowed FFT -> Magnitude to dB.
-2.  **Island Detection:** Group contiguous bins above `threshold_db`.
-3.  **Estimation:** Calculate `center_freq` and `-10dB bandwidth`.
-4.  **Resampled Synthesis:** For each target, use **Linear Interpolation** to resample the base "Warhead" waveform:
-    $$s(t) = s[n] \cdot (1 - frac) + s[n+1] \cdot frac$$
-5.  **Multi-Target Summation:** Sum all resampled/mixed targets into the output stream.
+### 4.1 Hydra Auto-Surgical Logic (Python/NumPy)
+Implement spectral detection inside the Python block's `work()` function:
+1.  **FFT Detection:** Compute a windowed FFT of the input stream.
+2.  **Surgical Mapping:** Identify peaks above threshold; calculate center frequency and bandwidth.
+3.  **Matched Synthesis:** Dynamically resample base waveforms using NumPy linear interpolation to match target bandwidths.
+4.  **Multi-Target Mixing:** Shift each synthesized jammer to its target frequency and sum them into the output buffer.
 
-### 4.2 Sticky Channel Denial
-Implement a state machine that appends newly discovered target frequencies to a `std::vector<Target>`. 
-1.  **Look-through Gating:** Implement a sample counter to toggle between `JAM` and `LOOK` states (e.g., 90% duty cycle).
-2.  Silence the output during `LOOK` to prevent self-interference during spectral discovery.
+### 4.2 Sticky Channel Denial (Persistent Trap)
+Maintain a persistent state within the Python block:
+*   **Memory:** Store a list of detected frequencies. Even when the target hopper moves, the jammer continues firing on those coordinates.
+*   **Gated Look-through:** Implement a high-precision sample counter to toggle the TX output. Periodically silence the jammer (e.g., 5ms every 50ms) to allow the detector to see the "clean" spectrum and find new hops.
 
-### 4.3 RF Calibration (Python)
-Implement **2D Smart Interpolation**:
-*   Perform Frequency vs. Gain sweeps.
-*   Enforce **Monotonic Filtering** (discard points where Pwr drops as Gain increases).
-*   Use `scipy.interpolate.interp1d` with `fill_value="extrapolate"` to generate an inverse lookup table (Target Pwr -> Required Gain).
+### 4.3 Direct Ettus Control
+*   **Discovery:** Implement `uhd.find_devices()` to populate a UI dropdown.
+*   **Tuning:** Support real-time gain, frequency, and sample rate updates via the UHD API.
 
 ## 5. Functional Requirements for the LLM
-1.  **DSP Templates:** Implement 15 vectorized waveforms (LFM Chirps, FHSS Noise, Differential Comb, Correlator Confusion).
-2.  **Hardware Hot-Plug:** Use `uhd.find_devices()` to populate a UI dropdown; allow dynamic Connect/Disconnect without restarting the flowgraph.
-3.  **High-Performance Mixing:** All mixing must happen in C++ using optimized phasor multiplication.
-4.  **Logging:** Use standard `logging` module with file and console handlers.
+1.  **Zero-Build Install:** The entire project should run with `pip install gnuradio uhd pyqt5 numpy scipy`. No C++ compilation required.
+2.  **Waveform Library:** Implement 15 templates including: Differential Comb (OFDM Erasure), Correlator Confusion (DF-OFDM Sabotage), Swept Noise, and LFM Chirps.
+3.  **Virtual Mode:** Allow the GUI to launch and simulate logic without an SDR physically connected.
+4.  **Hardware Hot-Plug:** Allow the user to Scan, Select, and Connect to USRPs by serial number within the GUI.
 
 ## 6. Implementation Order
-1.  Scaffold the `gr-techniquemaker` GNU Radio module (C++ template).
-2.  Implement the `BaseWaveforms.py` DSP math.
-3.  Build the C++ `work()` loop with FFT detection and multi-target summation.
-4.  Create the `ConfigManager` and centralized JSON structure.
-5.  Build the `PredatorJammer` Tabbed UI.
-6.  Implement the `SystemCalibrator` with CSV export and table views.
+1.  Build the `WaveformEngine.py` with 15 signal templates.
+2.  Implement the `PredatorJammer` Python block with FFT detection and Look-through gating.
+3.  Create the PyQt5 tabbed interface with Header-based Tuning.
+4.  Integrate the `uhd` source/sink blocks with dynamic serial number loading.
