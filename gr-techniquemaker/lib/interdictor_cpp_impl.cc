@@ -1,5 +1,6 @@
 #include "interdictor_cpp_impl.h"
 #include <gnuradio/io_signature.h>
+#include <gnuradio/fft/fft.h>
 #include <random>
 #include <cmath>
 #include <iostream>
@@ -85,8 +86,12 @@ interdictor_cpp_impl::interdictor_cpp_impl(const std::string& technique,
       d_current_clock_pull_phase(0.0),
       d_stutter_state(0),
       d_stutter_counter(0),
-      d_current_clean_limit(stutter_clean_count)
+      d_current_clean_limit(stutter_clean_count),
+      d_fft_ptr(0),
+      d_fft_size(1024),
+      d_dwell_counter(0)
 {
+    d_fft_buffer.resize(d_fft_size, std::complex<float>(0, 0));
     update_waveform();
 }
 
@@ -94,7 +99,7 @@ interdictor_cpp_impl::~interdictor_cpp_impl()
 {
 }
 
-void normalize_signal(std::vector<std::complex<float>>& wf, float target = 1.0f) {
+void normalize_signal_cpp(std::vector<std::complex<float>>& wf, float target = 1.0f) {
     float max_abs = 0.0f;
     for (const auto& s : wf) {
         float a = std::abs(s);
@@ -118,7 +123,7 @@ void interdictor_cpp_impl::generate_narrowband_noise()
     std::random_device rd; std::mt19937 gen(rd());
     std::normal_distribution<float> dist(0.0f, 1.0f);
     for (int i = 0; i < num_samples; ++i) d_base_waveform[i] = std::complex<float>(dist(gen), dist(gen));
-    normalize_signal(d_base_waveform);
+    normalize_signal_cpp(d_base_waveform);
 }
 
 void interdictor_cpp_impl::generate_phasor_tones()
@@ -132,7 +137,7 @@ void interdictor_cpp_impl::generate_phasor_tones()
             d_base_waveform[i] += std::complex<float>(cos(phase), sin(phase));
         }
     }
-    normalize_signal(d_base_waveform);
+    normalize_signal_cpp(d_base_waveform);
 }
 
 void interdictor_cpp_impl::generate_cosine_tones()
@@ -146,7 +151,7 @@ void interdictor_cpp_impl::generate_cosine_tones()
             d_base_waveform[i] += std::complex<float>(val, 0);
         }
     }
-    normalize_signal(d_base_waveform);
+    normalize_signal_cpp(d_base_waveform);
 }
 
 void interdictor_cpp_impl::generate_swept_noise()
@@ -163,7 +168,7 @@ void interdictor_cpp_impl::generate_swept_noise()
         std::complex<float> noise(dist(gen), dist(gen));
         d_base_waveform[i] = noise * std::complex<float>(cos(phase), sin(phase));
     }
-    normalize_signal(d_base_waveform);
+    normalize_signal_cpp(d_base_waveform);
 }
 
 void interdictor_cpp_impl::generate_lfm_chirp()
@@ -211,7 +216,7 @@ void interdictor_cpp_impl::generate_swept_phasors()
             d_base_waveform[i] += std::complex<float>(cos(cumulative_phase), sin(cumulative_phase));
         }
     }
-    normalize_signal(d_base_waveform);
+    normalize_signal_cpp(d_base_waveform);
 }
 
 void interdictor_cpp_impl::generate_swept_cosines()
@@ -230,7 +235,7 @@ void interdictor_cpp_impl::generate_swept_cosines()
             d_base_waveform[i] += std::complex<float>(cos(cumulative_phase), 0);
         }
     }
-    normalize_signal(d_base_waveform);
+    normalize_signal_cpp(d_base_waveform);
 }
 
 void interdictor_cpp_impl::generate_rrc_noise() { generate_narrowband_noise(); }
@@ -245,24 +250,59 @@ void interdictor_cpp_impl::generate_differential_comb()
 {
     int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
     d_base_waveform.assign(num_samples, std::complex<float>(0, 0));
-    
-    double spacing = d_bandwidth_hz; // Reusing bandwidth field for spacing
+    double spacing = d_bandwidth_hz; 
     int count = d_num_targets > 0 ? d_num_targets : 10;
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> dist(0.0f, 2.0f * M_PI);
-    
+    std::random_device rd; std::mt19937 gen(rd()); std::uniform_real_distribution<float> dist(0.0f, 2.0f * M_PI);
     int K = count / 2;
     for (int k = -K; k <= K; ++k) {
-        double freq = k * spacing;
-        float phase_offset = dist(gen);
+        double freq = k * spacing; float phase_offset = dist(gen);
         for (int i = 0; i < num_samples; ++i) {
             float phase = 2.0f * M_PI * freq * i / d_sample_rate_hz + phase_offset;
             d_base_waveform[i] += std::complex<float>(cos(phase), sin(phase));
         }
     }
-    normalize_signal(d_base_waveform);
+    normalize_signal_cpp(d_base_waveform);
+}
+
+void interdictor_cpp_impl::perform_spectral_detection()
+{
+    if (d_fft_ptr < d_fft_size) return;
+
+    gr::fft::fft<std::complex<float>, true> fft(d_fft_size);
+    std::vector<std::complex<float>> out(d_fft_size);
+    memcpy(fft.get_inbuf(), &d_fft_buffer[0], d_fft_size * sizeof(std::complex<float>));
+    fft.execute();
+    memcpy(&out[0], fft.get_outbuf(), d_fft_size * sizeof(std::complex<float>));
+
+    d_tracked_targets.clear();
+    bool in_island = false;
+    int start_bin = 0;
+
+    for (int i = 0; i < d_fft_size; i++) {
+        float mag_sq = out[i].real()*out[i].real() + out[i].imag()*out[i].imag();
+        float db = 10.0f * log10f(mag_sq / d_fft_size + 1e-12f);
+
+        if (db > d_reactive_threshold_db) {
+            if (!in_island) {
+                in_island = true;
+                start_bin = i;
+            }
+        } else {
+            if (in_island) {
+                in_island = false;
+                int end_bin = i - 1;
+                Target t;
+                int center_bin = (start_bin + end_bin) / 2;
+                if (center_bin > d_fft_size / 2) center_bin -= d_fft_size;
+                t.center_freq = (double)center_bin * d_sample_rate_hz / d_fft_size;
+                t.bandwidth = (double)(end_bin - start_bin) * d_sample_rate_hz / d_fft_size;
+                t.active = true;
+                d_tracked_targets.push_back(t);
+                if (d_tracked_targets.size() >= (size_t)d_num_targets) break;
+            }
+        }
+    }
+    d_fft_ptr = 0;
 }
 
 void interdictor_cpp_impl::update_waveform()
@@ -290,7 +330,7 @@ void interdictor_cpp_impl::update_waveform()
 // Setters
 void interdictor_cpp_impl::set_technique(const std::string& technique) { d_technique = technique; update_waveform(); }
 void interdictor_cpp_impl::set_sample_rate_hz(double sample_rate_hz) { d_sample_rate_hz = sample_rate_hz; update_waveform(); }
-void interdictor_cpp_impl::set_bandwidth_hz(double bandwidth_hz) { d_bandwidth_hz = bandwidth_hz; update_waveform(); }
+void interdictor_cpp_impl::set_bandwidth_hz(double bandwidth_hz) { d_bandwidth_hz = bandwidth_hz; }
 void interdictor_cpp_impl::set_reactive_threshold_db(double reactive_threshold_db) { d_reactive_threshold_db = reactive_threshold_db; }
 void interdictor_cpp_impl::set_reactive_dwell_ms(double reactive_dwell_ms) { d_reactive_dwell_ms = reactive_dwell_ms; }
 void interdictor_cpp_impl::set_num_targets(int num_targets) { d_num_targets = num_targets; }
@@ -312,21 +352,52 @@ int interdictor_cpp_impl::work(int noutput_items,
                                gr_vector_const_void_star &input_items,
                                gr_vector_void_star &output_items)
 {
-    (void)input_items;
+    const gr_complex *in = (const gr_complex *) input_items[0];
     gr_complex *out = (gr_complex *) output_items[0];
-    if (!d_jamming_enabled) { std::fill(out, out + noutput_items, std::complex<float>(0, 0)); return noutput_items; }
-    int wf_len = d_base_waveform.size();
-    if (wf_len == 0) { std::fill(out, out + noutput_items, std::complex<float>(0, 0)); return noutput_items; }
-    double freq_offset = d_manual_mode ? d_manual_freq : 0.0;
-    for (int i = 0; i < noutput_items; i++) {
-        std::complex<float> base_sample = d_base_waveform[d_waveform_idx];
-        d_waveform_idx = (d_waveform_idx + 1) % wf_len;
-        if (freq_offset != 0.0) {
-            float phase = 2.0f * M_PI * freq_offset * d_total_samples_processed / d_sample_rate_hz;
-            out[i] = base_sample * std::complex<float>(cos(phase), sin(phase));
-        } else out[i] = base_sample;
-        d_total_samples_processed++;
+
+    // Detection (Fill FFT buffer)
+    for (int i = 0; i < noutput_items && d_fft_ptr < d_fft_size; i++) {
+        d_fft_buffer[d_fft_ptr++] = in[i];
     }
+    if (d_fft_ptr >= d_fft_size) perform_spectral_detection();
+
+    if (!d_jamming_enabled) {
+        std::fill(out, out + noutput_items, std::complex<float>(0, 0));
+        return noutput_items;
+    }
+
+    int wf_len = d_base_waveform.size();
+    if (wf_len == 0) {
+        std::fill(out, out + noutput_items, std::complex<float>(0, 0));
+        return noutput_items;
+    }
+
+    if (d_output_mode == "Auto-Surgical") {
+        // Multi-Target Surgical Summation
+        std::fill(out, out + noutput_items, std::complex<float>(0, 0));
+        for (const auto& target : d_tracked_targets) {
+            if (!target.active) continue;
+            for (int i = 0; i < noutput_items; i++) {
+                float phase = 2.0f * M_PI * target.center_freq * (d_total_samples_processed + i) / d_sample_rate_hz;
+                out[i] += d_base_waveform[(d_waveform_idx + i) % wf_len] * std::complex<float>(cos(phase), sin(phase));
+            }
+        }
+        d_waveform_idx = (d_waveform_idx + noutput_items) % wf_len;
+        d_total_samples_processed += noutput_items;
+    } else {
+        // Single Target / Manual mode
+        double freq_offset = d_manual_mode ? d_manual_freq : 0.0;
+        for (int i = 0; i < noutput_items; i++) {
+            std::complex<float> base_sample = d_base_waveform[d_waveform_idx];
+            d_waveform_idx = (d_waveform_idx + 1) % wf_len;
+            if (freq_offset != 0.0) {
+                float phase = 2.0f * M_PI * freq_offset * d_total_samples_processed / d_sample_rate_hz;
+                out[i] = base_sample * std::complex<float>(cos(phase), sin(phase));
+            } else out[i] = base_sample;
+            d_total_samples_processed++;
+        }
+    }
+    
     return noutput_items;
 }
 

@@ -4,7 +4,8 @@
         "rx_usrp_serial": "3457464",
         "signal_hound_serial": "24248760",
         "default_sample_rate_hz": 2000000,
-        "default_center_freq_hz": 915000000
+        "default_center_freq_hz": 915000000,
+        "fft_detection_size": 1024
     },
     "rf_defaults": {
         "tx_gain": 50,

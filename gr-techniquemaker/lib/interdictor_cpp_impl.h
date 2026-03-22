@@ -40,6 +40,18 @@ private:
     int d_stutter_counter;
     int d_current_clean_limit;
     
+    // Hydra Tracking State
+    struct Target {
+        double center_freq;
+        double bandwidth;
+        bool active;
+    };
+    std::vector<Target> d_tracked_targets;
+    std::vector<std::complex<float>> d_fft_buffer;
+    int d_fft_ptr;
+    int d_fft_size;
+    int d_dwell_counter;
+
     // Core Waveform Generators
     void generate_cw_tone();
     void generate_narrowband_noise();
@@ -58,6 +70,7 @@ private:
     void generate_correlator_confusion();
     void generate_song();
     void generate_differential_comb();
+    void perform_spectral_detection();
     void update_waveform();
 
 public:
