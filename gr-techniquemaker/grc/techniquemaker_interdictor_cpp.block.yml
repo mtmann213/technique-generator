@@ -52,8 +52,8 @@ parameters:
   label: Technique
   dtype: enum
   default: "'Direct CW'"
-  options: ["'Direct CW'", "'CW Tone (Pure)'", "'Narrowband Noise'"]
-  option_labels: ['Direct CW', 'CW Tone (Pure)', 'Narrowband Noise']
+  options: ["'Direct CW'", "'CW Tone (Pure)'", "'Narrowband Noise'", "'RRC Modulated Noise'", "'Swept Noise'", "'Chunked Noise'", "'Noise Tones'", "'Cosine Tones'", "'Phasor Tones'", "'Swept Phasors'", "'Swept Cosines'", "'FM Cosine'", "'LFM Chirp'", "'FHSS Noise'", "'OFDM-Shaped Noise'", "'Song Maker'", "'Correlator Confusion'"]
+  option_labels: ['Direct CW', 'CW Tone (Pure)', 'Narrowband Noise', 'RRC Modulated Noise', 'Swept Noise', 'Chunked Noise', 'Noise Tones', 'Cosine Tones', 'Phasor Tones', 'Swept Phasors', 'Swept Cosines', 'FM Cosine', 'LFM Chirp', 'FHSS Noise', 'OFDM-Shaped Noise', 'Song Maker', 'Correlator Confusion']
 
 - id: sample_rate_hz
   label: Sample Rate (Hz)

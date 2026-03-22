@@ -45,6 +45,18 @@ private:
     void generate_narrowband_noise();
     void generate_phasor_tones();
     void generate_swept_noise();
+    void generate_rrc_noise();
+    void generate_chunked_noise();
+    void generate_noise_tones();
+    void generate_cosine_tones();
+    void generate_swept_phasors();
+    void generate_swept_cosines();
+    void generate_fm_cosine();
+    void generate_lfm_chirp();
+    void generate_fhss_noise();
+    void generate_ofdm_noise();
+    void generate_correlator_confusion();
+    void generate_song();
     void update_waveform();
 
 public:
