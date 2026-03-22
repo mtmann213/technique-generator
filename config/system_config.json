@@ -1,0 +1,18 @@
+{
+    "hardware": {
+        "tx_usrp_serial": "34573DD",
+        "rx_usrp_serial": "3457464",
+        "signal_hound_serial": "24248760",
+        "default_sample_rate_hz": 2000000,
+        "default_center_freq_hz": 915000000
+    },
+    "rf_defaults": {
+        "tx_gain": 50,
+        "rx_gain": 40,
+        "external_attenuation_db": 30
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "techniquemaker.log"
+    }
+}

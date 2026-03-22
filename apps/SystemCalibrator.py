@@ -13,6 +13,7 @@ matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from scipy.interpolate import interp1d
+from core_utils import ConfigManager, parse_scientific_notation
 from techniquemaker import techniquepdu, BaseWaveforms
 
 # Optional SoapySDR import
@@ -78,6 +79,9 @@ class ReceiveBlock(gr.top_block):
 class SystemCalibrator(Qt.QWidget):
     def __init__(self):
         super().__init__()
+        self.config_manager = ConfigManager()
+        self.sys_logger = self.config_manager.get_logger()
+        
         self.setWindowTitle("TechniqueMaker: RF System Calibrator (Precision Engine)")
         self.resize(1300, 950)
         self.results = {}; self.tech_deltas = {}; self.is_running = False; self.tb = None; self.rb = None; self.sdr = None
@@ -101,11 +105,11 @@ class SystemCalibrator(Qt.QWidget):
         # Hardware Setup
         hw_box = Qt.QGroupBox("Hardware Configuration")
         hw_layout = Qt.QFormLayout(); hw_box.setLayout(hw_layout)
-        self.tx_serial = Qt.QLineEdit("34573DD"); hw_layout.addRow("TX Serial:", self.tx_serial)
+        self.tx_serial = Qt.QLineEdit(self.config_manager.get("hardware", "tx_usrp_serial", "34573DD")); hw_layout.addRow("TX Serial:", self.tx_serial)
         self.rx_mode = Qt.QComboBox(); self.rx_mode.addItems(["USRP (UHD)", "Signal Hound (Soapy)", "Manual Entry (Spike)"]); hw_layout.addRow("Receiver Type:", self.rx_mode)
-        self.rx_serial = Qt.QLineEdit("3457464"); hw_layout.addRow("RX Serial:", self.rx_serial)
-        self.rx_gain_input = Qt.QLineEdit("40"); hw_layout.addRow("RX USRP Gain (dB):", self.rx_gain_input)
-        self.atten_ext = Qt.QLineEdit("30"); hw_layout.addRow("Ext Atten (dB):", self.atten_ext)
+        self.rx_serial = Qt.QLineEdit(self.config_manager.get("hardware", "rx_usrp_serial", "3457464")); hw_layout.addRow("RX Serial:", self.rx_serial)
+        self.rx_gain_input = Qt.QLineEdit(str(self.config_manager.get("rf_defaults", "rx_gain", 40))); hw_layout.addRow("RX USRP Gain (dB):", self.rx_gain_input)
+        self.atten_ext = Qt.QLineEdit(str(self.config_manager.get("rf_defaults", "external_attenuation_db", 30))); hw_layout.addRow("Ext Atten (dB):", self.atten_ext)
         self.scroll_layout.addWidget(hw_box)
 
         # Sweep Configuration
@@ -145,7 +149,9 @@ class SystemCalibrator(Qt.QWidget):
         self.timer = QtCore.QTimer(); self.timer.timeout.connect(self.run_auto_step)
         self.load_presets_from_file()
 
-    def log(self, msg): self.log_area.append(f"[{time.strftime('%H:%M:%S')}] {msg}")
+    def log(self, msg):
+        self.sys_logger.info(msg)
+        self.log_area.append(f"[{time.strftime('%H:%M:%S')}] {msg}")
 
     def load_presets_from_file(self):
         if os.path.exists(self.preset_file):
@@ -192,11 +198,11 @@ class SystemCalibrator(Qt.QWidget):
         try:
             if self.cal_mode.currentText() == "Technique Comparison":
                 self.sweep_techs = ["Direct CW", "CW Tone (Pure)"] + list(BaseWaveforms.waveform_definitions.keys())
-                self.sweep_freqs = [float(eval(self.f_start.text()))]
+                self.sweep_freqs = [float(parse_scientific_notation(self.f_start.text()))]
                 self.sweep_gains = [float(self.g_start.text())]
             else:
                 self.sweep_techs = [self.tech_select.currentText()]
-                fs, fe, fstep = float(eval(self.f_start.text())), float(eval(self.f_stop.text())), float(eval(self.f_step.text()))
+                fs, fe, fstep = float(parse_scientific_notation(self.f_start.text())), float(parse_scientific_notation(self.f_stop.text())), float(parse_scientific_notation(self.f_step.text()))
                 num_f = int(round((fe - fs) / fstep)) + 1
                 self.sweep_freqs = np.linspace(fs, fe, num_f)
                 gs, ge, gstep = float(self.g_start.text()), float(self.g_stop.text()), float(self.g_step.text())

@@ -10,19 +10,26 @@ import signal
 import sip
 import os
 from techniquemaker import techniquepdu, BaseWaveforms
+from core_utils import ConfigManager, parse_scientific_notation
 
 class PredatorJammer(gr.top_block, Qt.QWidget):
     def __init__(self):
         gr.top_block.__init__(self, "Predator Reactive Analysis Console")
         Qt.QWidget.__init__(self)
-        self.setWindowTitle("Predator Reactive Analysis Console: USRP 34573DD")
+        
+        self.config_manager = ConfigManager()
+        self.sys_logger = self.config_manager.get_logger()
+        
+        # Load defaults from config
+        self.serial = self.config_manager.get("hardware", "tx_usrp_serial", "34573DD")
+        self.samp_rate = self.config_manager.get("hardware", "default_sample_rate_hz", 2e6)
+        self.center_freq = self.config_manager.get("hardware", "default_center_freq_hz", 915e6)
+        self.rx_gain = self.config_manager.get("rf_defaults", "rx_gain", 40)
+        self.tx_gain = self.config_manager.get("rf_defaults", "tx_gain", 50)
+        
+        self.setWindowTitle(f"Predator Reactive Analysis Console: USRP {self.serial}")
 
         # --- Parameters ---
-        self.samp_rate = 2e6  
-        self.center_freq = 915e6 
-        self.serial = "34573DD"
-        self.rx_gain = 40
-        self.tx_gain = 50
         self.target_level = 0.5
         self.threshold = -45  
         self.bw = 100e3
