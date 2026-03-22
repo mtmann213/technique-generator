@@ -45,6 +45,7 @@ private:
         double center_freq;
         double bandwidth;
         bool active;
+        double resample_ptr;
     };
     std::vector<Target> d_tracked_targets;
     std::vector<std::complex<float>> d_fft_buffer;

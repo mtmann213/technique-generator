@@ -1,69 +1,43 @@
-# TechniqueMaker: Signal Synthesis & Interdiction Reference
+# TechniqueMaker: Mathematical & Tactical Reference
 
-This guide provides the mathematical and tactical foundations for the signal templates and interdiction strategies available in the TechniqueMaker suite.
-
----
-
-## 🛰️ Signal Synthesis Templates
-These algorithms generate the raw "payload" of an interdiction signal.
-
-### 1. Narrowband Noise
-*   **Math:** White Gaussian Noise (WGN) filtered to a specific bandwidth.
-*   **Tactical Use:** Basic barrage interference across a fixed channel.
-
-### 2. RRC Modulated Noise
-*   **Math:** Noise shaped by a Root-Raised Cosine filter.
-*   **Tactical Use:** Mimics the spectral footprint of digital comms (PSK/QAM) to test filter resilience.
-
-### 3. Swept Noise / Phasors
-*   **Math:** A narrowband source multiplied by a linear frequency ramp ($e^{j \pi k t^2}$).
-*   **Tactical Use:** Disruption of frequency-hopping targets by covering a wide span rapidly.
-
-### 4. LFM Chirp
-*   **Math:** A pure tone with linear frequency modulation.
-*   **Tactical Use:** Standard radar pulse simulation; used for range resolution stress-testing.
-
-### 5. OFDM-Shaped Noise
-*   **Math:** Frequency-domain subcarrier population with Cyclic Prefix (CP) insertion.
-*   **Tactical Use:** Protocol-matched interference for 4G/5G and WiFi systems.
-
-### 6. Correlator Confusion
-*   **Math:** Randomized Zadoff-Chu sequences with phase inversions and timing jitter.
-*   **Tactical Use:** Triggers false "Start of Burst" events in C++ correlators, causing depacketizer buffer overflows or misalignment.
+This document provides the technical theory and tactical deployment guidelines for all synthesis algorithms and interdiction strategies within the suite.
 
 ---
 
-## 🦅 Advanced Interdiction Strategies
-These logic-based modes control **when** and **how** the templates are applied to dismantle complex digital links.
+## 1. Interdiction Strategies (The "Brains")
 
-### 1. Preamble Sabotage (Invisible Mode)
-*   **Mechanism:** High-precision timing gating.
-*   **Logic:** Once a target is detected, the interdiction is active only for the first **10–20ms** of the burst.
-*   **Impact:** Destroys the **Synchronization Sequence** (Preamble). Without a clean preamble, the receiver fails to perform Time/Frequency Acquisition and FFT window alignment. The link dies while the spectrum appears 95% clean.
+### 1.1 Hydra Auto-Surgical Comb (C++ Core)
+The Hydra engine performs real-time spectral analysis using a high-speed windowed FFT pipeline in native C++.
+*   **Detection:** Identifies "Energy Islands" crossing a user-defined power threshold (dB).
+*   **Estimation:** Calculates the center frequency and -10dB bandwidth of every detected target.
+*   **Synthesis:** Dynamically sums multiple interference "teeth" into a single output stream.
+*   **Matched-Bandwidth Resampling:** Uses linear interpolation to scale the interference signal's width to perfectly match the target's spectral footprint, maximizing power-on-target efficiency.
 
-### 2. Clock-Pull Drift (Tracking Loop Attack)
-*   **Mechanism:** Frequency-domain ramping.
-*   **Logic:** After locking onto a target, the Predator introduces a linear frequency drift (e.g., +5 kHz/s).
-*   **Impact:** Attacks the receiver's **Phase-Locked Loop (PLL)**. The tracking loop "latches" onto the interdiction signal and is pulled away from the real carrier frequency, causing constellation rotation and eventual loss of synchronization.
+### 1.2 Sticky Channel Denial (Persistent Trap)
+Designed to counter frequency hoppers by "burning" their hopset one channel at a time.
+*   **Persistent Latching:** Once a hopper hits a frequency, that channel is added to a persistent list and jammed continuously until manually reset.
+*   **Gated Look-through:** Implements a duty-cycle (e.g., 90ms Jam / 10ms Silence). During the silence window, the C++ core scans for *new* hops without self-interference.
 
-### 3. Stability Frame Stutter (State-Machine Attack)
-*   **Mechanism:** Periodic frame erasure.
-*   **Logic:** Allows $X$ frames to pass through cleanly (**Clean Frames**), then pulses a burst to destroy the next $Y$ frames (**Burst Frames**).
-*   **Randomization:** If enabled, the number of clean frames is randomized between 1 and $X$ for each cycle, preventing the receiver's AGC or FEC logic from adapting to a fixed pattern.
-*   **Impact:** Targets the **Link Layer State Machine**. Tactical links require $N$ consecutive clean frames to declare a "Stable" link. By resetting the stability counter to zero every few frames, the link stays in a perpetual acquisition state.
+---
 
-### 4. RF Chain Calibration (System Characterization)
-*   **Mechanism:** Automated Full-Matrix Sweep (Frequency vs. USRP Gain).
-*   **Target:** The physical hardware chain (USRP -> Power Amplifier -> Attenuators).
-*   **Output:** Generates a lookup table used by the Predator console to translate relative USRP gain settings into actual estimated output power in **dBm**.
-*   **Integration:** Supports Signal Hound BB60D via SoapySDR for high-accuracy peak power measurement.
+## 2. Signal Templates (The "Warheads")
 
-### 5. Adaptive Bandwidth Sculpting
-*   **Mechanism:** Real-time spectral edge detection.
-*   **Logic:** Measures the **-10dB Occupied Bandwidth** of the detected signal and resizes the FIR filter of the template to match.
-*   **Impact:** Concentrates 100% of the SDR's transmit power exactly within the target's channel, maximizing **Power Spectral Density** and defeating wideband filtering.
+### 2.1 Differential Comb
+A high-precision technique that generates narrow spectral spikes at exact intervals.
+*   **Theory:** $x(t) = \sum A \cdot e^{j(2\pi \cdot k \cdot \Delta f \cdot t + \phi_k)}$
+*   **Tactical Use:** Disruption of specific subcarrier architectures (e.g., 15kHz or 30kHz) in OFDM-based datalinks.
 
-### 5. Hydra Multi-Targeting
-*   **Mechanism:** Windowed FFT peak suppression.
-*   **Logic:** Identifies up to 8 simultaneous signal peaks and synthesizes a composite interdiction signal.
-*   **Impact:** Prevents link diversity and disrupts mesh networks by interdicting multiple frequencies or "hops" simultaneously.
+### 2.2 Narrowband Noise
+Band-limited white Gaussian noise (AWGN) filtered to match the target's bandwidth.
+*   **Tactical Use:** General-purpose disruption of analog or simple digital modulations.
+
+### 2.3 Correlator Confusion
+Generates phase-inverted preamble sequences to trigger false correlations in C++ based receivers.
+*   **Tactical Use:** Breaking the FFT window alignment in OFDM depacketizers.
+
+---
+
+## 3. High-Performance C++ Engine
+The core interdiction logic is implemented in native C++ to bypass the Python Global Interpreter Lock (GIL).
+*   **Supported Bandwidths:** Optimized for 20MHz+ real-time processing.
+*   **Graceful Fallback:** Automatic detection of C++ binaries with seamless transition to Python-based math if needed.

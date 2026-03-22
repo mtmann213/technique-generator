@@ -306,9 +306,9 @@ void interdictor_cpp_impl::perform_spectral_detection()
                     for (const auto& existing : d_tracked_targets) {
                         if (std::abs(existing.center_freq - cf) < (bw/2)) { exists = true; break; }
                     }
-                    if (!exists) d_tracked_targets.push_back({cf, bw, true});
+                    if (!exists) d_tracked_targets.push_back({cf, bw, true, 0.0});
                 } else {
-                    d_tracked_targets.push_back({cf, bw, true});
+                    d_tracked_targets.push_back({cf, bw, true, 0.0});
                 }
                 
                 if (!d_sticky_denial && d_tracked_targets.size() >= (size_t)d_num_targets) break;
@@ -394,14 +394,30 @@ int interdictor_cpp_impl::work(int noutput_items,
 
     std::fill(out, out + noutput_items, std::complex<float>(0, 0));
     if (d_output_mode == "Auto-Surgical") {
-        for (const auto& target : d_tracked_targets) {
+        // Multi-Target Matched-Bandwidth Surgical Summation
+        std::fill(out, out + noutput_items, std::complex<float>(0, 0));
+        double native_bw = d_bandwidth_hz > 0 ? d_bandwidth_hz : 100000.0;
+
+        for (auto& target : d_tracked_targets) {
             if (!target.active) continue;
+            double bw_ratio = target.bandwidth / native_bw;
+            
             for (int i = 0; i < noutput_items; i++) {
                 float phase = 2.0f * M_PI * target.center_freq * (d_total_samples_processed + i) / d_sample_rate_hz;
-                out[i] += d_base_waveform[(d_waveform_idx + i) % wf_len] * std::complex<float>(cos(phase), sin(phase));
+                
+                // Linear Interpolation for Resampling
+                double virtual_idx = target.resample_ptr;
+                int idx_low = static_cast<int>(std::floor(virtual_idx)) % wf_len;
+                int idx_high = (idx_low + 1) % wf_len;
+                float frac = static_cast<float>(virtual_idx - std::floor(virtual_idx));
+                
+                std::complex<float> sample = d_base_waveform[idx_low] * (1.0f - frac) + d_base_waveform[idx_high] * frac;
+                
+                out[i] += sample * std::complex<float>(cos(phase), sin(phase));
+                target.resample_ptr += bw_ratio;
+                if (target.resample_ptr >= wf_len) target.resample_ptr -= wf_len;
             }
         }
-        d_waveform_idx = (d_waveform_idx + noutput_items) % wf_len;
         d_total_samples_processed += noutput_items;
     } else {
         double freq_offset = d_manual_mode ? d_manual_freq : 0.0;

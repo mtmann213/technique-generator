@@ -98,10 +98,13 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.middle_split = Qt.QHBoxLayout()
         self.root_layout.addLayout(self.middle_split)
 
-        # --- LEFT: Tabbed Controls ---
+        # --- LEFT: Sidebar Container ---
+        self.sidebar_container = Qt.QVBoxLayout()
+        self.middle_split.addLayout(self.sidebar_container)
+
         self.tabs = Qt.QTabWidget()
         self.tabs.setFixedWidth(380)
-        self.middle_split.addWidget(self.tabs)
+        self.sidebar_container.addWidget(self.tabs)
 
         # Tab 1: Hardware & Setup
         hw_tab = Qt.QWidget(); hw_layout = Qt.QVBoxLayout(hw_tab)
@@ -161,7 +164,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.reset_denial_btn = Qt.QPushButton("CLEAR DENIAL GRID"); self.reset_denial_btn.clicked.connect(self.on_reset_denial); self.reset_denial_btn.setStyleSheet("background-color: #400; color: white;"); sticky_grid.addRow(self.reset_denial_btn)
         jam_layout.addWidget(sticky_box)
         
-        # Manual Control (only visible/enabled in manual mode)
+        # Manual Control
         self.manual_box = Qt.QGroupBox("Manual Fine-Tuning")
         self.man_layout = Qt.QVBoxLayout(self.manual_box)
         self.manual_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.manual_slider.setRange(-1000000, 1000000); self.manual_slider.setEnabled(False); self.manual_slider.valueChanged.connect(self.on_manual_freq_change); self.man_layout.addWidget(self.manual_slider)
@@ -185,15 +188,12 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         prot_layout.addWidget(adv_box); prot_layout.addStretch()
 
         # --- PERMANENT BOTTOM: Template Selection ---
-        self.template_panel = Qt.QVBoxLayout()
-        self.scroll_layout.addLayout(self.template_panel) # Actually we'll just put it in the scroll area
-        
         template_box = Qt.QGroupBox("Warhead Template")
         template_layout = Qt.QVBoxLayout(template_box)
         self.template_combo = Qt.QComboBox(); self.template_combo.addItems(list(BaseWaveforms.waveform_definitions.keys())); self.template_combo.currentTextChanged.connect(self.on_template_change); template_layout.addWidget(self.template_combo)
         self.param_group = Qt.QGroupBox("Template Parameters"); self.param_layout = Qt.QFormLayout(); self.param_group.setLayout(self.param_layout)
         template_layout.addWidget(self.param_group)
-        self.scroll_layout.addWidget(template_box)
+        self.sidebar_container.addWidget(template_box)
 
         # --- CENTER: Waterfall ---
         self.waterfall = qtgui.waterfall_sink_c(1024, window.WIN_BLACKMAN_hARRIS, self.center_freq, self.samp_rate, "Active Tactical Waterfall", 1)
@@ -287,34 +287,30 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         freqs = sorted(self.cal_data.keys()); closest_f = freqs[np.argmin(np.abs(np.array(freqs) - self.center_freq))]
         gain_map = self.cal_data[closest_f]; gain_keys = sorted(gain_map.keys()); closest_g = gain_keys[np.argmin(np.abs(np.array(gain_keys) - self.tx_gain))]
         pwr = gain_map[closest_g]; self.cal_label.setText(f"Est. Output: {pwr:.1f} dBm (@{closest_f/1e6:.0f}M)")
+
     def on_pull_input_change(self):
         try:
             self.clock_pull = float(self.pull_input.text())
-            if self.interdictor:
-                self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
+            if self.interdictor: self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
         except: pass
 
     def on_adapt_toggle(self, checked):
         self.adaptive_bw = checked
-        if self.interdictor:
-            self.interdictor.set_adaptive_bw(checked)
+        if self.interdictor: self.interdictor.set_adaptive_bw(checked)
 
     def on_sab_toggle(self, checked):
         self.preamble_sabotage = checked
-        if self.interdictor:
-            self.interdictor.set_preamble_sabotage(checked)
+        if self.interdictor: self.interdictor.set_preamble_sabotage(checked)
 
     def on_sab_duration_change(self):
         try:
             self.sabotage_duration = float(self.sab_input.text())
-            if self.interdictor:
-                self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
+            if self.interdictor: self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
         except: pass
 
     def on_stutter_toggle(self, checked):
         self.stutter_enabled = checked
-        if self.interdictor:
-            self.interdictor.set_stutter_enabled(checked)
+        if self.interdictor: self.interdictor.set_stutter_enabled(checked)
 
     def on_stutter_clean_change(self):
         try:
