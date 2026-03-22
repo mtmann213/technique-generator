@@ -241,6 +241,30 @@ void interdictor_cpp_impl::generate_ofdm_noise() { generate_narrowband_noise(); 
 void interdictor_cpp_impl::generate_correlator_confusion() { generate_cw_tone(); }
 void interdictor_cpp_impl::generate_song() { generate_cosine_tones(); }
 
+void interdictor_cpp_impl::generate_differential_comb()
+{
+    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
+    d_base_waveform.assign(num_samples, std::complex<float>(0, 0));
+    
+    double spacing = d_bandwidth_hz; // Reusing bandwidth field for spacing
+    int count = d_num_targets > 0 ? d_num_targets : 10;
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(0.0f, 2.0f * M_PI);
+    
+    int K = count / 2;
+    for (int k = -K; k <= K; ++k) {
+        double freq = k * spacing;
+        float phase_offset = dist(gen);
+        for (int i = 0; i < num_samples; ++i) {
+            float phase = 2.0f * M_PI * freq * i / d_sample_rate_hz + phase_offset;
+            d_base_waveform[i] += std::complex<float>(cos(phase), sin(phase));
+        }
+    }
+    normalize_signal(d_base_waveform);
+}
+
 void interdictor_cpp_impl::update_waveform()
 {
     if (d_technique == "CW Tone (Pure)" || d_technique == "Direct CW") generate_cw_tone();
@@ -251,6 +275,7 @@ void interdictor_cpp_impl::update_waveform()
     else if (d_technique == "FM Cosine") generate_fm_cosine();
     else if (d_technique == "Swept Phasors") generate_swept_phasors();
     else if (d_technique == "Swept Cosines") generate_swept_cosines();
+    else if (d_technique == "Differential Comb") generate_differential_comb();
     else if (d_technique == "RRC Modulated Noise") generate_rrc_noise();
     else if (d_technique == "Chunked Noise") generate_chunked_noise();
     else if (d_technique == "Noise Tones") generate_noise_tones();

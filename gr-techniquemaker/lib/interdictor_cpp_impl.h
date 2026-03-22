@@ -57,6 +57,7 @@ private:
     void generate_ofdm_noise();
     void generate_correlator_confusion();
     void generate_song();
+    void generate_differential_comb();
     void update_waveform();
 
 public:

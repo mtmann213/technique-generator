@@ -218,8 +218,32 @@ def songMaker(songName: str, bandwidth_hz: float, sample_rate_hz: float, target_
     for j in range(len(A)): parts.append(noteMaker(A[j],B[j],BPMval,sample_rate_hz,bandwidth_hz))
     return _normalize_signal(np.concatenate(parts) if parts else np.array([]), target_value, normalization_type)
 
+def differential_comb_creator(
+    spike_spacing_hz: float,
+    spike_count: int,
+    sample_rate_hz: float,
+    technique_length_seconds: float,
+    target_value: float = 1.0,
+    normalization_type: Literal["peak", "rms"] = "peak",
+    filter_type: str = "none"
+) -> NDArray[np.complex128]:
+    """Generates a comb of high-power spectral spikes."""
+    time = _create_time_array(sample_rate_hz, technique_length_seconds)
+    out = np.zeros(len(time), dtype=np.complex128)
+    
+    # Generate K spikes on each side of DC
+    K = spike_count // 2
+    for k in range(-K, K + 1):
+        freq = k * spike_spacing_hz
+        phase_offset = random.uniform(0, 2 * np.pi) # Randomize phase to lower PAPR
+        out += np.exp(1j * (2 * np.pi * freq * time + phase_offset))
+        
+    out = _apply_spectral_shaping(out, spike_spacing_hz * spike_count, sample_rate_hz, filter_type)
+    return _normalize_signal(out, target_value, normalization_type)
+
 waveform_definitions = {
     "Narrowband Noise": {"func": narrowband_noise_creator, "params": [{"name": "bandwidth_hz", "title": "Bandwidth (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}, {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"]}]},
+    "Differential Comb": {"func": differential_comb_creator, "params": [{"name": "spike_spacing_hz", "title": "Spacing (Hz)", "type": "entry"}, {"name": "spike_count", "title": "Spike Count", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
     "RRC Modulated Noise": {"func": rrc_modulated_noise, "params": [{"name": "symbol_rate_hz", "title": "Symbol Rate (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "rolloff", "title": "Rolloff", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
     "Swept Noise": {"func": swept_noise_creator, "params": [{"name": "sweep_hz", "title": "Sweep Range (Hz)", "type": "entry"}, {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Duration (s)", "type": "entry"}, {"name": "sweep_type", "title": "Sweep Type", "type": "options", "choices": ["sawtooth", "triangle"]}, {"name": "sweep_rate_hz_s", "title": "Sweep Rate (Hz/s)", "type": "entry"}, {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"]}]},
     "Chunked Noise": {"func": chunk_noise_creator, "params": [{"name": "technique_width_hz", "title": "Width (Hz)", "type": "entry"}, {"name": "chunks", "title": "Chunks", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}, {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"]}]},
