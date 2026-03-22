@@ -137,6 +137,14 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         target_grid.addWidget(Qt.QLabel("Clock-Pull (Hz/s):"), 11, 0); self.pull_input = Qt.QLineEdit(str(self.clock_pull)); self.pull_input.editingFinished.connect(self.on_pull_input_change); target_grid.addWidget(self.pull_input, 11, 1)
         self.targets_label = Qt.QLabel(f"Max Targets: {self.num_targets}"); self.targets_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.targets_slider.setRange(1, 16); self.targets_slider.setValue(self.num_targets); self.targets_slider.valueChanged.connect(self.on_targets_change); target_grid.addWidget(self.targets_label, 12, 0); target_grid.addWidget(self.targets_slider, 12, 1)
         self.thresh_slider = Qt.QSlider(QtCore.Qt.Horizontal); self.thresh_slider.setRange(-120, 0); self.thresh_slider.setValue(-45); self.thresh_slider.valueChanged.connect(self.on_threshold_change); self.thresh_label = Qt.QLabel("Thresh: -45 dB"); target_grid.addWidget(self.thresh_label, 13, 0); target_grid.addWidget(self.thresh_slider, 13, 1)
+        
+        # Sticky Denial & Look-through
+        self.sticky_cb = Qt.QCheckBox("Persistent Channel Denial"); self.sticky_cb.toggled.connect(self.on_sticky_toggle); target_grid.addWidget(self.sticky_cb, 14, 0, 1, 2)
+        self.reset_denial_btn = Qt.QPushButton("RESET DENIAL GRID"); self.reset_denial_btn.clicked.connect(self.on_reset_denial); self.reset_denial_btn.setStyleSheet("background-color: #500; color: white;"); target_grid.addWidget(self.reset_denial_btn, 15, 0, 1, 2)
+        
+        self.look_input = Qt.QLineEdit("10.0"); self.look_input.editingFinished.connect(self.on_look_change); target_grid.addWidget(Qt.QLabel("Look-thru (ms):"), 16, 0); target_grid.addWidget(self.look_input, 16, 1)
+        self.cycle_input = Qt.QLineEdit("90.0"); self.cycle_input.editingFinished.connect(self.on_jam_cycle_change); target_grid.addWidget(Qt.QLabel("Jam Cycle (ms):"), 17, 0); target_grid.addWidget(self.cycle_input, 17, 1)
+        
         self.scroll_layout.addWidget(target_box)
 
         # Template Selection
@@ -260,6 +268,29 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.hydra_auto_surgical = checked
         if self.interdictor and hasattr(self.interdictor, 'set_output_mode'):
             self.interdictor.set_output_mode("Auto-Surgical" if checked else "Continuous (Stream)")
+
+    def on_sticky_toggle(self, checked):
+        if self.interdictor and hasattr(self.interdictor, 'set_sticky_denial'):
+            self.interdictor.set_sticky_denial(checked)
+
+    def on_reset_denial(self):
+        if self.interdictor and hasattr(self.interdictor, 'clear_persistent_targets'):
+            self.interdictor.clear_persistent_targets()
+            self.sys_logger.info("Persistent Denial Grid Cleared.")
+
+    def on_look_change(self):
+        try:
+            ms = float(self.look_input.text())
+            if self.interdictor and hasattr(self.interdictor, 'set_look_through_ms'):
+                self.interdictor.set_look_through_ms(ms)
+        except: pass
+
+    def on_jam_cycle_change(self):
+        try:
+            ms = float(self.cycle_input.text())
+            if self.interdictor and hasattr(self.interdictor, 'set_jam_cycle_ms'):
+                self.interdictor.set_jam_cycle_ms(ms)
+        except: pass
 
     def load_calibration(self):
         if os.path.exists("config/calibration_matrix.json"):

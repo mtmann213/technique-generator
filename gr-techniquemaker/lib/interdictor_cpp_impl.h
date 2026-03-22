@@ -52,6 +52,16 @@ private:
     int d_fft_size;
     int d_dwell_counter;
 
+    // Sticky Denial & Look-through
+    bool d_sticky_denial;
+    double d_look_through_ms;
+    double d_jam_cycle_ms;
+    bool d_is_looking;
+    uint64_t d_look_samples;
+    uint64_t d_jam_samples;
+    uint64_t d_cycle_counter;
+    std::vector<Target> d_persistent_targets;
+
     // Core Waveform Generators
     void generate_cw_tone();
     void generate_narrowband_noise();
@@ -116,6 +126,10 @@ public:
     void set_stutter_randomize(bool stutter_randomize) override;
     void set_frame_duration_ms(double frame_duration_ms) override;
     void set_output_mode(const std::string& output_mode) override;
+    void set_sticky_denial(bool sticky) override;
+    void set_look_through_ms(double ms) override;
+    void set_jam_cycle_ms(double ms) override;
+    void clear_persistent_targets() override;
 
     int work(int noutput_items,
              gr_vector_const_void_star &input_items,

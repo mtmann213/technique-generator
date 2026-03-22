@@ -63,7 +63,11 @@ void bind_interdictor_cpp(py::module& m)
         .def("set_stutter_burst_count", &interdictor_cpp::set_stutter_burst_count)
         .def("set_stutter_randomize", &interdictor_cpp::set_stutter_randomize)
         .def("set_frame_duration_ms", &interdictor_cpp::set_frame_duration_ms)
-        .def("set_output_mode", &interdictor_cpp::set_output_mode);
+        .def("set_output_mode", &interdictor_cpp::set_output_mode)
+        .def("set_sticky_denial", &interdictor_cpp::set_sticky_denial)
+        .def("set_look_through_ms", &interdictor_cpp::set_look_through_ms)
+        .def("set_jam_cycle_ms", &interdictor_cpp::set_jam_cycle_ms)
+        .def("clear_persistent_targets", &interdictor_cpp::clear_persistent_targets);
 }
 
 // We need this hack because import_array() returns NULL

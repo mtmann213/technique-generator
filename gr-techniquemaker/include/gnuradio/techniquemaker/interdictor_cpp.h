@@ -52,6 +52,10 @@ public:
     virtual void set_stutter_randomize(bool stutter_randomize) = 0;
     virtual void set_frame_duration_ms(double frame_duration_ms) = 0;
     virtual void set_output_mode(const std::string& output_mode) = 0;
+    virtual void set_sticky_denial(bool sticky) = 0;
+    virtual void set_look_through_ms(double ms) = 0;
+    virtual void set_jam_cycle_ms(double ms) = 0;
+    virtual void clear_persistent_targets() = 0;
 };
 
 } // namespace techniquemaker
