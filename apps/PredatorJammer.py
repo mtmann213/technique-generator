@@ -288,32 +288,58 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         gain_map = self.cal_data[closest_f]; gain_keys = sorted(gain_map.keys()); closest_g = gain_keys[np.argmin(np.abs(np.array(gain_keys) - self.tx_gain))]
         pwr = gain_map[closest_g]; self.cal_label.setText(f"Est. Output: {pwr:.1f} dBm (@{closest_f/1e6:.0f}M)")
     def on_pull_input_change(self):
-        try: self.clock_pull = float(self.pull_input.text()); 
-        if self.interdictor: self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
+        try:
+            self.clock_pull = float(self.pull_input.text())
+            if self.interdictor:
+                self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
         except: pass
-    def on_adapt_toggle(self, checked): self.adaptive_bw = checked; 
-        if self.interdictor: self.interdictor.set_adaptive_bw(checked)
-    def on_sab_toggle(self, checked): self.preamble_sabotage = checked; 
-        if self.interdictor: self.interdictor.set_preamble_sabotage(checked)
+
+    def on_adapt_toggle(self, checked):
+        self.adaptive_bw = checked
+        if self.interdictor:
+            self.interdictor.set_adaptive_bw(checked)
+
+    def on_sab_toggle(self, checked):
+        self.preamble_sabotage = checked
+        if self.interdictor:
+            self.interdictor.set_preamble_sabotage(checked)
+
     def on_sab_duration_change(self):
-        try: self.sabotage_duration = float(self.sab_input.text()); 
-        if self.interdictor: self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
+        try:
+            self.sabotage_duration = float(self.sab_input.text())
+            if self.interdictor:
+                self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
         except: pass
-    def on_stutter_toggle(self, checked): self.stutter_enabled = checked; 
-        if self.interdictor: self.interdictor.set_stutter_enabled(checked)
+
+    def on_stutter_toggle(self, checked):
+        self.stutter_enabled = checked
+        if self.interdictor:
+            self.interdictor.set_stutter_enabled(checked)
+
     def on_stutter_clean_change(self):
-        try: self.stutter_clean = int(self.stutter_clean_input.text()); 
-        if self.interdictor: self.interdictor.set_stutter_clean_count(self.stutter_clean)
+        try:
+            self.stutter_clean = int(self.stutter_clean_input.text())
+            if self.interdictor:
+                self.interdictor.set_stutter_clean_count(self.stutter_clean)
         except: pass
+
     def on_stutter_burst_change(self):
-        try: self.stutter_burst = int(self.stutter_burst_input.text()); 
-        if self.interdictor: self.interdictor.set_stutter_burst_count(self.stutter_burst)
+        try:
+            self.stutter_burst = int(self.stutter_burst_input.text())
+            if self.interdictor:
+                self.interdictor.set_stutter_burst_count(self.stutter_burst)
         except: pass
-    def on_stutter_rand_toggle(self, checked): self.stutter_randomize = checked; 
-        if self.interdictor: self.interdictor.set_stutter_randomize(checked)
+
+    def on_stutter_rand_toggle(self, checked):
+        self.stutter_randomize = checked
+        if self.interdictor:
+            self.interdictor.set_stutter_randomize(checked)
+
     def on_frame_dur_change(self):
-        try: self.frame_dur = float(self.frame_input.text()); 
-        if self.interdictor: self.interdictor.set_frame_duration_ms(self.frame_dur)
+        try:
+            self.frame_dur = float(self.frame_input.text())
+            if self.interdictor:
+                self.interdictor.set_frame_duration_ms(self.frame_dur)
         except: pass
     def load_presets_from_file(self):
         if os.path.exists(self.preset_file):
@@ -338,50 +364,94 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if not self.hardware_connected: return
         if checked: ts = int(time.time()); self.lock(); self.file_sink.open(f"analysis_{ts}.sigmf-data"); self.connect(self.source, self.file_sink); self.unlock(); self.record_btn.setText("LOGGING..."); self.record_btn.setStyleSheet("background-color: #A00; color: white;")
         else: self.lock(); self.disconnect(self.source, self.file_sink); self.file_sink.close(); self.unlock(); self.record_btn.setText("LOG SIGMF"); self.record_btn.setStyleSheet("background-color: #333; color: white;")
-    def on_targets_change(self, val): self.num_targets = val; self.targets_label.setText(f"Max Targets: {val}"); 
-        if self.interdictor: self.interdictor.set_num_targets(self.num_targets)
-    def on_mode_change(self): self.manual_mode = self.manual_radio.isChecked(); 
-        if self.interdictor: self.interdictor.set_manual_mode(self.manual_mode)
-        self.manual_slider.setEnabled(self.manual_mode); self.thresh_slider.setEnabled(not self.manual_mode)
-    def on_manual_freq_change(self, val): self.manual_freq = float(val); self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz"); 
-        if self.interdictor: self.interdictor.set_manual_freq(self.manual_freq)
+    def on_targets_change(self, val):
+        self.num_targets = val
+        self.targets_label.setText(f"Max Targets: {val}")
+        if self.interdictor:
+            self.interdictor.set_num_targets(self.num_targets)
+
+    def on_mode_change(self):
+        self.manual_mode = self.manual_radio.isChecked()
+        if self.interdictor:
+            self.interdictor.set_manual_mode(self.manual_mode)
+        self.manual_slider.setEnabled(self.manual_mode)
+        self.thresh_slider.setEnabled(not self.manual_mode)
+
+    def on_manual_freq_change(self, val):
+        self.manual_freq = float(val)
+        self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz")
+        if self.interdictor:
+            self.interdictor.set_manual_freq(self.manual_freq)
+
     def update_dynamic_params(self):
         while self.param_layout.count():
             child = self.param_layout.takeAt(0)
-            if child.widget(): child.widget().deleteLater()
+            if child.widget():
+                child.widget().deleteLater()
         wf_def = BaseWaveforms.waveform_definitions.get(self.template)
-        if not wf_def: return
+        if not wf_def:
+            return
         for p in wf_def['params']:
-            if p['name'] in ['sample_rate_hz', 'technique_length_seconds']: continue
+            if p['name'] in ['sample_rate_hz', 'technique_length_seconds']:
+                continue
             if p['type'] == 'entry':
-                w = Qt.QLineEdit("0"); w.editingFinished.connect(lambda n=p['name'], widget=w: self.on_dynamic_change(n, widget.text())); self.param_layout.addRow(p['title'], w)
+                w = Qt.QLineEdit("0")
+                w.editingFinished.connect(lambda n=p['name'], widget=w: self.on_dynamic_change(n, widget.text()))
+                self.param_layout.addRow(p['title'], w)
             elif p['type'] == 'options':
-                w = Qt.QComboBox(); w.addItems(p['choices']); w.currentTextChanged.connect(lambda val, n=p['name']: self.on_dynamic_change(n, val)); self.param_layout.addRow(p['title'], w)
+                w = Qt.QComboBox()
+                w.addItems(p['choices'])
+                w.currentTextChanged.connect(lambda val, n=p['name']: self.on_dynamic_change(n, val))
+                self.param_layout.addRow(p['title'], w)
+
     def on_dynamic_change(self, name, value):
         setter = f"set_{name}"
         if self.interdictor and hasattr(self.interdictor, setter):
             try:
                 val = float(value) if '.' in value else int(value)
                 getattr(self.interdictor, setter)(val)
-            except: pass
-    def on_template_change(self, value): self.template = value; 
-        if self.interdictor: self.interdictor.set_technique(self.template)
+            except:
+                pass
+
+    def on_template_change(self, value):
+        self.template = value
+        if self.interdictor:
+            self.interdictor.set_technique(self.template)
         self.update_dynamic_params()
-    def on_fire_toggle(self, checked): self.interdiction_enabled = not checked; 
-        if self.interdictor: self.interdictor.set_jamming_enabled(self.interdiction_enabled)
-    def on_threshold_change(self, value): self.threshold = value; self.thresh_label.setText(f"Threshold: {value} dB"); 
-        if self.interdictor: self.interdictor.set_reactive_threshold_db(value)
-    def on_rx_gain_change(self, value): self.rx_gain = value; 
-        if self.source: self.source.set_gain(value, 0)
-    def on_tx_gain_change(self, value): self.tx_gain = value; 
-        if self.sink: self.sink.set_gain(value, 0)
+
+    def on_fire_toggle(self, checked):
+        self.interdiction_enabled = not checked
+        if self.interdictor:
+            self.interdictor.set_jamming_enabled(self.interdiction_enabled)
+
+    def on_threshold_change(self, value):
+        self.threshold = value
+        self.thresh_label.setText(f"Threshold: {value} dB")
+        if self.interdictor:
+            self.interdictor.set_reactive_threshold_db(value)
+
+    def on_rx_gain_change(self, value):
+        self.rx_gain = value
+        if self.source:
+            self.source.set_gain(value, 0)
+
+    def on_tx_gain_change(self, value):
+        self.tx_gain = value
+        if self.sink:
+            self.sink.set_gain(value, 0)
         self.update_cal_display()
+
     def on_freq_change(self):
-        try: self.center_freq = float(self.freq_input.text()); 
-            if self.source: self.source.set_center_freq(self.center_freq, 0)
-            if self.sink: self.sink.set_center_freq(self.center_freq, 0)
-            self.waterfall.set_frequency_range(self.center_freq, self.samp_rate); self.update_cal_display()
-        except: pass
+        try:
+            self.center_freq = float(self.freq_input.text())
+            if self.source:
+                self.source.set_center_freq(self.center_freq, 0)
+            if self.sink:
+                self.sink.set_center_freq(self.center_freq, 0)
+            self.waterfall.set_frequency_range(self.center_freq, self.samp_rate)
+            self.update_cal_display()
+        except:
+            pass
     def on_samp_change(self):
         try: self.samp_rate = float(self.samp_input.text())
         except: pass
