@@ -11,7 +11,9 @@
 ########################################################################
 include(GrPlatform) #define LIB_SUFFIX
 
-list(APPEND techniquemaker_sources)
+list(APPEND techniquemaker_sources
+    interdictor_cpp_impl.cc
+)
 
 set(techniquemaker_sources
     "${techniquemaker_sources}"

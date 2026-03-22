@@ -138,9 +138,18 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
         # --- Blocks ---
         self.source = uhd.usrp_source(",".join(("", f"serial={self.serial}")), uhd.stream_args(cpu_format="fc32", args='', channels=list(range(1)))); self.source.set_samp_rate(self.samp_rate); self.source.set_center_freq(self.center_freq, 0); self.source.set_gain(self.rx_gain, 0)
-        self.interdictor = techniquepdu(
-            technique='Reactive Jammer', warhead_technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Continuous (Stream)'
-        )
+        try:
+            from techniquemaker import interdictor_cpp
+            self.sys_logger.info("Using high-performance C++ interdictor core.")
+            self.interdictor = interdictor_cpp(
+                technique='Direct CW', # Use the C++ default mapped name for Reactive Jammer
+                sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Continuous (Stream)'
+            )
+        except ImportError:
+            self.sys_logger.warning("C++ core not found. Falling back to Python techniquepdu.")
+            self.interdictor = techniquepdu(
+                technique='Reactive Jammer', warhead_technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Continuous (Stream)'
+            )
         self.sink = uhd.usrp_sink(",".join(("", f"serial={self.serial}")), uhd.stream_args(cpu_format="fc32", args='', channels=list(range(1)))); self.sink.set_samp_rate(self.samp_rate); self.sink.set_center_freq(self.center_freq, 0); self.sink.set_gain(self.tx_gain, 0)
         self.file_sink = blocks.file_sink(gr.sizeof_gr_complex, "session.bin", False); self.file_sink.set_unbuffered(True)
 

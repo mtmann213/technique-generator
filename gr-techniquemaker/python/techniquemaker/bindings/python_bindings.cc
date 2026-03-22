@@ -12,17 +12,59 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
+#include <gnuradio/techniquemaker/interdictor_cpp.h>
+
 namespace py = pybind11;
 
-// Headers for binding functions
-/**************************************/
-// The following comment block is used for
-// gr_modtool to insert function prototypes
-// Please do not delete
-/**************************************/
-// BINDING_FUNCTION_PROTOTYPES(
-// ) END BINDING_FUNCTION_PROTOTYPES
+void bind_interdictor_cpp(py::module& m)
+{
+    using interdictor_cpp = ::gr::techniquemaker::interdictor_cpp;
 
+    py::class_<interdictor_cpp,
+               gr::sync_block,
+               gr::block,
+               gr::basic_block,
+               std::shared_ptr<interdictor_cpp>>(m, "interdictor_cpp")
+        .def(py::init(&interdictor_cpp::make),
+             py::arg("technique") = "Direct CW",
+             py::arg("sample_rate_hz") = 2000000.0,
+             py::arg("bandwidth_hz") = 100000.0,
+             py::arg("reactive_threshold_db") = -45.0,
+             py::arg("reactive_dwell_ms") = 400.0,
+             py::arg("num_targets") = 1,
+             py::arg("manual_mode") = false,
+             py::arg("manual_freq") = 0.0,
+             py::arg("jamming_enabled") = true,
+             py::arg("adaptive_bw") = false,
+             py::arg("preamble_sabotage") = false,
+             py::arg("sabotage_duration_ms") = 20.0,
+             py::arg("clock_pull_drift_hz_s") = 0.0,
+             py::arg("stutter_enabled") = false,
+             py::arg("stutter_clean_count") = 3,
+             py::arg("stutter_burst_count") = 1,
+             py::arg("stutter_randomize") = false,
+             py::arg("frame_duration_ms") = 40.0,
+             py::arg("output_mode") = "Continuous (Stream)")
+        .def("set_technique", &interdictor_cpp::set_technique)
+        .def("set_sample_rate_hz", &interdictor_cpp::set_sample_rate_hz)
+        .def("set_bandwidth_hz", &interdictor_cpp::set_bandwidth_hz)
+        .def("set_reactive_threshold_db", &interdictor_cpp::set_reactive_threshold_db)
+        .def("set_reactive_dwell_ms", &interdictor_cpp::set_reactive_dwell_ms)
+        .def("set_num_targets", &interdictor_cpp::set_num_targets)
+        .def("set_manual_mode", &interdictor_cpp::set_manual_mode)
+        .def("set_manual_freq", &interdictor_cpp::set_manual_freq)
+        .def("set_jamming_enabled", &interdictor_cpp::set_jamming_enabled)
+        .def("set_adaptive_bw", &interdictor_cpp::set_adaptive_bw)
+        .def("set_preamble_sabotage", &interdictor_cpp::set_preamble_sabotage)
+        .def("set_sabotage_duration_ms", &interdictor_cpp::set_sabotage_duration_ms)
+        .def("set_clock_pull_drift_hz_s", &interdictor_cpp::set_clock_pull_drift_hz_s)
+        .def("set_stutter_enabled", &interdictor_cpp::set_stutter_enabled)
+        .def("set_stutter_clean_count", &interdictor_cpp::set_stutter_clean_count)
+        .def("set_stutter_burst_count", &interdictor_cpp::set_stutter_burst_count)
+        .def("set_stutter_randomize", &interdictor_cpp::set_stutter_randomize)
+        .def("set_frame_duration_ms", &interdictor_cpp::set_frame_duration_ms)
+        .def("set_output_mode", &interdictor_cpp::set_output_mode);
+}
 
 // We need this hack because import_array() returns NULL
 // for newer Python versions.
@@ -43,11 +85,5 @@ PYBIND11_MODULE(techniquemaker_python, m)
     // Allow access to base block methods
     py::module::import("gnuradio.gr");
 
-    /**************************************/
-    // The following comment block is used for
-    // gr_modtool to insert binding function calls
-    // Please do not delete
-    /**************************************/
-    // BINDING_FUNCTION_CALLS(
-    // ) END BINDING_FUNCTION_CALLS
+    bind_interdictor_cpp(m);
 }

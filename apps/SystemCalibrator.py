@@ -56,7 +56,22 @@ class TransmitBlock(gr.top_block):
         if technique == "Direct CW":
             self.src = analog.sig_source_c(samp_rate, analog.GR_CONST_WAVE, 0, 1.0, 0)
         else:
-            self.src = techniquepdu(technique=technique, sample_rate_hz=samp_rate, bandwidth_hz=100e3, output_mode='Continuous (Stream)')
+            try:
+                from techniquemaker import interdictor_cpp
+                # Use the new high-performance C++ block
+                self.src = interdictor_cpp(
+                    technique=technique, sample_rate_hz=samp_rate, bandwidth_hz=100e3,
+                    reactive_threshold_db=-45.0, reactive_dwell_ms=400.0, num_targets=1,
+                    manual_mode=False, manual_freq=0.0, jamming_enabled=True,
+                    adaptive_bw=False, preamble_sabotage=False, sabotage_duration_ms=20.0,
+                    clock_pull_drift_hz_s=0.0, stutter_enabled=False, stutter_clean_count=3,
+                    stutter_burst_count=1, stutter_randomize=False, frame_duration_ms=40.0,
+                    output_mode='Continuous (Stream)'
+                )
+            except ImportError:
+                # Fallback to Python block
+                self.sys_logger.warning("C++ interdictor block not found. Falling back to Python techniquepdu.")
+                self.src = techniquepdu(technique=technique, sample_rate_hz=samp_rate, bandwidth_hz=100e3, output_mode='Continuous (Stream)')
         
         self.connect(self.src, self.sink)
     def set_freq(self, freq): self.sink.set_center_freq(freq, 0)

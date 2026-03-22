@@ -9,4 +9,8 @@
 ########################################################################
 # Install public header files
 ########################################################################
-install(FILES api.h DESTINATION include/gnuradio/techniquemaker)
+install(FILES
+    api.h
+    interdictor_cpp.h
+    DESTINATION include/gnuradio/techniquemaker
+)

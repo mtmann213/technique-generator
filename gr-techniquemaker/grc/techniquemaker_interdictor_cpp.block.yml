@@ -1,0 +1,158 @@
+id: techniquemaker_interdictor_cpp
+label: Technique PDU Generator (C++)
+category: '[techniquemaker]'
+
+templates:
+  imports: from techniquemaker import interdictor_cpp
+  make: |-
+    interdictor_cpp(
+        technique=${technique},
+        sample_rate_hz=${sample_rate_hz},
+        bandwidth_hz=${bandwidth_hz},
+        reactive_threshold_db=${reactive_threshold_db},
+        reactive_dwell_ms=${reactive_dwell_ms},
+        num_targets=${num_targets},
+        manual_mode=${manual_mode},
+        manual_freq=${manual_freq},
+        jamming_enabled=${jamming_enabled},
+        adaptive_bw=${adaptive_bw},
+        preamble_sabotage=${preamble_sabotage},
+        sabotage_duration_ms=${sabotage_duration_ms},
+        clock_pull_drift_hz_s=${clock_pull_drift_hz_s},
+        stutter_enabled=${stutter_enabled},
+        stutter_clean_count=${stutter_clean_count},
+        stutter_burst_count=${stutter_burst_count},
+        stutter_randomize=${stutter_randomize},
+        frame_duration_ms=${frame_duration_ms},
+        output_mode=${output_mode}
+    )
+  callbacks:
+    - set_technique(${technique})
+    - set_sample_rate_hz(${sample_rate_hz})
+    - set_bandwidth_hz(${bandwidth_hz})
+    - set_reactive_threshold_db(${reactive_threshold_db})
+    - set_reactive_dwell_ms(${reactive_dwell_ms})
+    - set_num_targets(${num_targets})
+    - set_manual_mode(${manual_mode})
+    - set_manual_freq(${manual_freq})
+    - set_jamming_enabled(${jamming_enabled})
+    - set_adaptive_bw(${adaptive_bw})
+    - set_preamble_sabotage(${preamble_sabotage})
+    - set_sabotage_duration_ms(${sabotage_duration_ms})
+    - set_clock_pull_drift_hz_s(${clock_pull_drift_hz_s})
+    - set_stutter_enabled(${stutter_enabled})
+    - set_stutter_clean_count(${stutter_clean_count})
+    - set_stutter_burst_count(${stutter_burst_count})
+    - set_stutter_randomize(${stutter_randomize})
+    - set_frame_duration_ms(${frame_duration_ms})
+    - set_output_mode(${output_mode})
+
+parameters:
+- id: technique
+  label: Technique
+  dtype: enum
+  default: "'Direct CW'"
+  options: ["'Direct CW'", "'CW Tone (Pure)'", "'Narrowband Noise'"]
+  option_labels: ['Direct CW', 'CW Tone (Pure)', 'Narrowband Noise']
+
+- id: sample_rate_hz
+  label: Sample Rate (Hz)
+  dtype: float
+  default: '2000000.0'
+
+- id: bandwidth_hz
+  label: Bandwidth (Hz)
+  dtype: float
+  default: '100000.0'
+
+- id: reactive_threshold_db
+  label: Detect Threshold (dB)
+  dtype: float
+  default: '-45.0'
+
+- id: reactive_dwell_ms
+  label: Dwell Time (ms)
+  dtype: float
+  default: '400.0'
+
+- id: num_targets
+  label: Num Targets
+  dtype: int
+  default: '1'
+
+- id: manual_mode
+  label: Manual Mode
+  dtype: bool
+  default: 'False'
+
+- id: manual_freq
+  label: Manual Freq (Hz)
+  dtype: float
+  default: '0.0'
+
+- id: jamming_enabled
+  label: Jamming Enabled
+  dtype: bool
+  default: 'True'
+
+- id: adaptive_bw
+  label: Adaptive BW
+  dtype: bool
+  default: 'False'
+
+- id: preamble_sabotage
+  label: Preamble Sabotage
+  dtype: bool
+  default: 'False'
+
+- id: sabotage_duration_ms
+  label: Sabotage Duration (ms)
+  dtype: float
+  default: '20.0'
+
+- id: clock_pull_drift_hz_s
+  label: Clock Pull (Hz/s)
+  dtype: float
+  default: '0.0'
+
+- id: stutter_enabled
+  label: Stutter Enabled
+  dtype: bool
+  default: 'False'
+
+- id: stutter_clean_count
+  label: Stutter Clean Count
+  dtype: int
+  default: '3'
+
+- id: stutter_burst_count
+  label: Stutter Burst Count
+  dtype: int
+  default: '1'
+
+- id: stutter_randomize
+  label: Stutter Randomize
+  dtype: bool
+  default: 'False'
+
+- id: frame_duration_ms
+  label: Frame Duration (ms)
+  dtype: float
+  default: '40.0'
+
+- id: output_mode
+  label: Output Mode
+  dtype: string
+  default: "'Continuous (Stream)'"
+
+inputs:
+- label: in
+  domain: stream
+  dtype: complex
+
+outputs:
+- label: out
+  domain: stream
+  dtype: complex
+
+file_format: 1

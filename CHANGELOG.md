@@ -2,6 +2,12 @@
 
 ## [2026-03-13] - Project Reorganization & Precision Engine Finalization
 
+### 🚀 Phase 3: High-Performance OOT Migration (C++ Port Scaffold)
+- **C++ Block Scaffold:** Created the infrastructure for `interdictor_cpp`, a native C++ GNU Radio block designed to bypass the Python GIL for 5-10+ MHz reactive jamming.
+- **Python Bindings:** Generated `pybind11` definitions allowing the new C++ block to be called seamlessly from the existing Python apps.
+- **Graceful Fallback:** Updated `SystemCalibrator.py` and `PredatorJammer.py` to attempt loading the C++ core first, gracefully falling back to the original Python `techniquepdu` block if compilation fails.
+- **Direct CW Hardware Test:** Added a "Direct CW" template backed by a pure C++ oscillator for robust hardware verification without complex DSP overhead.
+
 ### 🏗️ Directory Refactor (New Professional Structure)
 - **Organizational Sweep:** Moved all core applications to `apps/`, persistent data to `config/`, documentation to `docs/`, and experiments to `tests/`.
 - **Single Source of Truth:** Removed duplicated `BaseWaveforms.py` from the root. All tools now import the core DSP logic directly from the installed OOT module.
