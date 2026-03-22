@@ -3,6 +3,7 @@
 #include <random>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 namespace gr {
 namespace techniquemaker {
@@ -93,37 +94,66 @@ interdictor_cpp_impl::~interdictor_cpp_impl()
 
 void interdictor_cpp_impl::generate_cw_tone()
 {
-    int num_samples = 1024;
-    d_base_waveform.resize(num_samples);
-    for (int i = 0; i < num_samples; ++i) {
-        d_base_waveform[i] = std::complex<float>(1.0f, 0.0f); // DC Tone
-    }
+    d_base_waveform.assign(1024, std::complex<float>(1.0f, 0.0f));
 }
 
 void interdictor_cpp_impl::generate_narrowband_noise()
 {
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1); // 100ms
+    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
     if (num_samples < 1024) num_samples = 1024;
-    
     d_base_waveform.resize(num_samples);
     
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::normal_distribution<float> d(0.0f, 1.0f);
+    std::normal_distribution<float> dist(0.0f, 1.0f);
     
     for (int i = 0; i < num_samples; ++i) {
-        d_base_waveform[i] = std::complex<float>(d(gen), d(gen));
+        d_base_waveform[i] = std::complex<float>(dist(gen), dist(gen));
     }
-    // Note: A true port would include the FIR filter here. 
-    // This is simplified for the Phase 1 architectural proof.
+}
+
+void interdictor_cpp_impl::generate_phasor_tones()
+{
+    std::vector<double> freqs = {1000.0, 5000.0, 10000.0};
+    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
+    d_base_waveform.assign(num_samples, std::complex<float>(0, 0));
+    
+    for (double f : freqs) {
+        for (int i = 0; i < num_samples; ++i) {
+            float phase = 2.0f * M_PI * f * i / d_sample_rate_hz;
+            d_base_waveform[i] += std::complex<float>(cos(phase), sin(phase));
+        }
+    }
+}
+
+void interdictor_cpp_impl::generate_swept_noise()
+{
+    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
+    d_base_waveform.resize(num_samples);
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution<float> dist(0.0f, 1.0f);
+    
+    double sweep_hz = 500000.0;
+    for (int i = 0; i < num_samples; ++i) {
+        double t = static_cast<double>(i) / d_sample_rate_hz;
+        double inst_freq = (sweep_hz / 0.1) * t - (sweep_hz / 2.0);
+        float phase = 2.0f * M_PI * inst_freq * t;
+        std::complex<float> noise(dist(gen), dist(gen));
+        d_base_waveform[i] = noise * std::complex<float>(cos(phase), sin(phase));
+    }
 }
 
 void interdictor_cpp_impl::update_waveform()
 {
     if (d_technique == "CW Tone (Pure)" || d_technique == "Direct CW") {
         generate_cw_tone();
+    } else if (d_technique == "Phasor Tones") {
+        generate_phasor_tones();
+    } else if (d_technique == "Swept Noise") {
+        generate_swept_noise();
     } else {
-        // Default to Narrowband Noise for any unported Python technique
         generate_narrowband_noise();
     }
     d_waveform_idx = 0;
@@ -154,24 +184,36 @@ int interdictor_cpp_impl::work(int noutput_items,
                                gr_vector_const_void_star &input_items,
                                gr_vector_void_star &output_items)
 {
-    const gr_complex *in = (const gr_complex *) input_items[0];
+    // Unused input for now
+    (void)input_items;
     gr_complex *out = (gr_complex *) output_items[0];
 
     if (!d_jamming_enabled) {
-        for (int i = 0; i < noutput_items; i++) {
-            out[i] = std::complex<float>(0, 0);
-        }
+        std::fill(out, out + noutput_items, std::complex<float>(0, 0));
         return noutput_items;
     }
 
-    // Phase 1: Simple playback of the generated waveform (No FFT mixing yet)
     int wf_len = d_base_waveform.size();
+    if (wf_len == 0) {
+        std::fill(out, out + noutput_items, std::complex<float>(0, 0));
+        return noutput_items;
+    }
+
+    double freq_offset = d_manual_mode ? d_manual_freq : 0.0;
+    
     for (int i = 0; i < noutput_items; i++) {
-        out[i] = d_base_waveform[d_waveform_idx];
+        std::complex<float> base_sample = d_base_waveform[d_waveform_idx];
         d_waveform_idx = (d_waveform_idx + 1) % wf_len;
+        
+        if (freq_offset != 0.0) {
+            float phase = 2.0f * M_PI * freq_offset * d_total_samples_processed / d_sample_rate_hz;
+            out[i] = base_sample * std::complex<float>(cos(phase), sin(phase));
+        } else {
+            out[i] = base_sample;
+        }
+        d_total_samples_processed++;
     }
     
-    d_total_samples_processed += noutput_items;
     return noutput_items;
 }
 

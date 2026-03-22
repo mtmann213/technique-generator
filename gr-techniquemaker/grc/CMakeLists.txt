@@ -7,4 +7,6 @@
 #
 
 install(FILES
-    techniquemaker_techniquepdu.block.yml DESTINATION share/gnuradio/grc/blocks)
+    techniquemaker_techniquepdu.block.yml
+    techniquemaker_interdictor_cpp.block.yml
+    DESTINATION share/gnuradio/grc/blocks)

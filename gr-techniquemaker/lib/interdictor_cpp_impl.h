@@ -43,6 +43,8 @@ private:
     // Core Waveform Generators
     void generate_cw_tone();
     void generate_narrowband_noise();
+    void generate_phasor_tones();
+    void generate_swept_noise();
     void update_waveform();
 
 public:
