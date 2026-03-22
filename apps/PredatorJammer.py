@@ -20,14 +20,18 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.config_manager = ConfigManager()
         self.sys_logger = self.config_manager.get_logger()
         
+        # Hardware state
+        self.serial = None
+        self.hardware_connected = False
+        
         # Load defaults from config
-        self.serial = self.config_manager.get("hardware", "tx_usrp_serial", "34573DD")
+        default_serial = self.config_manager.get("hardware", "tx_usrp_serial", "34573DD")
         self.samp_rate = self.config_manager.get("hardware", "default_sample_rate_hz", 2e6)
         self.center_freq = self.config_manager.get("hardware", "default_center_freq_hz", 915e6)
         self.rx_gain = self.config_manager.get("rf_defaults", "rx_gain", 40)
         self.tx_gain = self.config_manager.get("rf_defaults", "tx_gain", 50)
         
-        self.setWindowTitle(f"Predator Reactive Analysis Console: USRP {self.serial}")
+        self.setWindowTitle("Predator Reactive Analysis Console")
 
         # --- Parameters ---
         self.target_level = 0.5
@@ -60,8 +64,8 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.setLayout(self.layout)
 
         # --- 1. Status Display ---
-        self.label = Qt.QLabel("SCANNING...")
-        self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: yellow; background-color: black; padding: 10px; border: 2px solid #00F;")
+        self.label = Qt.QLabel("OFFLINE (VIRTUAL MODE)")
+        self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: #555; background-color: black; padding: 10px; border: 2px solid #333;")
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.layout.addWidget(self.label)
 
@@ -76,6 +80,26 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.scroll.setWidgetResizable(True); self.scroll.setFixedWidth(350)
         self.scroll.setWidget(self.scroll_content)
         self.main_split.addWidget(self.scroll)
+
+        # Hardware Discovery
+        hw_disc_box = Qt.QGroupBox("Hardware Discovery")
+        hw_disc_grid = Qt.QGridLayout(); hw_disc_box.setLayout(hw_disc_grid)
+        self.serial_combo = Qt.QComboBox()
+        self.serial_combo.setEditable(True)
+        self.serial_combo.addItem(default_serial)
+        hw_disc_grid.addWidget(Qt.QLabel("USRP Serial:"), 0, 0)
+        hw_disc_grid.addWidget(self.serial_combo, 0, 1)
+        
+        self.scan_btn = Qt.QPushButton("SCAN DEVICES")
+        self.scan_btn.clicked.connect(self.on_scan_clicked)
+        hw_disc_grid.addWidget(self.scan_btn, 1, 0)
+        
+        self.connect_btn = Qt.QPushButton("CONNECT")
+        self.connect_btn.setCheckable(True)
+        self.connect_btn.setStyleSheet("background-color: #005; color: white; font-weight: bold;")
+        self.connect_btn.toggled.connect(self.on_connect_toggled)
+        hw_disc_grid.addWidget(self.connect_btn, 1, 1)
+        self.scroll_layout.addWidget(hw_disc_box)
 
         # Session & Presets
         session_box = Qt.QGroupBox("Session & Presets")
@@ -145,11 +169,63 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.history_panel = Qt.QVBoxLayout(); self.history_list = Qt.QListWidget(); self.history_list.setFixedWidth(180); self.history_list.setStyleSheet("background-color: #111; color: #0F0; font-family: monospace;"); self.main_split.addLayout(self.history_panel); self.history_panel.addWidget(Qt.QLabel("TRACK LOG (kHz)")); self.history_panel.addWidget(self.history_list); clear_hist = Qt.QPushButton("Clear Log"); clear_hist.clicked.connect(self.history_list.clear); self.history_panel.addWidget(clear_hist)
 
         # --- Blocks ---
-        self.init_blocks()
+        self.source = None
+        self.interdictor = None
+        self.sink = None
+        self.file_sink = None
+        
         self.update_dynamic_params(); self.load_presets_from_file(); self.update_cal_display()
         self.timer = QtCore.QTimer(); self.timer.timeout.connect(self.check_detections); self.timer.start(100)
 
+    def on_scan_clicked(self):
+        self.sys_logger.info("Scanning for USRP devices...")
+        try:
+            devices = uhd.find_devices()
+            self.serial_combo.clear()
+            if not devices:
+                self.sys_logger.warning("No USRP devices found.")
+                return
+            for dev in devices:
+                serial = dev.get('serial')
+                model = dev.get('product', 'Unknown')
+                self.serial_combo.addItem(f"{serial} ({model})")
+            self.sys_logger.info(f"Found {len(devices)} devices.")
+        except Exception as e:
+            self.sys_logger.error(f"Scan failed: {e}")
+
+    def on_connect_toggled(self, checked):
+        if checked:
+            selected_text = self.serial_combo.currentText()
+            self.serial = selected_text.split(' ')[0] # Extract serial from "SERIAL (MODEL)"
+            self.sys_logger.info(f"Connecting to USRP {self.serial}...")
+            try:
+                self.init_blocks()
+                self.start()
+                self.hardware_connected = True
+                self.connect_btn.setText("DISCONNECT")
+                self.connect_btn.setStyleSheet("background-color: #700; color: white; font-weight: bold;")
+                self.label.setText("SCANNING...")
+                self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: yellow; background-color: black; padding: 10px; border: 2px solid #00F;")
+                self.setWindowTitle(f"Predator Reactive Analysis Console: USRP {self.serial}")
+            except Exception as e:
+                self.sys_logger.error(f"Hardware connection failed: {e}")
+                self.connect_btn.setChecked(False)
+        else:
+            self.sys_logger.info("Disconnecting hardware...")
+            self.stop(); self.wait()
+            self.disconnect_all()
+            self.source = self.interdictor = self.sink = self.file_sink = None
+            self.hardware_connected = False
+            self.connect_btn.setText("CONNECT")
+            self.connect_btn.setStyleSheet("background-color: #005; color: white; font-weight: bold;")
+            self.label.setText("OFFLINE (VIRTUAL MODE)")
+            self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: #555; background-color: black; padding: 10px; border: 2px solid #333;")
+            self.setWindowTitle("Predator Reactive Analysis Console")
+
     def init_blocks(self):
+        if not self.serial:
+            raise ValueError("No USRP serial specified.")
+            
         self.source = uhd.usrp_source(",".join(("", f"serial={self.serial}")), uhd.stream_args(cpu_format="fc32", args='', channels=list(range(1)))); self.source.set_samp_rate(self.samp_rate); self.source.set_center_freq(self.center_freq, 0); self.source.set_gain(self.rx_gain, 0)
         try:
             from techniquemaker import interdictor_cpp
@@ -168,6 +244,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.connect(self.source, self.interdictor); self.connect(self.interdictor, self.sink); self.connect(self.source, self.waterfall)
 
     def restart_flowgraph(self):
+        if not self.hardware_connected:
+            self.sys_logger.warning("Cannot restart flowgraph: No hardware connected.")
+            return
         self.sys_logger.info("Restarting Flowgraph...")
         self.stop(); self.wait()
         self.disconnect_all()
@@ -179,7 +258,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def on_hydra_toggle(self, checked):
         self.hydra_auto_surgical = checked
-        if hasattr(self.interdictor, 'set_output_mode'):
+        if self.interdictor and hasattr(self.interdictor, 'set_output_mode'):
             self.interdictor.set_output_mode("Auto-Surgical" if checked else "Continuous (Stream)")
 
     def load_calibration(self):
@@ -197,23 +276,41 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         pwr = gain_map[closest_g]; self.cal_label.setText(f"Est. Output: {pwr:.1f} dBm (@{closest_f/1e6:.0f}M)")
 
     def on_pull_input_change(self):
-        try: self.clock_pull = float(self.pull_input.text()); self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
+        try:
+            self.clock_pull = float(self.pull_input.text())
+            if self.interdictor: self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
         except: pass
-    def on_adapt_toggle(self, checked): self.adaptive_bw = checked; self.interdictor.set_adaptive_bw(checked)
-    def on_sab_toggle(self, checked): self.preamble_sabotage = checked; self.interdictor.set_preamble_sabotage(checked)
+    def on_adapt_toggle(self, checked):
+        self.adaptive_bw = checked
+        if self.interdictor: self.interdictor.set_adaptive_bw(checked)
+    def on_sab_toggle(self, checked):
+        self.preamble_sabotage = checked
+        if self.interdictor: self.interdictor.set_preamble_sabotage(checked)
     def on_sab_duration_change(self):
-        try: self.sabotage_duration = float(self.sab_input.text()); self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
+        try:
+            self.sabotage_duration = float(self.sab_input.text())
+            if self.interdictor: self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
         except: pass
-    def on_stutter_toggle(self, checked): self.stutter_enabled = checked; self.interdictor.set_stutter_enabled(checked)
+    def on_stutter_toggle(self, checked):
+        self.stutter_enabled = checked
+        if self.interdictor: self.interdictor.set_stutter_enabled(checked)
     def on_stutter_clean_change(self):
-        try: self.stutter_clean = int(self.stutter_clean_input.text()); self.interdictor.set_stutter_clean_count(self.stutter_clean)
+        try:
+            self.stutter_clean = int(self.stutter_clean_input.text())
+            if self.interdictor: self.interdictor.set_stutter_clean_count(self.stutter_clean)
         except: pass
     def on_stutter_burst_change(self):
-        try: self.stutter_burst = int(self.stutter_burst_input.text()); self.interdictor.set_stutter_burst_count(self.stutter_burst)
+        try:
+            self.stutter_burst = int(self.stutter_burst_input.text())
+            if self.interdictor: self.interdictor.set_stutter_burst_count(self.stutter_burst)
         except: pass
-    def on_stutter_rand_toggle(self, checked): self.stutter_randomize = checked; self.interdictor.set_stutter_randomize(checked)
+    def on_stutter_rand_toggle(self, checked):
+        self.stutter_randomize = checked
+        if self.interdictor: self.interdictor.set_stutter_randomize(checked)
     def on_frame_dur_change(self):
-        try: self.frame_dur = float(self.frame_input.text()); self.interdictor.set_frame_duration_ms(self.frame_dur)
+        try:
+            self.frame_dur = float(self.frame_input.text())
+            if self.interdictor: self.interdictor.set_frame_duration_ms(self.frame_dur)
         except: pass
     def load_presets_from_file(self):
         if os.path.exists(self.preset_file):
@@ -234,18 +331,29 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if name in self.presets:
             p = self.presets[name]; self.rx_gain = p.get("rx_gain", 40); self.rx_gain_slider.setValue(self.rx_gain); self.tx_gain = p.get("tx_gain", 50); self.tx_gain_slider.setValue(self.tx_gain); self.threshold = p.get("threshold", -45); self.thresh_slider.setValue(int(self.threshold)); self.num_targets = p.get("num_targets", 1); self.targets_slider.setValue(self.num_targets); self.center_freq = p.get("center_freq", 915e6); self.samp_rate = p.get("samp_rate", 2e6); self.template = p.get("template", "Narrowband Noise"); self.adaptive_bw = p.get("adaptive_bw", False); self.adapt_cb.setChecked(self.adaptive_bw); self.preamble_sabotage = p.get("preamble_sabotage", False); self.sab_cb.setChecked(self.preamble_sabotage); self.clock_pull = p.get("clock_pull", 0.0); self.pull_input.setText(str(self.clock_pull)); self.stutter_enabled = p.get("stutter_enabled", False); self.stutter_cb.setChecked(self.stutter_enabled); self.stutter_clean = p.get("stutter_clean", 3); self.stutter_clean_input.setText(str(self.stutter_clean)); self.stutter_burst = p.get("stutter_burst", 1); self.stutter_burst_input.setText(str(self.stutter_burst)); self.stutter_randomize = p.get("stutter_randomize", False); self.stutter_rand_cb.setChecked(self.stutter_randomize); self.frame_dur = p.get("frame_dur", 40.0); self.frame_input.setText(str(self.frame_dur)); self.template_combo.setCurrentText(self.template); self.update_cal_display()
     def check_detections(self):
+        if not self.hardware_connected: return
         if not self.interdiction_enabled: self.label.setText("STBY (CEASE OUTPUT)"); self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: gray; background-color: black; padding: 10px; border: 2px solid #0F0;"); return
         if self.manual_mode: self.label.setText(f"MANUAL: {self.manual_freq/1e3:.1f} kHz")
         elif self.hydra_auto_surgical: self.label.setText(f"HYDRA AUTO-SURGICAL ACTIVE"); self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: cyan; background-color: black; padding: 10px; border: 2px solid #FF0;")
-        elif getattr(self.interdictor, '_dwell_counter', 0) > 0:
+        elif self.interdictor and getattr(self.interdictor, '_dwell_counter', 0) > 0:
             self.label.setText(f"TRACKING ACTIVE"); self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: #F00; background-color: black; padding: 10px; border: 2px solid #FF0;")
         else: self.label.setText("SCANNING..."); self.label.setStyleSheet("font-size: 24px; font-weight: bold; color: #0F0; background-color: black; padding: 10px; border: 2px solid white;")
     def on_record_toggle(self, checked):
+        if not self.hardware_connected: return
         if checked: ts = int(time.time()); self.lock(); self.file_sink.open(f"analysis_{ts}.sigmf-data"); self.connect(self.source, self.file_sink); self.unlock(); self.record_btn.setText("LOGGING..."); self.record_btn.setStyleSheet("background-color: #A00; color: white;")
         else: self.lock(); self.disconnect(self.source, self.file_sink); self.file_sink.close(); self.unlock(); self.record_btn.setText("LOG SESSION"); self.record_btn.setStyleSheet("background-color: #333; color: white;")
-    def on_targets_change(self, val): self.num_targets = val; self.targets_label.setText(f"Max Targets: {val}"); self.interdictor.set_num_targets(self.num_targets)
-    def on_mode_change(self): self.manual_mode = self.manual_radio.isChecked(); self.interdictor.set_manual_mode(self.manual_mode); self.manual_slider.setEnabled(self.manual_mode); self.thresh_slider.setEnabled(not self.manual_mode)
-    def on_manual_freq_change(self, val): self.manual_freq = float(val); self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz"); self.interdictor.set_manual_freq(self.manual_freq)
+    def on_targets_change(self, val):
+        self.num_targets = val
+        self.targets_label.setText(f"Max Targets: {val}")
+        if self.interdictor: self.interdictor.set_num_targets(self.num_targets)
+    def on_mode_change(self):
+        self.manual_mode = self.manual_radio.isChecked()
+        if self.interdictor: self.interdictor.set_manual_mode(self.manual_mode)
+        self.manual_slider.setEnabled(self.manual_mode); self.thresh_slider.setEnabled(not self.manual_mode)
+    def on_manual_freq_change(self, val):
+        self.manual_freq = float(val)
+        self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz")
+        if self.interdictor: self.interdictor.set_manual_freq(self.manual_freq)
     def update_dynamic_params(self):
         while self.param_layout.count():
             child = self.param_layout.takeAt(0);
@@ -255,23 +363,45 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         for p in wf_def['params']:
             if p['name'] in ['sample_rate_hz', 'technique_length_seconds']: continue
             if p['type'] == 'entry':
-                w = Qt.QLineEdit("0"); w.editingFinished.connect(lambda n=p['name'], widget=w: self.on_dynamic_change(n, widget.text())); self.param_layout.addRow(p['title'], w)
+                w = Qt.QLineEdit("0")
+                if self.interdictor: w.setText(str(getattr(self.interdictor, p['name'], "0")))
+                w.editingFinished.connect(lambda n=p['name'], widget=w: self.on_dynamic_change(n, widget.text())); self.param_layout.addRow(p['title'], w)
             elif p['type'] == 'options':
-                w = Qt.QComboBox(); w.addItems(p['choices']); w.currentTextChanged.connect(lambda val, n=p['name']: self.on_dynamic_change(n, val)); self.param_layout.addRow(p['title'], w)
+                w = Qt.QComboBox(); w.addItems(p['choices'])
+                if self.interdictor: w.setCurrentText(str(getattr(self.interdictor, p['name'], p['choices'][0])))
+                w.currentTextChanged.connect(lambda val, n=p['name']: self.on_dynamic_change(n, val)); self.param_layout.addRow(p['title'], w)
     def on_dynamic_change(self, name, value):
         setter = f"set_{name}"
-        if hasattr(self.interdictor, setter):
+        if self.interdictor and hasattr(self.interdictor, setter):
             try:
                 val = float(value) if '.' in value else int(value)
                 getattr(self.interdictor, setter)(val)
             except: pass
-    def on_template_change(self, value): self.template = value; self.interdictor.set_technique(self.template); self.update_dynamic_params()
-    def on_fire_toggle(self, checked): self.interdiction_enabled = not checked; self.interdictor.set_jamming_enabled(self.interdiction_enabled)
-    def on_threshold_change(self, value): self.threshold = value; self.thresh_label.setText(f"Thresh: {value} dB"); self.interdictor.set_reactive_threshold_db(value)
-    def on_rx_gain_change(self, value): self.source.set_gain(value, 0)
-    def on_tx_gain_change(self, value): self.tx_gain = value; self.sink.set_gain(value, 0); self.update_cal_display()
+    def on_template_change(self, value):
+        self.template = value
+        if self.interdictor: self.interdictor.set_technique(self.template)
+        self.update_dynamic_params()
+    def on_fire_toggle(self, checked):
+        self.interdiction_enabled = not checked
+        if self.interdictor: self.interdictor.set_jamming_enabled(self.interdiction_enabled)
+    def on_threshold_change(self, value):
+        self.threshold = value
+        self.thresh_label.setText(f"Thresh: {value} dB")
+        if self.interdictor: self.interdictor.set_reactive_threshold_db(value)
+    def on_rx_gain_change(self, value):
+        self.rx_gain = value
+        if self.source: self.source.set_gain(value, 0)
+    def on_tx_gain_change(self, value):
+        self.tx_gain = value
+        if self.sink: self.sink.set_gain(value, 0)
+        self.update_cal_display()
     def on_freq_change(self):
-        try: self.center_freq = float(self.freq_input.text()); self.source.set_center_freq(self.center_freq, 0); self.sink.set_center_freq(self.center_freq, 0); self.waterfall.set_frequency_range(self.center_freq, self.samp_rate); self.update_cal_display()
+        try:
+            self.center_freq = float(self.freq_input.text())
+            if self.source: self.source.set_center_freq(self.center_freq, 0)
+            if self.sink: self.sink.set_center_freq(self.center_freq, 0)
+            self.waterfall.set_frequency_range(self.center_freq, self.samp_rate)
+            self.update_cal_display()
         except: pass
     def on_samp_change(self):
         try: self.samp_rate = float(self.samp_input.text())
