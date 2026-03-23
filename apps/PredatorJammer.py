@@ -56,6 +56,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.stutter_randomize = False
         self.frame_dur = 40.0
         self.hydra_auto_surgical = False
+        self.sticky_denial = False
         self.is_recording = False
 
         self.setWindowTitle("Predator Console [OFFLINE]")
@@ -94,13 +95,13 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.middle_split = Qt.QHBoxLayout()
         self.root_layout.addLayout(self.middle_split)
 
-        # --- LEFT: Tabbed Sidebar ---
-        self.sidebar = Qt.QVBoxLayout()
-        self.middle_split.addLayout(self.sidebar)
-        
+        # --- LEFT: Sidebar Container ---
+        self.sidebar_container = Qt.QVBoxLayout()
+        self.middle_split.addLayout(self.sidebar_container)
+
         self.tabs = Qt.QTabWidget()
         self.tabs.setFixedWidth(380)
-        self.sidebar.addWidget(self.tabs)
+        self.sidebar_container.addWidget(self.tabs)
 
         # Tab 1: Hardware
         hw_tab = Qt.QWidget(); hw_layout = Qt.QVBoxLayout(hw_tab)
@@ -182,7 +183,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.template_combo = Qt.QComboBox(); self.template_combo.addItems(list(BaseWaveforms.waveform_definitions.keys())); self.template_combo.currentTextChanged.connect(self.on_template_change); template_layout.addWidget(self.template_combo)
         self.param_group = Qt.QGroupBox("Technique Parameters"); self.param_layout = Qt.QFormLayout(); self.param_group.setLayout(self.param_layout)
         template_layout.addWidget(self.param_group)
-        self.sidebar.addWidget(template_box)
+        self.sidebar_container.addWidget(template_box)
 
         # --- Waterfall ---
         self.waterfall = qtgui.waterfall_sink_c(1024, window.WIN_BLACKMAN_hARRIS, self.center_freq, self.samp_rate, "Active Tactical Waterfall", 1)
@@ -206,7 +207,8 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def on_sim_hop(self):
         if self.sim_src:
-            hop_offset = random.uniform(-self.samp_rate/3, self.samp_rate/3)
+            # More aggressive hopping for better demonstration
+            hop_offset = random.choice([-0.4, -0.2, 0, 0.2, 0.4]) * self.samp_rate
             self.sim_src.set_frequency(hop_offset)
 
     # --- UI LOGIC ---
@@ -287,67 +289,124 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.waterfall.set_sample_rate(self.samp_rate)
         except: pass
 
-    def on_hydra_toggle(self, checked): self.hydra_auto_surgical = checked; 
-        if self.interdictor: self.interdictor.set_output_mode("Auto-Surgical" if checked else "Continuous (Stream)")
+    def on_hydra_toggle(self, checked):
+        self.hydra_auto_surgical = checked
+        if self.interdictor:
+            self.interdictor.set_output_mode("Auto-Surgical" if checked else "Continuous (Stream)")
+
     def on_sticky_toggle(self, checked): 
-        if self.interdictor and hasattr(self.interdictor, 'set_sticky_denial'): self.interdictor.set_sticky_denial(checked)
+        self.sticky_denial = checked
+        if self.interdictor and hasattr(self.interdictor, 'set_sticky_denial'):
+            self.interdictor.set_sticky_denial(checked)
+
     def on_reset_denial(self): 
-        if self.interdictor and hasattr(self.interdictor, 'clear_persistent_targets'): self.interdictor.clear_persistent_targets(); self.sys_logger.info("Denial Grid Cleared.")
+        if self.interdictor and hasattr(self.interdictor, 'clear_persistent_targets'):
+            self.interdictor.clear_persistent_targets()
+            self.sys_logger.info("Denial Grid Cleared.")
+
     def on_look_change(self):
         try: 
             ms = float(self.look_input.text())
-            if self.interdictor: self.interdictor.set_look_through_ms(ms)
+            if self.interdictor:
+                self.interdictor.set_look_through_ms(ms)
         except: pass
+
     def on_jam_cycle_change(self):
         try: 
             ms = float(self.cycle_input.text())
-            if self.interdictor: self.interdictor.set_jam_cycle_ms(ms)
+            if self.interdictor:
+                self.interdictor.set_jam_cycle_ms(ms)
         except: pass
-    def on_rx_gain_change(self, value): self.rx_gain = value; 
-        if not self.sim_mode and self.source: self.source.set_gain(value, 0)
-    def on_tx_gain_change(self, value): self.tx_gain = value; 
-        if self.sink: self.sink.set_gain(value, 0)
+
+    def on_rx_gain_change(self, value):
+        self.rx_gain = value
+        if not self.sim_mode and self.source:
+            self.source.set_gain(value, 0)
+
+    def on_tx_gain_change(self, value):
+        self.tx_gain = value
+        if self.sink:
+            self.sink.set_gain(value, 0)
         self.update_cal_display()
+
     def on_pull_input_change(self):
         try: 
             self.clock_pull = float(self.pull_input.text())
-            if self.interdictor: self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
+            if self.interdictor:
+                self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
         except: pass
-    def on_adapt_toggle(self, checked): self.adaptive_bw = checked; 
-        if self.interdictor: self.interdictor.set_adaptive_bw(checked)
-    def on_sab_toggle(self, checked): self.preamble_sabotage = checked; 
-        if self.interdictor: self.interdictor.set_preamble_sabotage(checked)
+
+    def on_adapt_toggle(self, checked):
+        self.adaptive_bw = checked
+        if self.interdictor:
+            self.interdictor.set_adaptive_bw(checked)
+
+    def on_sab_toggle(self, checked):
+        self.preamble_sabotage = checked
+        if self.interdictor:
+            self.interdictor.set_preamble_sabotage(checked)
+
     def on_sab_duration_change(self):
         try: 
             self.sabotage_duration = float(self.sab_input.text())
-            if self.interdictor: self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
+            if self.interdictor:
+                self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
         except: pass
-    def on_stutter_toggle(self, checked): self.stutter_enabled = checked; 
-        if self.interdictor: self.interdictor.set_stutter_enabled(checked)
+
+    def on_stutter_toggle(self, checked):
+        self.stutter_enabled = checked
+        if self.interdictor:
+            self.interdictor.set_stutter_enabled(checked)
+
     def on_stutter_clean_change(self):
         try: 
             self.stutter_clean = int(self.stutter_clean_input.text())
-            if self.interdictor: self.interdictor.set_stutter_clean_count(self.stutter_clean)
+            if self.interdictor:
+                self.interdictor.set_stutter_clean_count(self.stutter_clean)
         except: pass
+
     def on_stutter_burst_change(self):
         try: 
             self.stutter_burst = int(self.stutter_burst_input.text())
-            if self.interdictor: self.interdictor.set_stutter_burst_count(self.stutter_burst)
+            if self.interdictor:
+                self.interdictor.set_stutter_burst_count(self.stutter_burst)
         except: pass
-    def on_targets_change(self, val): self.num_targets = val; self.targets_label.setText(f"Max Targets: {val}"); 
-        if self.interdictor: self.interdictor.set_num_targets(self.num_targets)
-    def on_threshold_change(self, value): self.threshold = value; self.thresh_label.setText(f"Threshold: {value} dB"); 
-        if self.interdictor: self.interdictor.set_reactive_threshold_db(value)
-    def on_template_change(self, value): self.template = value; 
-        if self.interdictor: self.interdictor.set_technique(self.template)
+
+    def on_targets_change(self, val):
+        self.num_targets = val
+        self.targets_label.setText(f"Max Targets: {val}")
+        if self.interdictor:
+            self.interdictor.set_num_targets(self.num_targets)
+
+    def on_threshold_change(self, value):
+        self.threshold = value
+        self.thresh_label.setText(f"Threshold: {value} dB")
+        if self.interdictor:
+            self.interdictor.set_reactive_threshold_db(value)
+
+    def on_template_change(self, value):
+        self.template = value
+        if self.interdictor:
+            self.interdictor.set_technique(self.template)
         self.update_dynamic_params()
-    def on_mode_change(self): self.manual_mode = self.manual_radio.isChecked(); 
-        if self.interdictor: self.interdictor.set_manual_mode(self.manual_mode)
-        self.manual_slider.setEnabled(self.manual_mode); self.thresh_slider.setEnabled(not self.manual_mode)
-    def on_manual_freq_change(self, val): self.manual_freq = float(val); self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz"); 
-        if self.interdictor: self.interdictor.set_manual_freq(self.manual_freq)
-    def on_fire_toggle(self, checked): self.interdiction_enabled = not checked; 
-        if self.interdictor: self.interdictor.set_jamming_enabled(self.interdiction_enabled)
+
+    def on_mode_change(self):
+        self.manual_mode = self.manual_radio.isChecked()
+        if self.interdictor:
+            self.interdictor.set_manual_mode(self.manual_mode)
+        self.manual_slider.setEnabled(self.manual_mode)
+        self.thresh_slider.setEnabled(not self.manual_mode)
+
+    def on_manual_freq_change(self, val):
+        self.manual_freq = float(val)
+        self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz")
+        if self.interdictor:
+            self.interdictor.set_manual_freq(self.manual_freq)
+
+    def on_fire_toggle(self, checked):
+        self.interdiction_enabled = not checked
+        if self.interdictor:
+            self.interdictor.set_jamming_enabled(self.interdiction_enabled)
 
     def load_calibration(self):
         if os.path.exists("config/calibration_matrix.json"):
@@ -384,6 +443,15 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if not self.hardware_connected: return
         if checked: ts = int(time.time()); self.lock(); self.file_sink.open(f"analysis_{ts}.sigmf-data"); self.connect(self.source, self.file_sink); self.unlock(); self.record_btn.setText("LOGGING..."); self.record_btn.setStyleSheet("background-color: #A00; color: white;")
         else: self.lock(); self.disconnect(self.source, self.file_sink); self.file_sink.close(); self.unlock(); self.record_btn.setText("LOG SIGMF"); self.record_btn.setStyleSheet("background-color: #333; color: white;")
+    
+    def on_dynamic_change(self, name, value):
+        setter = f"set_{name}"
+        if self.interdictor and hasattr(self.interdictor, setter):
+            try:
+                val = float(value) if '.' in value else int(value)
+                getattr(self.interdictor, setter)(val)
+            except: pass
+
     def update_dynamic_params(self):
         while self.param_layout.count():
             child = self.param_layout.takeAt(0)
@@ -392,18 +460,11 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if not wf_def: return
         for p in wf_def['params']:
             if p['name'] in ['sample_rate_hz', 'technique_length_seconds']: continue
-            # Attempt to find a default value in the waveform definition
-            default_val = "0"
-            # Hardcoded logic for standard defaults if they exist in the definition
-            if p['name'] == 'target_value': default_val = "1.0"
-            elif p['name'] == 'bandwidth_hz': default_val = "100000"
-            elif p['name'] == 'spike_count': default_val = "10"
-            elif p['name'] == 'spike_spacing_hz': default_val = "30000"
-            
+            default_val = p.get('default', "0")
             if p['type'] == 'entry':
                 w = Qt.QLineEdit(default_val); w.editingFinished.connect(lambda n=p['name'], widget=w: self.on_dynamic_change(n, widget.text())); self.param_layout.addRow(p['title'], w)
             elif p['type'] == 'options':
-                w = Qt.QComboBox(); w.addItems(p['choices']); w.currentTextChanged.connect(lambda val, n=p['name']: self.on_dynamic_change(n, val)); self.param_layout.addRow(p['title'], w)
+                w = Qt.QComboBox(); w.addItems(p['choices']); w.setCurrentText(default_val); w.currentTextChanged.connect(lambda val, n=p['name']: self.on_dynamic_change(n, val)); self.param_layout.addRow(p['title'], w)
     def stop_all(self): self.stop(); self.wait()
 
 if __name__ == '__main__':

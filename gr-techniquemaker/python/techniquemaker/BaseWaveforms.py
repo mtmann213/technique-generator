@@ -242,25 +242,157 @@ def differential_comb_creator(
     return _normalize_signal(out, target_value, normalization_type)
 
 waveform_definitions = {
-    "Narrowband Noise": {"func": narrowband_noise_creator, "params": [{"name": "bandwidth_hz", "title": "Bandwidth (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}, {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"]}]},
-    "Differential Comb": {"func": differential_comb_creator, "params": [{"name": "spike_spacing_hz", "title": "Spacing (Hz)", "type": "entry"}, {"name": "spike_count", "title": "Spike Count", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "RRC Modulated Noise": {"func": rrc_modulated_noise, "params": [{"name": "symbol_rate_hz", "title": "Symbol Rate (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "rolloff", "title": "Rolloff", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "Swept Noise": {"func": swept_noise_creator, "params": [{"name": "sweep_hz", "title": "Sweep Range (Hz)", "type": "entry"}, {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Duration (s)", "type": "entry"}, {"name": "sweep_type", "title": "Sweep Type", "type": "options", "choices": ["sawtooth", "triangle"]}, {"name": "sweep_rate_hz_s", "title": "Sweep Rate (Hz/s)", "type": "entry"}, {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"]}]},
-    "Chunked Noise": {"func": chunk_noise_creator, "params": [{"name": "technique_width_hz", "title": "Width (Hz)", "type": "entry"}, {"name": "chunks", "title": "Chunks", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}, {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"]}]},
-    "Noise Tones": {"func": noise_tones, "params": [{"name": "frequencies_str", "title": "Freqs (Hz)", "type": "entry"}, {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}, {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"]}]},
-    "Cosine Tones": {"func": cosine_tones, "params": [{"name": "frequencies_str", "title": "Freqs (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "Phasor Tones": {"func": phasor_tones, "params": [{"name": "frequencies_str", "title": "Freqs (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "Swept Phasors": {"func": swept_phasors, "params": [{"name": "sweep_hz", "title": "Sweep (Hz)", "type": "entry"}, {"name": "tones", "title": "Tones", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "Swept Cosines": {"func": swept_cosines, "params": [{"name": "sweep_hz", "title": "Sweep (Hz)", "type": "entry"}, {"name": "tones", "title": "Tones", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "FM Cosine": {"func": FM_cosine, "params": [{"name": "sweep_range_hz", "title": "Sweep (Hz)", "type": "entry"}, {"name": "modulated_frequency", "title": "Mod Freq (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "LFM Chirp": {"func": lfm_chirp, "params": [{"name": "start_freq_hz", "title": "Start (Hz)", "type": "entry"}, {"name": "end_freq_hz", "title": "End (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "FHSS Noise": {"func": fhss_noise, "params": [{"name": "hop_frequencies_str", "title": "Hops (Hz)", "type": "entry"}, {"name": "hop_duration_seconds", "title": "Duration (s)", "type": "entry"}, {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}, {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"]}]},
-    "OFDM-Shaped Noise": {"func": ofdm_shaped_noise, "params": [{"name": "fft_size", "title": "FFT Size", "type": "entry"}, {"name": "num_subcarriers", "title": "Subcarriers", "type": "entry"}, {"name": "cp_length", "title": "CP Length", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}, {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry"}]},
-    "Song Maker": {"func": songMaker, "params": [{"name": "songName", "title": "Song", "type": "options", "choices": ["Air Force Song", "Anchors Away", "Marine Hymn", "Army Song", "Baby Shark", "Star Wars", "Pink Panther", "Mission Impossible", "Annoying Tone"]}, {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry"}, {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry"}]},
-    "Correlator Confusion": {"func": correlator_confusion, "params": [{"name": "bandwidth_hz", "title": "Target BW (Hz)", "type": "entry"}, {"name": "pulse_interval_ms", "title": "Pulse Gap (ms)", "type": "entry"}, {"name": "confusion_mode", "title": "Mode", "type": "options", "choices": ["phase_flip", "timing_jitter", "both"]}]}
+    "Narrowband Noise": {
+        "func": narrowband_noise_creator,
+        "params": [
+            {"name": "bandwidth_hz", "title": "Bandwidth (Hz)", "type": "entry", "default": "100000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"},
+            {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"], "default": "complex"}
+        ]
+    },
+    "Differential Comb": {
+        "func": differential_comb_creator,
+        "params": [
+            {"name": "spike_spacing_hz", "title": "Spacing (Hz)", "type": "entry", "default": "30000"},
+            {"name": "spike_count", "title": "Spike Count", "type": "entry", "default": "10"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "RRC Modulated Noise": {
+        "func": rrc_modulated_noise,
+        "params": [
+            {"name": "symbol_rate_hz", "title": "Symbol Rate (Hz)", "type": "entry", "default": "50000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "rolloff", "title": "Rolloff", "type": "entry", "default": "0.35"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "Swept Noise": {
+        "func": swept_noise_creator,
+        "params": [
+            {"name": "sweep_hz", "title": "Sweep Range (Hz)", "type": "entry", "default": "500000"},
+            {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry", "default": "50000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Duration (s)", "type": "entry", "default": "0.1"},
+            {"name": "sweep_type", "title": "Sweep Type", "type": "options", "choices": ["sawtooth", "triangle"], "default": "sawtooth"},
+            {"name": "sweep_rate_hz_s", "title": "Sweep Rate (Hz/s)", "type": "entry", "default": "0"},
+            {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"], "default": "complex"}
+        ]
+    },
+    "Chunked Noise": {
+        "func": chunk_noise_creator,
+        "params": [
+            {"name": "technique_width_hz", "title": "Width (Hz)", "type": "entry", "default": "1000000"},
+            {"name": "chunks", "title": "Chunks", "type": "entry", "default": "10"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"},
+            {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"], "default": "complex"}
+        ]
+    },
+    "Noise Tones": {
+        "func": noise_tones,
+        "params": [
+            {"name": "frequencies_str", "title": "Freqs (Hz)", "type": "entry", "default": "-100000 0 100000"},
+            {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry", "default": "10000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"},
+            {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"], "default": "complex"}
+        ]
+    },
+    "Cosine Tones": {
+        "func": cosine_tones,
+        "params": [
+            {"name": "frequencies_str", "title": "Freqs (Hz)", "type": "entry", "default": "10000 50000 100000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "Phasor Tones": {
+        "func": phasor_tones,
+        "params": [
+            {"name": "frequencies_str", "title": "Freqs (Hz)", "type": "entry", "default": "10000 50000 100000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "Swept Phasors": {
+        "func": swept_phasors,
+        "params": [
+            {"name": "sweep_hz", "title": "Sweep (Hz)", "type": "entry", "default": "500000"},
+            {"name": "tones", "title": "Tones", "type": "entry", "default": "5"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "Swept Cosines": {
+        "func": swept_cosines,
+        "params": [
+            {"name": "sweep_hz", "title": "Sweep (Hz)", "type": "entry", "default": "500000"},
+            {"name": "tones", "title": "Tones", "type": "entry", "default": "5"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "FM Cosine": {
+        "func": FM_cosine,
+        "params": [
+            {"name": "sweep_range_hz", "title": "Sweep (Hz)", "type": "entry", "default": "100000"},
+            {"name": "modulated_frequency", "title": "Mod Freq (Hz)", "type": "entry", "default": "1000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "LFM Chirp": {
+        "func": lfm_chirp,
+        "params": [
+            {"name": "start_freq_hz", "title": "Start (Hz)", "type": "entry", "default": "-500000"},
+            {"name": "end_freq_hz", "title": "End (Hz)", "type": "entry", "default": "500000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "FHSS Noise": {
+        "func": fhss_noise,
+        "params": [
+            {"name": "hop_frequencies_str", "title": "Hops (Hz)", "type": "entry", "default": "-200000 0 200000"},
+            {"name": "hop_duration_seconds", "title": "Duration (s)", "type": "entry", "default": "0.01"},
+            {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry", "default": "50000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"},
+            {"name": "interference_type", "title": "Type", "type": "options", "choices": ["complex", "real", "sinc"], "default": "complex"}
+        ]
+    },
+    "OFDM-Shaped Noise": {
+        "func": ofdm_shaped_noise,
+        "params": [
+            {"name": "fft_size", "title": "FFT Size", "type": "entry", "default": "64"},
+            {"name": "num_subcarriers", "title": "Subcarriers", "type": "entry", "default": "48"},
+            {"name": "cp_length", "title": "CP Length", "type": "entry", "default": "16"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
+        ]
+    },
+    "Song Maker": {
+        "func": songMaker,
+        "params": [
+            {"name": "songName", "title": "Song", "type": "options", "choices": ["Air Force Song", "Anchors Away", "Marine Hymn", "Army Song", "Baby Shark", "Star Wars", "Pink Panther", "Mission Impossible", "Annoying Tone"], "default": "Star Wars"},
+            {"name": "bandwidth_hz", "title": "BW (Hz)", "type": "entry", "default": "100000"},
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"}
+        ]
+    },
+    "Correlator Confusion": {
+        "func": correlator_confusion,
+        "params": [
+            {"name": "bandwidth_hz", "title": "Target BW (Hz)", "type": "entry", "default": "1000000"},
+            {"name": "pulse_interval_ms", "title": "Pulse Gap (ms)", "type": "entry", "default": "10.0"},
+            {"name": "confusion_mode", "title": "Mode", "type": "options", "choices": ["phase_flip", "timing_jitter", "both"], "default": "both"}
+        ]
+    }
 }
 
 for tech in waveform_definitions:
-    waveform_definitions[tech]["params"].append({"name": "filter_type", "title": "Filter Type", "type": "options", "choices": ["none", "rectangular", "rrc"]})
-    waveform_definitions[tech]["params"].append({"name": "target_value", "title": "Target Level", "type": "entry"})
-    waveform_definitions[tech]["params"].append({"name": "normalization_type", "title": "Norm Type", "type": "options", "choices": ["peak", "rms"]})
+    waveform_definitions[tech]["params"].append({"name": "filter_type", "title": "Filter Type", "type": "options", "choices": ["none", "rectangular", "rrc"], "default": "none"})
+    waveform_definitions[tech]["params"].append({"name": "target_value", "title": "Amplitude (0-1)", "type": "entry", "default": "1.0"})
+    waveform_definitions[tech]["params"].append({"name": "normalization_type", "title": "Norm Type", "type": "options", "choices": ["peak", "rms"], "default": "peak"})
