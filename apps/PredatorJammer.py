@@ -174,6 +174,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.stutter_cb = Qt.QCheckBox("Stability Frame Stutter"); self.stutter_cb.toggled.connect(self.on_stutter_toggle); adv_grid.addRow(self.stutter_cb)
         self.stutter_clean_input = Qt.QLineEdit(str(self.stutter_clean)); self.stutter_clean_input.editingFinished.connect(self.on_stutter_clean_change); adv_grid.addRow("Clean Count:", self.stutter_clean_input)
         self.stutter_burst_input = Qt.QLineEdit(str(self.stutter_burst)); self.stutter_burst_input.editingFinished.connect(self.on_stutter_burst_change); adv_grid.addRow("Burst Count:", self.stutter_burst_input)
+        self.frame_input = Qt.QLineEdit(str(self.frame_dur)); self.frame_input.editingFinished.connect(self.on_frame_dur_change); adv_grid.addRow("Frame Dur (ms):", self.frame_input)
         self.pull_input = Qt.QLineEdit(str(self.clock_pull)); self.pull_input.editingFinished.connect(self.on_pull_input_change); adv_grid.addRow("Clock-Pull (Hz/s):", self.pull_input)
         prot_layout.addWidget(adv_box); prot_layout.addStretch()
 
@@ -198,7 +199,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.timer = QtCore.QTimer(); self.timer.timeout.connect(self.check_detections); self.timer.start(100)
         self.sim_timer = QtCore.QTimer(); self.sim_timer.timeout.connect(self.on_sim_hop)
 
-    # --- Simulation Logic ---
+    # --- SIMULATION LOGIC ---
     def on_sim_toggle(self, checked):
         self.sim_mode = checked
         if checked: self.sim_timer.start(500); self.sys_logger.info("Simulation Mode Started.")
@@ -210,11 +211,11 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             hop_offset = random.choice([-0.4, -0.2, 0, 0.2, 0.4]) * self.samp_rate
             self.sim_src.set_frequency(hop_offset)
 
-    # --- Hardware Scanning ---
+    # --- UI LOGIC ---
     def on_scan_clicked(self):
         self.sys_logger.info("Scanning for USRP devices...")
         try:
-            # Using find_devices utility directly
+            # Using the correct find_devices utility for UHD
             devices = uhd.find_devices("")
             self.serial_combo.clear()
             if not devices:
@@ -296,102 +297,144 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.waterfall.set_sample_rate(self.samp_rate)
         except: pass
 
-    # --- Tactical Callbacks ---
     def on_hydra_toggle(self, checked):
         self.hydra_auto_surgical = checked
-        if self.interdictor: self.interdictor.set_output_mode("Auto-Surgical" if checked else "Continuous (Stream)")
+        if self.interdictor:
+            self.interdictor.set_output_mode("Auto-Surgical" if checked else "Continuous (Stream)")
 
     def on_sticky_toggle(self, checked): 
         self.sticky_denial = checked
-        if self.interdictor and hasattr(self.interdictor, 'set_sticky_denial'): self.interdictor.set_sticky_denial(checked)
+        if self.interdictor and hasattr(self.interdictor, 'set_sticky_denial'):
+            self.interdictor.set_sticky_denial(checked)
 
     def on_reset_denial(self): 
-        if self.interdictor and hasattr(self.interdictor, 'clear_persistent_targets'): self.interdictor.clear_persistent_targets(); self.sys_logger.info("Denial Grid Cleared.")
+        if self.interdictor and hasattr(self.interdictor, 'clear_persistent_targets'):
+            self.interdictor.clear_persistent_targets()
+            self.sys_logger.info("Denial Grid Cleared.")
 
     def on_look_change(self):
         try: 
             ms = float(self.look_input.text())
-            if self.interdictor: self.interdictor.set_look_through_ms(ms)
+            if self.interdictor:
+                self.interdictor.set_look_through_ms(ms)
         except: pass
 
     def on_jam_cycle_change(self):
         try: 
             ms = float(self.cycle_input.text())
-            if self.interdictor: self.interdictor.set_jam_cycle_ms(ms)
+            if self.interdictor:
+                self.interdictor.set_jam_cycle_ms(ms)
         except: pass
 
     def on_rx_gain_change(self, value):
         self.rx_gain = value
-        if not self.sim_mode and self.source: self.source.set_gain(value, 0)
+        if not self.sim_mode and self.source:
+            self.source.set_gain(value, 0)
 
     def on_tx_gain_change(self, value):
         self.tx_gain = value
-        if self.sink: self.sink.set_gain(value, 0)
+        if self.sink:
+            self.sink.set_gain(value, 0)
         self.update_cal_display()
 
     def on_pull_input_change(self):
         try: 
             self.clock_pull = float(self.pull_input.text())
-            if self.interdictor: self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
+            if self.interdictor:
+                self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
         except: pass
 
     def on_adapt_toggle(self, checked):
         self.adaptive_bw = checked
-        if self.interdictor: self.interdictor.set_adaptive_bw(checked)
+        if self.interdictor:
+            self.interdictor.set_adaptive_bw(checked)
 
     def on_sab_toggle(self, checked):
         self.preamble_sabotage = checked
-        if self.interdictor: self.interdictor.set_preamble_sabotage(checked)
+        if self.interdictor:
+            self.interdictor.set_preamble_sabotage(checked)
 
     def on_sab_duration_change(self):
         try: 
             self.sabotage_duration = float(self.sab_input.text())
-            if self.interdictor: self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
+            if self.interdictor:
+                self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
         except: pass
 
     def on_stutter_toggle(self, checked):
         self.stutter_enabled = checked
-        if self.interdictor: self.interdictor.set_stutter_enabled(checked)
+        if self.interdictor:
+            self.interdictor.set_stutter_enabled(checked)
 
     def on_stutter_clean_change(self):
         try: 
             self.stutter_clean = int(self.stutter_clean_input.text())
-            if self.interdictor: self.interdictor.set_stutter_clean_count(self.stutter_clean)
+            if self.interdictor:
+                self.interdictor.set_stutter_clean_count(self.stutter_clean)
         except: pass
 
     def on_stutter_burst_change(self):
         try: 
             self.stutter_burst = int(self.stutter_burst_input.text())
-            if self.interdictor: self.interdictor.set_stutter_burst_count(self.stutter_burst)
+            if self.interdictor:
+                self.interdictor.set_stutter_burst_count(self.stutter_burst)
         except: pass
 
     def on_targets_change(self, val):
-        self.num_targets = val; self.targets_label.setText(f"Max Targets: {val}")
-        if self.interdictor: self.interdictor.set_num_targets(self.num_targets)
+        self.num_targets = val
+        self.targets_label.setText(f"Max Targets: {val}")
+        if self.interdictor:
+            self.interdictor.set_num_targets(self.num_targets)
 
     def on_threshold_change(self, value):
-        self.threshold = value; self.thresh_label.setText(f"Threshold: {value} dB")
-        if self.interdictor: self.interdictor.set_reactive_threshold_db(value)
+        self.threshold = value
+        self.thresh_label.setText(f"Threshold: {value} dB")
+        if self.interdictor:
+            self.interdictor.set_reactive_threshold_db(value)
 
     def on_template_change(self, value):
         self.template = value
-        if self.interdictor: self.interdictor.set_technique(self.template)
+        if self.interdictor:
+            self.interdictor.set_technique(self.template)
         self.update_dynamic_params()
 
     def on_mode_change(self):
         self.manual_mode = self.manual_radio.isChecked()
-        if self.interdictor: self.interdictor.set_manual_mode(self.manual_mode)
-        self.manual_slider.setEnabled(self.manual_mode); self.thresh_slider.setEnabled(not self.manual_mode)
+        if self.interdictor:
+            self.interdictor.set_manual_mode(self.manual_mode)
+        self.manual_slider.setEnabled(self.manual_mode)
+        self.thresh_slider.setEnabled(not self.manual_mode)
 
     def on_manual_freq_change(self, val):
-        self.manual_freq = float(val); self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz")
-        if self.interdictor: self.interdictor.set_manual_freq(self.manual_freq)
+        self.manual_freq = float(val)
+        self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz")
+        if self.interdictor:
+            self.interdictor.set_manual_freq(self.manual_freq)
 
     def on_fire_toggle(self, checked):
         self.interdiction_enabled = not checked
-        if self.interdictor: self.interdictor.set_jamming_enabled(self.interdiction_enabled)
+        if self.interdictor:
+            self.interdictor.set_jamming_enabled(self.interdiction_enabled)
 
-    # --- Data Persistence ---
+    def check_detections(self):
+        if not self.hardware_connected and not self.sim_mode:
+            self.status_label.setText("OFFLINE")
+            self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #222; color: #555; border: 2px solid #333; border-radius: 5px;")
+            return
+        if not self.interdiction_enabled:
+            self.status_label.setText("TX SILENT")
+            self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #440; color: yellow; border: 2px solid yellow; border-radius: 5px;")
+            return
+        self.status_label.setText("ACTIVE")
+        self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #400; color: #F00; border: 2px solid #F00; border-radius: 5px;")
+
+    def on_frame_dur_change(self):
+        try:
+            self.frame_dur = float(self.frame_input.text())
+            if self.interdictor:
+                self.interdictor.set_frame_duration_ms(self.frame_dur)
+        except: pass
+
     def load_calibration(self):
         if os.path.exists("config/calibration_matrix.json"):
             try:
