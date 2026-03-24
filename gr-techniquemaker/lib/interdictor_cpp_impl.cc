@@ -190,6 +190,9 @@ void interdictor_cpp_impl::perform_spectral_detection()
                 double cf = (double)center_bin * d_sample_rate_hz / d_fft_size;
                 double bw = (double)(end_bin - start_bin + 1) * d_sample_rate_hz / d_fft_size;
                 if (bw <= 0) bw = d_sample_rate_hz / d_fft_size;
+                
+                // Safety: Ignore islands that are > 20% of the entire spectrum (likely noise floor)
+                if (bw > d_sample_rate_hz * 0.2) continue;
 
                 if (d_sticky_denial) {
                     // Search for existing sticky target near this frequency (within 10kHz)
@@ -261,10 +264,13 @@ int interdictor_cpp_impl::work(int noutput_items,
     const gr_complex *in = (const gr_complex *) input_items[0];
     gr_complex *out = (gr_complex *) output_items[0];
 
+    std::vector<float> gate(noutput_items, 1.0f);
+
     // 1. Gated Look-through & Efficient Buffer Filling
     for (int i = 0; i < noutput_items; i++) {
         d_cycle_counter++;
         if (d_is_looking) {
+            gate[i] = 0.0f; // Silence output during look-through
             // Guard Phase: Wait for USB/Hardware latency to clear before listening
             if (d_cycle_counter > d_guard_samples) {
                 // Capture Phase: Fill the buffer
@@ -277,13 +283,14 @@ int interdictor_cpp_impl::work(int noutput_items,
                 d_is_looking = false; d_cycle_counter = 0; 
             }
         } else {
+            gate[i] = 1.0f; // Enable jammer
             if (d_cycle_counter >= d_jam_samples) { 
                 d_is_looking = true; d_cycle_counter = 0; d_fft_ptr = 0; // Reset for next scan
             }
         }
     }
 
-    if (!d_jamming_enabled || d_is_looking) {
+    if (!d_jamming_enabled) {
         std::fill(out, out + noutput_items, std::complex<float>(0, 0));
         return noutput_items;
     }
@@ -325,6 +332,12 @@ int interdictor_cpp_impl::work(int noutput_items,
                 if (target.resample_ptr >= wf_len) target.resample_ptr -= wf_len;
             }
         }
+        
+        // Apply Gating
+        for (int i = 0; i < noutput_items; i++) {
+            out[i] *= gate[i];
+        }
+        
         d_total_samples_processed += noutput_items;
     } else {
         // ... (Single Target Logic) ...
@@ -336,9 +349,9 @@ int interdictor_cpp_impl::work(int noutput_items,
             
             if (freq_offset != 0.0) {
                 float phase = phase_inc * d_total_samples_processed;
-                out[i] = base_sample * std::complex<float>(cosf(phase), sinf(phase));
+                out[i] = base_sample * std::complex<float>(cosf(phase), sinf(phase)) * gate[i];
             } else {
-                out[i] = base_sample;
+                out[i] = base_sample * gate[i];
             }
             d_total_samples_processed++;
         }
