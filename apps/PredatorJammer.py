@@ -246,21 +246,30 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def on_connect_toggled(self, checked):
         if checked:
+            # 1. Ensure any previous instance is completely dead
+            self.stop(); self.wait()
+            
             selected_text = self.serial_combo.currentText()
             self.serial = selected_text.split(' ')[0]
             self.sys_logger.info(f"Connecting to USRP {self.serial}...")
             try:
-                self.init_blocks(); self.start(); self.hardware_connected = True
+                # 2. Mark as connected FIRST so init_blocks knows to build the hardware path
+                self.hardware_connected = True
+                self.init_blocks()
+                self.start()
+                
                 self.connect_btn.setText("DISCONNECT"); self.connect_btn.setStyleSheet("background-color: #700; color: white; font-weight: bold;")
                 self.status_label.setText("CONNECTED"); self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #040; color: #0F0; border: 2px solid #0F0; border-radius: 5px;")
                 self.setWindowTitle(f"Predator Console [ONLINE - {self.serial}]")
                 self.update_cal_display(); self.update_dynamic_params()
             except Exception as e:
-                self.sys_logger.error(f"Hardware connection failed: {e}"); self.connect_btn.setChecked(False)
+                self.sys_logger.error(f"Hardware connection failed: {e}")
+                self.hardware_connected = False
+                self.connect_btn.setChecked(False)
         else:
             self.sys_logger.info("Disconnecting hardware...")
             self.stop(); self.wait(); self.disconnect_all()
-            self.source_node = self.interdictor = self.sink = self.file_sink = self.sim_src = None
+            self.hw_source = self.interdictor = self.sink = self.file_sink = self.sim_src = None
             self.hardware_connected = False
             self.connect_btn.setText("CONNECT"); self.connect_btn.setStyleSheet("background-color: #005; color: white; font-weight: bold;")
             self.status_label.setText("OFFLINE"); self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #222; color: #555; border: 2px solid #333; border-radius: 5px;")
@@ -284,22 +293,27 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.sim_src = None
             self.final_source = self.hw_source
 
-        # 3. Engine
+        # 3. Engine (Ensure we use the latest C++ core)
         try:
             from techniquemaker import interdictor_cpp
             self.interdictor = interdictor_cpp(technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Auto-Surgical' if self.hydra_auto_surgical else 'Continuous (Stream)')
         except ImportError:
             self.interdictor = techniquepdu(technique='Reactive Jammer', warhead_technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Continuous (Stream)')
         
-        # 4. Hardware Sink
+        # 4. Sink Path (Crucial Fix: Always connect to SOMETHING)
         if self.hardware_connected and self.serial:
             self.sink = uhd.usrp_sink(",".join(("", f"serial={self.serial}")), uhd.stream_args(cpu_format="fc32", args='', channels=list(range(1))))
             self.sink.set_samp_rate(self.samp_rate); self.sink.set_center_freq(self.center_freq, 0); self.sink.set_gain(self.tx_gain, 0)
+            self.connect(self.interdictor, self.sink)
+        else:
+            # Use a null sink if offline so the engine doesn't complain about dangling ports
+            self.sink = blocks.null_sink(gr.sizeof_gr_complex)
             self.connect(self.interdictor, self.sink)
         
         self.file_sink = blocks.file_sink(gr.sizeof_gr_complex, "session.bin", False); self.file_sink.set_unbuffered(True)
         self.connect(self.final_source, self.interdictor); self.connect(self.final_source, self.waterfall)
         self.update_dynamic_params()
+
 
     def restart_flowgraph(self):
         if not self.hardware_connected and not self.sim_mode: return
