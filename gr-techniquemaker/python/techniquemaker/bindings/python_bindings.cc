@@ -67,7 +67,8 @@ void bind_interdictor_cpp(py::module& m)
         .def("set_sticky_denial", &interdictor_cpp::set_sticky_denial)
         .def("set_look_through_ms", &interdictor_cpp::set_look_through_ms)
         .def("set_jam_cycle_ms", &interdictor_cpp::set_jam_cycle_ms)
-        .def("clear_persistent_targets", &interdictor_cpp::clear_persistent_targets);
+        .def("clear_persistent_targets", &interdictor_cpp::clear_persistent_targets)
+        .def("set_base_waveform", &interdictor_cpp::set_base_waveform);
 }
 
 // We need this hack because import_array() returns NULL

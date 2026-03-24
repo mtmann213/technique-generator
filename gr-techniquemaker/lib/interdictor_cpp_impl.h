@@ -132,6 +132,7 @@ public:
     void set_look_through_ms(double ms) override;
     void set_jam_cycle_ms(double ms) override;
     void clear_persistent_targets() override;
+    void set_base_waveform(const std::vector<std::complex<float>>& waveform) override;
 
     int work(int noutput_items,
              gr_vector_const_void_star &input_items,

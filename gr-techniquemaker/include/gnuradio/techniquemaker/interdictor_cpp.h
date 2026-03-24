@@ -56,6 +56,7 @@ public:
     virtual void set_look_through_ms(double ms) = 0;
     virtual void set_jam_cycle_ms(double ms) = 0;
     virtual void clear_persistent_targets() = 0;
+    virtual void set_base_waveform(const std::vector<std::complex<float>>& waveform) = 0;
 };
 
 } // namespace techniquemaker
