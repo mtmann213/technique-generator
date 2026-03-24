@@ -1,6 +1,42 @@
+import sys
+import os
+
+def setup_env():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    oot_python_path = os.path.join(current_dir, "gr-techniquemaker", "python")
+    
+    # 1. Add standard gnuradio install paths to the VERY FRONT of sys.path
+    system_paths = [
+        "/usr/local/lib/python3.12/dist-packages",
+        "/usr/local/lib/python3.12/site-packages",
+        "/usr/local/lib/python3/dist-packages"
+    ]
+    for p in reversed(system_paths):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+            
+    # 2. Add local path to the END of sys.path as a fallback
+    if oot_python_path not in sys.path:
+        sys.path.append(oot_python_path)
+    
+    # 3. Setup subprocess environment
+    env = os.environ.copy()
+    existing_pp = env.get("PYTHONPATH", "")
+    
+    # Build new PYTHONPATH: System Paths -> Existing -> Local Path
+    sys_pp_str = os.pathsep.join(system_paths)
+    if existing_pp:
+        env["PYTHONPATH"] = f"{sys_pp_str}{os.pathsep}{existing_pp}{os.pathsep}{oot_python_path}"
+    else:
+        env["PYTHONPATH"] = f"{sys_pp_str}{os.pathsep}{oot_python_path}"
+    
+    return env
+
+env = setup_env()
+
 import time
 from gnuradio import gr, blocks, analog
-from techniquemaker import interdictor_cpp
+from gnuradio.techniquemaker import interdictor_cpp
 
 class TestFlowgraph(gr.top_block):
     def __init__(self):
@@ -34,6 +70,7 @@ class TestFlowgraph(gr.top_block):
         self.interdictor.set_sticky_denial(True)
         self.interdictor.set_look_through_ms(10.0)
         self.interdictor.set_jam_cycle_ms(90.0)
+        self.interdictor.set_base_waveform([complex(1,0)])
         
         self.sink = blocks.null_sink(gr.sizeof_gr_complex)
         self.connect(self.src, self.interdictor, self.sink)

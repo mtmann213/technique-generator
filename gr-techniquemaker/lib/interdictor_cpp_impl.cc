@@ -109,6 +109,11 @@ interdictor_cpp_impl::interdictor_cpp_impl(const std::string& technique,
 
     d_look_samples = static_cast<uint64_t>(d_look_through_ms * d_sample_rate_hz / 1000.0);
     d_jam_samples = static_cast<uint64_t>(d_jam_cycle_ms * d_sample_rate_hz / 1000.0);
+    
+    // Guard time: 5ms or half the look-through window, whichever is smaller
+    double guard_ms = std::min(5.0, d_look_through_ms / 2.0);
+    d_guard_samples = static_cast<uint64_t>(guard_ms * d_sample_rate_hz / 1000.0);
+    
     update_waveform();
 }
 
@@ -128,157 +133,14 @@ void normalize_signal_v3(std::vector<std::complex<float>>& wf, float target = 1.
     }
 }
 
-void interdictor_cpp_impl::generate_cw_tone()
+void interdictor_cpp_impl::set_base_waveform(const std::vector<std::complex<float>>& waveform)
 {
-    d_base_waveform.assign(1024, std::complex<float>(1.0f, 0.0f));
-}
-
-void interdictor_cpp_impl::generate_narrowband_noise()
-{
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.resize(num_samples);
-    std::random_device rd; std::mt19937 gen(rd());
-    std::normal_distribution<float> dist(0.0f, 1.0f);
-    for (int i = 0; i < num_samples; ++i) d_base_waveform[i] = std::complex<float>(dist(gen), dist(gen));
-    normalize_signal_v3(d_base_waveform);
-}
-
-void interdictor_cpp_impl::generate_phasor_tones()
-{
-    std::vector<double> freqs = {1000.0, 5000.0, 10000.0};
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.assign(num_samples, std::complex<float>(0, 0));
-    for (double f : freqs) {
-        for (int i = 0; i < num_samples; ++i) {
-            float phase = 2.0f * M_PI * f * i / d_sample_rate_hz;
-            d_base_waveform[i] += std::complex<float>(cos(phase), sin(phase));
-        }
+    if (waveform.empty()) {
+        d_base_waveform.assign(1, std::complex<float>(0,0));
+    } else {
+        d_base_waveform = waveform;
     }
-    normalize_signal_v3(d_base_waveform);
-}
-
-void interdictor_cpp_impl::generate_cosine_tones()
-{
-    std::vector<double> freqs = {1000.0, 5000.0, 10000.0};
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.assign(num_samples, std::complex<float>(0, 0));
-    for (double f : freqs) {
-        for (int i = 0; i < num_samples; ++i) {
-            float val = cos(2.0f * M_PI * f * i / d_sample_rate_hz);
-            d_base_waveform[i] += std::complex<float>(val, 0);
-        }
-    }
-    normalize_signal_v3(d_base_waveform);
-}
-
-void interdictor_cpp_impl::generate_swept_noise()
-{
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.resize(num_samples);
-    std::random_device rd; std::mt19937 gen(rd());
-    std::normal_distribution<float> dist(0.0f, 1.0f);
-    double sweep_hz = 500000.0;
-    for (int i = 0; i < num_samples; ++i) {
-        double t = static_cast<double>(i) / d_sample_rate_hz;
-        double inst_freq = (sweep_hz / 0.1) * t - (sweep_hz / 2.0);
-        float phase = 2.0f * M_PI * inst_freq * t;
-        std::complex<float> noise(dist(gen), dist(gen));
-        d_base_waveform[i] = noise * std::complex<float>(cos(phase), sin(phase));
-    }
-    normalize_signal_v3(d_base_waveform);
-}
-
-void interdictor_cpp_impl::generate_lfm_chirp()
-{
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.resize(num_samples);
-    double f0 = -d_bandwidth_hz / 2.0;
-    double f1 = d_bandwidth_hz / 2.0;
-    double T = 0.1;
-    for (int i = 0; i < num_samples; ++i) {
-        double t = static_cast<double>(i) / d_sample_rate_hz;
-        double phase = 2.0 * M_PI * (f0 * t + 0.5 * (f1 - f0) * t * t / T);
-        d_base_waveform[i] = std::complex<float>(cos(phase), sin(phase));
-    }
-}
-
-void interdictor_cpp_impl::generate_fm_cosine()
-{
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.resize(num_samples);
-    double sweep_range = d_bandwidth_hz;
-    double mod_freq = 1000.0;
-    double cumulative_phase = 0.0;
-    for (int i = 0; i < num_samples; ++i) {
-        double t = static_cast<double>(i) / d_sample_rate_hz;
-        double inst_freq_dev = 0.5 * sweep_range * cos(2.0 * M_PI * mod_freq * t);
-        cumulative_phase += 2.0 * M_PI * inst_freq_dev / d_sample_rate_hz;
-        d_base_waveform[i] = std::complex<float>(cos(cumulative_phase), sin(cumulative_phase));
-    }
-}
-
-void interdictor_cpp_impl::generate_swept_phasors()
-{
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.assign(num_samples, std::complex<float>(0, 0));
-    int tones = 5;
-    double sweep_hz = d_bandwidth_hz;
-    for (int k = 0; k < tones; ++k) {
-        double f0 = -sweep_hz/2.0 + k*(sweep_hz/tones);
-        double cumulative_phase = 0.0;
-        for (int i = 0; i < num_samples; ++i) {
-            double t = static_cast<double>(i) / d_sample_rate_hz;
-            double inst_freq = (sweep_hz / tones / 0.1) * t + f0;
-            cumulative_phase += 2.0 * M_PI * inst_freq / d_sample_rate_hz;
-            d_base_waveform[i] += std::complex<float>(cos(cumulative_phase), sin(cumulative_phase));
-        }
-    }
-    normalize_signal_v3(d_base_waveform);
-}
-
-void interdictor_cpp_impl::generate_swept_cosines()
-{
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.assign(num_samples, std::complex<float>(0, 0));
-    int tones = 5;
-    double sweep_hz = d_bandwidth_hz;
-    for (int k = 0; k < tones; ++k) {
-        double f0 = -sweep_hz/2.0 + k*(sweep_hz/tones);
-        double cumulative_phase = 0.0;
-        for (int i = 0; i < num_samples; ++i) {
-            double t = static_cast<double>(i) / d_sample_rate_hz;
-            double inst_freq = (sweep_hz / tones / 0.1) * t + f0;
-            cumulative_phase += 2.0 * M_PI * inst_freq / d_sample_rate_hz;
-            d_base_waveform[i] += std::complex<float>(cos(cumulative_phase), 0);
-        }
-    }
-    normalize_signal_v3(d_base_waveform);
-}
-
-void interdictor_cpp_impl::generate_rrc_noise() { generate_narrowband_noise(); }
-void interdictor_cpp_impl::generate_chunked_noise() { generate_narrowband_noise(); }
-void interdictor_cpp_impl::generate_noise_tones() { generate_phasor_tones(); }
-void interdictor_cpp_impl::generate_fhss_noise() { generate_narrowband_noise(); }
-void interdictor_cpp_impl::generate_ofdm_noise() { generate_narrowband_noise(); }
-void interdictor_cpp_impl::generate_correlator_confusion() { generate_cw_tone(); }
-void interdictor_cpp_impl::generate_song() { generate_cosine_tones(); }
-
-void interdictor_cpp_impl::generate_differential_comb()
-{
-    int num_samples = static_cast<int>(d_sample_rate_hz * 0.1);
-    d_base_waveform.assign(num_samples, std::complex<float>(0, 0));
-    double spacing = d_bandwidth_hz; 
-    int count = d_num_targets > 0 ? d_num_targets : 10;
-    std::random_device rd; std::mt19937 gen(rd()); std::uniform_real_distribution<float> dist(0.0f, 2.0f * M_PI);
-    int K = count / 2;
-    for (int k = -K; k <= K; ++k) {
-        double freq = k * spacing; float phase_offset = dist(gen);
-        for (int i = 0; i < num_samples; ++i) {
-            float phase = 2.0f * M_PI * freq * i / d_sample_rate_hz + phase_offset;
-            d_base_waveform[i] += std::complex<float>(cos(phase), sin(phase));
-        }
-    }
-    normalize_signal_v3(d_base_waveform);
+    d_waveform_idx = 0;
 }
 
 void interdictor_cpp_impl::perform_spectral_detection()
@@ -363,23 +225,7 @@ void interdictor_cpp_impl::perform_spectral_detection()
 
 void interdictor_cpp_impl::update_waveform()
 {
-    if (d_technique == "CW Tone (Pure)" || d_technique == "Direct CW") generate_cw_tone();
-    else if (d_technique == "Phasor Tones") generate_phasor_tones();
-    else if (d_technique == "Cosine Tones") generate_cosine_tones();
-    else if (d_technique == "Swept Noise") generate_swept_noise();
-    else if (d_technique == "LFM Chirp") generate_lfm_chirp();
-    else if (d_technique == "FM Cosine") generate_fm_cosine();
-    else if (d_technique == "Swept Phasors") generate_swept_phasors();
-    else if (d_technique == "Swept Cosines") generate_swept_cosines();
-    else if (d_technique == "Differential Comb") generate_differential_comb();
-    else if (d_technique == "RRC Modulated Noise") generate_rrc_noise();
-    else if (d_technique == "Chunked Noise") generate_chunked_noise();
-    else if (d_technique == "Noise Tones") generate_noise_tones();
-    else if (d_technique == "FHSS Noise") generate_fhss_noise();
-    else if (d_technique == "OFDM-Shaped Noise") generate_ofdm_noise();
-    else if (d_technique == "Correlator Confusion") generate_correlator_confusion();
-    else if (d_technique == "Song Maker") generate_song();
-    else generate_narrowband_noise();
+    // The waveform is now generated by the Python UI and passed in via set_base_waveform
     d_waveform_idx = 0;
 }
 
@@ -419,10 +265,13 @@ int interdictor_cpp_impl::work(int noutput_items,
     for (int i = 0; i < noutput_items; i++) {
         d_cycle_counter++;
         if (d_is_looking) {
-            // Only fill FFT buffer if we haven't run a detection this cycle
-            if (d_fft_ptr < d_fft_size) {
-                d_fft_buffer[d_fft_ptr++] = in[i];
-                if (d_fft_ptr == d_fft_size) perform_spectral_detection();
+            // Guard Phase: Wait for USB/Hardware latency to clear before listening
+            if (d_cycle_counter > d_guard_samples) {
+                // Capture Phase: Fill the buffer
+                if (d_fft_ptr < d_fft_size) {
+                    d_fft_buffer[d_fft_ptr++] = in[i];
+                    if (d_fft_ptr == d_fft_size) perform_spectral_detection();
+                }
             }
             if (d_cycle_counter >= d_look_samples) { 
                 d_is_looking = false; d_cycle_counter = 0; 

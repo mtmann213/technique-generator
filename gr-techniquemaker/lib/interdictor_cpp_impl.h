@@ -61,6 +61,7 @@ private:
     bool d_is_looking;
     uint64_t d_look_samples;
     uint64_t d_jam_samples;
+    uint64_t d_guard_samples;
     uint64_t d_cycle_counter;
     std::vector<Target> d_persistent_targets;
 
