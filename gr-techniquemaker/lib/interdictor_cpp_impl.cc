@@ -327,17 +327,24 @@ void interdictor_cpp_impl::perform_spectral_detection()
                 
                 double cf = (double)center_bin * d_sample_rate_hz / d_fft_size;
                 double bw = (double)(end_bin - start_bin + 1) * d_sample_rate_hz / d_fft_size;
-                
-                // Sensitivity Floor: Minimum 1 bin bandwidth
                 if (bw <= 0) bw = d_sample_rate_hz / d_fft_size;
 
                 if (d_sticky_denial) {
+                    // Search for existing sticky target near this frequency (within 10kHz)
                     bool exists = false;
                     for (const auto& existing : d_tracked_targets) {
-                        if (std::abs(existing.center_freq - cf) < (bw/2 + 5000)) { exists = true; break; }
+                        if (std::abs(existing.center_freq - cf) < 10000.0) { 
+                            exists = true; 
+                            break; 
+                        }
                     }
-                    if (!exists) d_tracked_targets.push_back({cf, bw, true, 0.0});
+                    // Only add if it's a NEW channel we haven't burned yet
+                    if (!exists) {
+                        d_tracked_targets.push_back({cf, bw, true, 0.0});
+                        std::cout << "STUCK Target: " << cf/1e3 << " kHz (BW: " << bw/1e3 << "k)" << std::endl;
+                    }
                 } else {
+                    // Standard surgical mode: just add current discovery
                     d_tracked_targets.push_back({cf, bw, true, 0.0});
                 }
                 
