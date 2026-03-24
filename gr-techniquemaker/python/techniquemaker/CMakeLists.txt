@@ -19,7 +19,11 @@ add_subdirectory(bindings)
 ########################################################################
 # Install python sources
 ########################################################################
-gr_python_install(FILES __init__.py DESTINATION ${GR_PYTHON_DIR}/gnuradio/techniquemaker)
+gr_python_install(FILES 
+    __init__.py 
+    techniquepdu.py
+    BaseWaveforms.py
+    DESTINATION ${GR_PYTHON_DIR}/gnuradio/techniquemaker)
 
 ########################################################################
 # Handle the unit tests

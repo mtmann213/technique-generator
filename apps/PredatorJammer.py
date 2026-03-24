@@ -296,8 +296,11 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         # 3. Engine (Ensure we use the latest C++ core)
         try:
             from techniquemaker import interdictor_cpp
+            self.sys_logger.info("Using high-performance C++ interdictor core.")
             self.interdictor = interdictor_cpp(technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Auto-Surgical' if self.hydra_auto_surgical else 'Continuous (Stream)')
-        except ImportError:
+        except ImportError as e:
+            self.sys_logger.warning(f"C++ core failed to load: {e}")
+            self.sys_logger.warning("Falling back to pure Python techniquepdu (No Sticky Trap logic).")
             self.interdictor = techniquepdu(technique='Reactive Jammer', warhead_technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Continuous (Stream)')
         
         # 4. Sink Path (Crucial Fix: Always connect to SOMETHING)

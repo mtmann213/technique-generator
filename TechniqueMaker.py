@@ -9,19 +9,30 @@ def setup_env():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     oot_python_path = os.path.join(current_dir, "gr-techniquemaker", "python")
     
-    # Add to current process at the END, so system-installed compiled OOT modules take priority
+    # 1. Add standard gnuradio install paths to the VERY FRONT of sys.path
+    system_paths = [
+        "/usr/local/lib/python3.12/dist-packages",
+        "/usr/local/lib/python3.12/site-packages",
+        "/usr/local/lib/python3/dist-packages"
+    ]
+    for p in reversed(system_paths):
+        if p not in sys.path:
+            sys.path.insert(0, p)
+            
+    # 2. Add local path to the END of sys.path as a fallback
     if oot_python_path not in sys.path:
         sys.path.append(oot_python_path)
     
-    # Set for subprocesses
+    # 3. Setup subprocess environment
     env = os.environ.copy()
     existing_pp = env.get("PYTHONPATH", "")
-    # Append local path so system paths take precedence
-    env["PYTHONPATH"] = f"{existing_pp}{os.pathsep}{oot_python_path}" if existing_pp else oot_python_path
     
-    # Also ensure the standard gnuradio install path is explicitly in the environment
-    system_path = "/usr/local/lib/python3/dist-packages:/usr/local/lib/python3.12/site-packages:/usr/local/lib/python3.12/dist-packages"
-    env["PYTHONPATH"] = f"{system_path}:{env['PYTHONPATH']}"
+    # Build new PYTHONPATH: System Paths -> Existing -> Local Path
+    sys_pp_str = os.pathsep.join(system_paths)
+    if existing_pp:
+        env["PYTHONPATH"] = f"{sys_pp_str}{os.pathsep}{existing_pp}{os.pathsep}{oot_python_path}"
+    else:
+        env["PYTHONPATH"] = f"{sys_pp_str}{os.pathsep}{oot_python_path}"
     
     return env
 

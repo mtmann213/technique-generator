@@ -24,7 +24,7 @@ if(NOT techniquemaker_sources)
 endif(NOT techniquemaker_sources)
 
 add_library(gnuradio-techniquemaker SHARED ${techniquemaker_sources})
-target_link_libraries(gnuradio-techniquemaker gnuradio::gnuradio-runtime)
+target_link_libraries(gnuradio-techniquemaker gnuradio::gnuradio-runtime gnuradio::gnuradio-fft)
 target_include_directories(
     gnuradio-techniquemaker
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>

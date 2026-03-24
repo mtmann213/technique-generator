@@ -352,6 +352,12 @@ void interdictor_cpp_impl::perform_spectral_detection()
             }
         }
     }
+    
+    // Debug Logging
+    if (d_sticky_denial) {
+        std::cout << "[DEBUG] Sticky Mode ON. Current Targets: " << d_tracked_targets.size() << std::endl;
+    }
+    
     d_fft_ptr = 0;
 }
 
@@ -397,7 +403,7 @@ void interdictor_cpp_impl::set_stutter_burst_count(int stutter_burst_count) { d_
 void interdictor_cpp_impl::set_stutter_randomize(bool stutter_randomize) { d_stutter_randomize = stutter_randomize; }
 void interdictor_cpp_impl::set_frame_duration_ms(double frame_duration_ms) { d_frame_duration_ms = frame_duration_ms; }
 void interdictor_cpp_impl::set_output_mode(const std::string& output_mode) { d_output_mode = output_mode; }
-void interdictor_cpp_impl::set_sticky_denial(bool sticky) { d_sticky_denial = sticky; if (!sticky) d_tracked_targets.clear(); }
+void interdictor_cpp_impl::set_sticky_denial(bool sticky) { d_sticky_denial = sticky; }
 void interdictor_cpp_impl::set_look_through_ms(double ms) { d_look_through_ms = ms; d_look_samples = static_cast<uint64_t>(ms * d_sample_rate_hz / 1000.0); }
 void interdictor_cpp_impl::set_jam_cycle_ms(double ms) { d_jam_cycle_ms = ms; d_jam_samples = static_cast<uint64_t>(ms * d_sample_rate_hz / 1000.0); }
 void interdictor_cpp_impl::clear_persistent_targets() { d_tracked_targets.clear(); }
