@@ -40,13 +40,6 @@ private:
     int d_stutter_counter;
     int d_current_clean_limit;
     
-    // Hydra Tracking State
-    struct Target {
-        double center_freq;
-        double bandwidth;
-        bool active;
-        double resample_ptr;
-    };
     std::vector<Target> d_tracked_targets;
     std::vector<std::complex<float>> d_fft_buffer;
     int d_fft_ptr;
@@ -63,26 +56,8 @@ private:
     uint64_t d_jam_samples;
     uint64_t d_guard_samples;
     uint64_t d_cycle_counter;
-    std::vector<Target> d_persistent_targets;
 
     // Core Waveform Generators
-    void generate_cw_tone();
-    void generate_narrowband_noise();
-    void generate_phasor_tones();
-    void generate_swept_noise();
-    void generate_rrc_noise();
-    void generate_chunked_noise();
-    void generate_noise_tones();
-    void generate_cosine_tones();
-    void generate_swept_phasors();
-    void generate_swept_cosines();
-    void generate_fm_cosine();
-    void generate_lfm_chirp();
-    void generate_fhss_noise();
-    void generate_ofdm_noise();
-    void generate_correlator_confusion();
-    void generate_song();
-    void generate_differential_comb();
     void perform_spectral_detection();
     void update_waveform();
 
@@ -134,6 +109,9 @@ public:
     void set_jam_cycle_ms(double ms) override;
     void clear_persistent_targets() override;
     void set_base_waveform(const std::vector<std::complex<float>>& waveform) override;
+    
+    std::vector<Target> get_targets() override;
+    void set_targets(const std::vector<Target>& targets) override;
 
     int work(int noutput_items,
              gr_vector_const_void_star &input_items,

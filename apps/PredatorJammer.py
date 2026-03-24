@@ -31,6 +31,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.presets = {}
         self.preset_file = "config/predator_presets.json"
         self.cal_data = {}
+        self.burned_channels = [] # Shadow list of C++ targets
         
         # Load defaults from config
         default_serial = self.config_manager.get("hardware", "tx_usrp_serial", "34573DD")
@@ -229,7 +230,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             hop_offset = random.choice([-0.4, -0.2, 0, 0.2, 0.4]) * self.samp_rate
             self.sim_src.set_frequency(hop_offset)
 
-    # --- UI Callbacks ---
+    # --- Hardware Scanning ---
     def on_scan_clicked(self):
         self.sys_logger.info("Scanning for USRP devices...")
         try:
@@ -249,18 +250,14 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def on_connect_toggled(self, checked):
         if checked:
-            # 1. Ensure any previous instance is completely dead
             self.stop(); self.wait()
-            
             selected_text = self.serial_combo.currentText()
             self.serial = selected_text.split(' ')[0]
             self.sys_logger.info(f"Connecting to USRP {self.serial}...")
             try:
-                # 2. Mark as connected FIRST so init_blocks knows to build the hardware path
                 self.hardware_connected = True
                 self.init_blocks()
                 self.start()
-                
                 self.connect_btn.setText("DISCONNECT"); self.connect_btn.setStyleSheet("background-color: #700; color: white; font-weight: bold;")
                 self.status_label.setText("CONNECTED"); self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #040; color: #0F0; border: 2px solid #0F0; border-radius: 5px;")
                 self.setWindowTitle(f"Predator Console [ONLINE - {self.serial}]")
@@ -279,14 +276,12 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.setWindowTitle("Predator Console [OFFLINE]")
 
     def init_blocks(self):
-        # 1. Primary Source
         if self.hardware_connected and self.serial:
             self.hw_source = uhd.usrp_source(",".join(("", f"serial={self.serial}")), uhd.stream_args(cpu_format="fc32", args='', channels=list(range(1))))
             self.hw_source.set_samp_rate(self.samp_rate); self.hw_source.set_center_freq(self.center_freq, 0); self.hw_source.set_gain(self.rx_gain, 0)
         else:
             self.hw_source = analog.noise_source_c(analog.GR_GAUSSIAN, 0.001, 0)
 
-        # 2. Sim Injection
         if self.sim_mode:
             self.sim_src = analog.sig_source_c(self.samp_rate, analog.GR_COS_WAVE, 0, 0.5, 0)
             self.mixer = blocks.add_cc()
@@ -296,51 +291,35 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.sim_src = None
             self.final_source = self.hw_source
 
-        # 3. Engine (Ensure we use the latest C++ core)
         try:
-            # Force absolute import of the compiled system module
-            import importlib.util
-            spec = importlib.util.find_spec("gnuradio.techniquemaker.techniquemaker_python")
-            if spec is None:
-                raise ImportError("gnuradio.techniquemaker.techniquemaker_python not found in system paths.")
-                
-            from gnuradio.techniquemaker import interdictor_cpp
+            try:
+                from gnuradio.techniquemaker import interdictor_cpp
+            except ImportError:
+                from techniquemaker import interdictor_cpp
             self.sys_logger.info("Using high-performance C++ interdictor core.")
             self.interdictor = interdictor_cpp(technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Auto-Surgical' if self.hydra_auto_surgical else 'Continuous (Stream)')
-        except Exception as e:
+        except ImportError as e:
             self.sys_logger.warning(f"C++ core failed to load: {e}")
-            self.sys_logger.warning("Falling back to pure Python techniquepdu (No Sticky Trap logic).")
-            # If C++ fails, we must fall back to the Python version
-            try:
-                from techniquemaker import techniquepdu
-            except ImportError:
-                from gnuradio.techniquemaker import techniquepdu
-            
             self.interdictor = techniquepdu(technique='Reactive Jammer', warhead_technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw, reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell, num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq, jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw, preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration, clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled, stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst, stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur, output_mode='Continuous (Stream)')
         
-        # 4. Sink Path (Crucial Fix: Always connect to SOMETHING)
         if self.hardware_connected and self.serial:
             self.sink = uhd.usrp_sink(",".join(("", f"serial={self.serial}")), uhd.stream_args(cpu_format="fc32", args='', channels=list(range(1))))
             self.sink.set_samp_rate(self.samp_rate); self.sink.set_center_freq(self.center_freq, 0); self.sink.set_gain(self.tx_gain, 0)
             self.connect(self.interdictor, self.sink)
         else:
-            # Use a null sink if offline so the engine doesn't complain about dangling ports
             self.sink = blocks.null_sink(gr.sizeof_gr_complex)
             self.connect(self.interdictor, self.sink)
         
         self.file_sink = blocks.file_sink(gr.sizeof_gr_complex, "session.bin", False); self.file_sink.set_unbuffered(True)
-        
-        # Mix environment and jammer output for the waterfall display
         self.display_mixer = blocks.add_cc()
         self.connect(self.final_source, (self.display_mixer, 0))
         self.connect(self.interdictor, (self.display_mixer, 1))
-        
         self.connect(self.final_source, self.interdictor)
         self.connect(self.display_mixer, self.waterfall)
         
-        # Apply states that are not in the C++ constructor
         if hasattr(self.interdictor, 'set_sticky_denial'):
             self.interdictor.set_sticky_denial(self.sticky_cb.isChecked())
+            self.interdictor.set_targets(self.burned_channels)
         if hasattr(self.interdictor, 'set_look_through_ms'):
             try: self.interdictor.set_look_through_ms(float(self.look_input.text()))
             except: pass
@@ -349,7 +328,6 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             except: pass
             
         self.update_dynamic_params()
-
 
     def restart_flowgraph(self):
         if not self.hardware_connected and not self.sim_mode: return
@@ -361,8 +339,8 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
     def on_freq_change(self):
         try:
             self.center_freq = float(self.freq_input.text())
-            if not self.sim_mode and self.hw_source: self.hw_source.set_center_freq(self.center_freq, 0)
-            if self.sink: self.sink.set_center_freq(self.center_freq, 0)
+            if not self.sim_mode and hasattr(self, 'hw_source'): self.hw_source.set_center_freq(self.center_freq, 0)
+            if hasattr(self, 'sink'): self.sink.set_center_freq(self.center_freq, 0)
             self.waterfall.set_frequency_range(self.center_freq, self.samp_rate); self.update_cal_display()
         except: pass
 
@@ -377,9 +355,20 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.status_label.setText("OFFLINE"); self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #222; color: #555; border: 2px solid #333; border-radius: 5px;"); return
         if not self.interdiction_enabled:
             self.status_label.setText("TX SILENT"); self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #440; color: yellow; border: 2px solid yellow; border-radius: 5px;"); return
+        
+        # Telemetry Sync
+        if self.interdictor and hasattr(self.interdictor, 'get_targets'):
+            cpp_targets = self.interdictor.get_targets()
+            if self.sticky_denial:
+                self.burned_channels = cpp_targets
+            
+            # Update UI Log
+            self.history_list.clear()
+            for t in cpp_targets:
+                self.history_list.addItem(f"{t.center_freq/1e3:8.1f} kHz | {t.bandwidth/1e3:4.1f}k")
+
         self.status_label.setText("ACTIVE"); self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #400; color: #F00; border: 2px solid #F00; border-radius: 5px;")
 
-    # --- Tactical Setters ---
     def on_hydra_toggle(self, checked):
         self.hydra_auto_surgical = checked
         if self.interdictor: self.interdictor.set_output_mode("Auto-Surgical" if checked else "Continuous (Stream)")
@@ -387,7 +376,10 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.sticky_denial = checked
         if self.interdictor and hasattr(self.interdictor, 'set_sticky_denial'): self.interdictor.set_sticky_denial(checked)
     def on_reset_denial(self): 
-        if self.interdictor and hasattr(self.interdictor, 'clear_persistent_targets'): self.interdictor.clear_persistent_targets(); self.sys_logger.info("Denial Grid Cleared.")
+        self.burned_channels = []
+        if self.interdictor and hasattr(self.interdictor, 'clear_persistent_targets'): 
+            self.interdictor.clear_persistent_targets()
+            self.sys_logger.info("Denial Grid Cleared.")
     def on_look_change(self):
         try:
             ms = float(self.look_input.text())
@@ -403,7 +395,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if not self.sim_mode and hasattr(self, 'hw_source'): self.hw_source.set_gain(value, 0)
     def on_tx_gain_change(self, value):
         self.tx_gain = value
-        if self.sink: self.sink.set_gain(value, 0)
+        if hasattr(self, 'sink'): self.sink.set_gain(value, 0)
         self.update_cal_display()
     def on_pull_input_change(self):
         try:
@@ -460,7 +452,6 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             if self.interdictor: self.interdictor.set_frame_duration_ms(self.frame_dur)
         except: pass
 
-    # --- Data Persistence ---
     def load_calibration(self):
         if os.path.exists("config/calibration_matrix.json"):
             try:
@@ -512,82 +503,37 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         while self.param_layout.count():
             child = self.param_layout.takeAt(0)
             if child.widget(): child.widget().deleteLater()
-        
         wf_def = BaseWaveforms.waveform_definitions.get(self.template)
         if not wf_def: return
-        
-        # Keep track of current kwargs for waveform generation
-        self.current_template_kwargs = {
-            'sample_rate_hz': self.samp_rate,
-            'technique_length_seconds': 0.1 # standard length for the resampler
-        }
-        
+        self.current_template_kwargs = { 'sample_rate_hz': self.samp_rate, 'technique_length_seconds': 0.1 }
         for p in wf_def['params']:
             if p['name'] in ['sample_rate_hz', 'technique_length_seconds']: continue
             default_val = p.get('default', "0")
-            
-            # Init the kwargs with default
-            try:
-                self.current_template_kwargs[p['name']] = float(default_val) if '.' in default_val else int(default_val)
-            except ValueError:
-                self.current_template_kwargs[p['name']] = default_val
-                
+            try: self.current_template_kwargs[p['name']] = float(default_val) if '.' in default_val else int(default_val)
+            except ValueError: self.current_template_kwargs[p['name']] = default_val
             if p['type'] == 'entry':
-                w = Qt.QLineEdit(default_val)
-                w.editingFinished.connect(lambda n=p['name'], widget=w: self.on_dynamic_change(n, widget.text()))
-                self.param_layout.addRow(p['title'], w)
+                w = Qt.QLineEdit(default_val); w.editingFinished.connect(lambda n=p['name'], widget=w: self.on_dynamic_change(n, widget.text())); self.param_layout.addRow(p['title'], w)
             elif p['type'] == 'options':
-                w = Qt.QComboBox()
-                w.addItems(p['choices'])
-                w.setCurrentText(default_val)
-                w.currentTextChanged.connect(lambda val, n=p['name']: self.on_dynamic_change(n, val))
-                self.param_layout.addRow(p['title'], w)
-                
+                w = Qt.QComboBox(); w.addItems(p['choices']); w.setCurrentText(default_val); w.currentTextChanged.connect(lambda val, n=p['name']: self.on_dynamic_change(n, val)); self.param_layout.addRow(p['title'], w)
         self.generate_and_load_waveform()
-
     def on_dynamic_change(self, name, value):
-        # Update the kwargs and regenerate the waveform
-        try:
-            val = float(value) if '.' in value else int(value)
-            self.current_template_kwargs[name] = val
-        except ValueError:
-            self.current_template_kwargs[name] = value
-            
+        try: val = float(value) if '.' in value else int(value); self.current_template_kwargs[name] = val
+        except ValueError: self.current_template_kwargs[name] = value
         self.generate_and_load_waveform()
-        
     def generate_and_load_waveform(self):
-        if not self.interdictor or not hasattr(self.interdictor, 'set_base_waveform'):
-            return
-            
+        if not self.interdictor or not hasattr(self.interdictor, 'set_base_waveform'): return
         wf_def = BaseWaveforms.waveform_definitions.get(self.template)
         if not wf_def: return
-        
         try:
-            # Generate the highly precise NumPy array using BaseWaveforms
-            func = wf_def['func']
-            
-            # Handle string conversions for lists (like frequencies_str)
-            kwargs = self.current_template_kwargs.copy()
-            if 'frequencies_str' in kwargs:
-                kwargs['frequencies'] = [float(x) for x in str(kwargs['frequencies_str']).split() if x.strip()]
-                del kwargs['frequencies_str']
-            if 'hop_frequencies_str' in kwargs:
-                kwargs['hop_frequencies'] = [float(x) for x in str(kwargs['hop_frequencies_str']).split() if x.strip()]
-                del kwargs['hop_frequencies_str']
-                
-            # Filter out any kwargs that the function doesn't actually accept to prevent crashes
-            import inspect
-            sig = inspect.signature(func)
-            valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
-            
+            func = wf_def['func']; kwargs = self.current_template_kwargs.copy()
+            if 'frequencies_str' in kwargs: kwargs['frequencies'] = [float(x) for x in str(kwargs['frequencies_str']).split() if x.strip()]; del kwargs['frequencies_str']
+            if 'hop_frequencies_str' in kwargs: kwargs['hop_frequencies'] = [float(x) for x in str(kwargs['hop_frequencies_str']).split() if x.strip()]; del kwargs['hop_frequencies_str']
+            import inspect; sig = inspect.signature(func); valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
             numpy_array = func(**valid_kwargs)
-            
-            # Cast to complex64 (C++ std::complex<float>) and convert to list for pybind11
             complex_float_array = np.array(numpy_array, dtype=np.complex64).tolist()
             self.interdictor.set_base_waveform(complex_float_array)
-            self.sys_logger.info(f"Loaded {self.template} warhead into C++ core.")
-        except Exception as e:
-            self.sys_logger.error(f"Failed to generate waveform: {e}")
+            self.sys_logger.info(f"Loaded {self.template} warhead.")
+        except Exception as e: self.sys_logger.error(f"Failed to generate waveform: {e}")
     def stop_all(self): self.stop(); self.wait()
 
 if __name__ == '__main__':

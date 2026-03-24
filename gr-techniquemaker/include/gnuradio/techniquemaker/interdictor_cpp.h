@@ -4,6 +4,7 @@
 #include <gnuradio/techniquemaker/api.h>
 #include <gnuradio/sync_block.h>
 #include <string>
+#include <vector>
 
 namespace gr {
 namespace techniquemaker {
@@ -12,6 +13,15 @@ class TECHNIQUEMAKER_API interdictor_cpp : virtual public gr::sync_block
 {
 public:
     typedef std::shared_ptr<interdictor_cpp> sptr;
+
+    struct Target {
+        double center_freq;
+        double bandwidth;
+        bool active;
+        double resample_ptr;
+        double phase_acc;
+        int detection_count;
+    };
 
     static sptr make(const std::string& technique,
                      double sample_rate_hz,
@@ -57,6 +67,10 @@ public:
     virtual void set_jam_cycle_ms(double ms) = 0;
     virtual void clear_persistent_targets() = 0;
     virtual void set_base_waveform(const std::vector<std::complex<float>>& waveform) = 0;
+    
+    // New Persistence API
+    virtual std::vector<Target> get_targets() = 0;
+    virtual void set_targets(const std::vector<Target>& targets) = 0;
 };
 
 } // namespace techniquemaker

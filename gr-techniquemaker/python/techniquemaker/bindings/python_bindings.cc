@@ -22,6 +22,15 @@ void bind_interdictor_cpp(py::module& m)
 {
     using interdictor_cpp = ::gr::techniquemaker::interdictor_cpp;
 
+    py::class_<interdictor_cpp::Target>(m, "Target")
+        .def(py::init<>())
+        .def_readwrite("center_freq", &interdictor_cpp::Target::center_freq)
+        .def_readwrite("bandwidth", &interdictor_cpp::Target::bandwidth)
+        .def_readwrite("active", &interdictor_cpp::Target::active)
+        .def_readwrite("resample_ptr", &interdictor_cpp::Target::resample_ptr)
+        .def_readwrite("phase_acc", &interdictor_cpp::Target::phase_acc)
+        .def_readwrite("detection_count", &interdictor_cpp::Target::detection_count);
+
     py::class_<interdictor_cpp,
                gr::sync_block,
                gr::block,
@@ -70,7 +79,9 @@ void bind_interdictor_cpp(py::module& m)
         .def("set_look_through_ms", &interdictor_cpp::set_look_through_ms)
         .def("set_jam_cycle_ms", &interdictor_cpp::set_jam_cycle_ms)
         .def("clear_persistent_targets", &interdictor_cpp::clear_persistent_targets)
-        .def("set_base_waveform", &interdictor_cpp::set_base_waveform);
+        .def("set_base_waveform", &interdictor_cpp::set_base_waveform)
+        .def("get_targets", &interdictor_cpp::get_targets)
+        .def("set_targets", &interdictor_cpp::set_targets);
 }
 
 // We need this hack because import_array() returns NULL
