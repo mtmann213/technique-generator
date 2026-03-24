@@ -312,6 +312,17 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         
         self.file_sink = blocks.file_sink(gr.sizeof_gr_complex, "session.bin", False); self.file_sink.set_unbuffered(True)
         self.connect(self.final_source, self.interdictor); self.connect(self.final_source, self.waterfall)
+        
+        # Apply states that are not in the C++ constructor
+        if hasattr(self.interdictor, 'set_sticky_denial'):
+            self.interdictor.set_sticky_denial(self.sticky_cb.isChecked())
+        if hasattr(self.interdictor, 'set_look_through_ms'):
+            try: self.interdictor.set_look_through_ms(float(self.look_input.text()))
+            except: pass
+        if hasattr(self.interdictor, 'set_jam_cycle_ms'):
+            try: self.interdictor.set_jam_cycle_ms(float(self.cycle_input.text()))
+            except: pass
+            
         self.update_dynamic_params()
 
 
