@@ -211,23 +211,37 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             hop_offset = random.choice([-0.4, -0.2, 0, 0.2, 0.4]) * self.samp_rate
             self.sim_src.set_frequency(hop_offset)
 
-    # --- UI LOGIC ---
+    # --- Hardware Scanning ---
     def on_scan_clicked(self):
         self.sys_logger.info("Scanning for USRP devices...")
         try:
-            # Using the correct find_devices utility for UHD
-            devices = uhd.find_devices("")
+            import uhd as standalone_uhd
+            devices = standalone_uhd.find("")
             self.serial_combo.clear()
             if not devices:
                 self.sys_logger.warning("No USRP devices found.")
                 return
             for dev in devices:
+                # Standalone UHD returns dict-like objects
                 serial = dev.get('serial', 'N/A')
                 product = dev.get('product', 'Unknown')
                 self.serial_combo.addItem(f"{serial} ({product})")
             self.sys_logger.info(f"Found {len(devices)} devices.")
         except Exception as e:
             self.sys_logger.error(f"Scan failed: {e}")
+
+    def check_detections(self):
+        if not self.hardware_connected and not self.sim_mode:
+            self.status_label.setText("OFFLINE")
+            self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #222; color: #555; border: 2px solid #333; border-radius: 5px;")
+            return
+        if not self.interdiction_enabled:
+            self.status_label.setText("TX SILENT")
+            self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #440; color: yellow; border: 2px solid yellow; border-radius: 5px;")
+            return
+        self.status_label.setText("ACTIVE")
+        self.status_label.setStyleSheet("font-size: 18px; font-weight: bold; background: #400; color: #F00; border: 2px solid #F00; border-radius: 5px;")
+
 
     def on_connect_toggled(self, checked):
         if checked:
@@ -465,7 +479,27 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def load_selected_preset(self, name):
         if name in self.presets:
-            p = self.presets[name]; self.rx_gain = p.get("rx_gain", 40); self.rx_gain_slider.setValue(self.rx_gain); self.tx_gain = p.get("tx_gain", 50); self.tx_gain_slider.setValue(self.tx_gain); self.threshold = p.get("threshold", -45); self.thresh_slider.setValue(int(self.threshold)); self.num_targets = p.get("num_targets", 1); self.targets_slider.setValue(self.num_targets); self.center_freq = p.get("center_freq", 915e6); self.samp_rate = p.get("samp_rate", 2e6); self.template = p.get("template", "Narrowband Noise"); self.adaptive_bw = p.get("adaptive_bw", False); self.adapt_cb.setChecked(self.adaptive_bw); self.preamble_sabotage = p.get("preamble_sabotage", False); self.sab_cb.setChecked(self.preamble_sabotage); self.clock_pull = p.get("clock_pull", 0.0); self.pull_input.setText(str(self.clock_pull)); self.stutter_enabled = p.get("stutter_enabled", False); self.stutter_cb.setChecked(self.stutter_enabled); self.stutter_clean = p.get("stutter_clean", 3); self.stutter_clean_input.setText(str(self.stutter_clean)); self.stutter_burst = p.get("stutter_burst", 1); self.stutter_burst_input.setText(str(self.stutter_burst)); self.stutter_randomize = p.get("stutter_randomize", False); self.frame_dur = p.get("frame_dur", 40.0); self.frame_input.setText(str(self.frame_dur)); self.template_combo.setCurrentText(self.template); self.update_cal_display()
+            p = self.presets[name]
+            self.rx_gain = p.get("rx_gain", 40); self.rx_gain_slider.setValue(self.rx_gain)
+            self.tx_gain = p.get("tx_gain", 50); self.tx_gain_slider.setValue(self.tx_gain)
+            self.threshold = p.get("threshold", -45); self.thresh_slider.setValue(int(self.threshold))
+            self.num_targets = p.get("num_targets", 1); self.targets_slider.setValue(self.num_targets)
+            self.center_freq = p.get("center_freq", 915e6); self.freq_input.setText(str(int(self.center_freq)))
+            self.samp_rate = p.get("samp_rate", 2e6); self.samp_input.setText(str(int(self.samp_rate)))
+            self.template = p.get("template", "Narrowband Noise"); self.template_combo.setCurrentText(self.template)
+            
+            self.adaptive_bw = p.get("adaptive_bw", False); self.adapt_cb.setChecked(self.adaptive_bw)
+            self.preamble_sabotage = p.get("preamble_sabotage", False); self.sab_cb.setChecked(self.preamble_sabotage)
+            self.clock_pull = p.get("clock_pull", 0.0); self.pull_input.setText(str(self.clock_pull))
+            self.stutter_enabled = p.get("stutter_enabled", False); self.stutter_cb.setChecked(self.stutter_enabled)
+            self.stutter_clean = p.get("stutter_clean", 3); self.stutter_clean_input.setText(str(self.stutter_clean))
+            self.stutter_burst = p.get("stutter_burst", 1); self.stutter_burst_input.setText(str(self.stutter_burst))
+            self.frame_dur = p.get("frame_dur", 40.0)
+            if hasattr(self, 'frame_input'):
+                self.frame_input.setText(str(self.frame_dur))
+            
+            self.update_cal_display()
+
 
     def on_record_toggle(self, checked):
         if not self.hardware_connected: return
