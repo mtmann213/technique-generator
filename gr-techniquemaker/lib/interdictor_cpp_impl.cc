@@ -88,7 +88,7 @@ interdictor_cpp_impl::interdictor_cpp_impl(const std::string& technique,
       d_stutter_counter(0),
       d_current_clean_limit(stutter_clean_count),
       d_fft_ptr(0),
-      d_fft_size(1024),
+      d_fft_size(4096),
       d_dwell_counter(0),
       d_sticky_denial(false),
       d_look_through_ms(10.0),
@@ -97,6 +97,16 @@ interdictor_cpp_impl::interdictor_cpp_impl(const std::string& technique,
       d_cycle_counter(0)
 {
     d_fft_buffer.resize(d_fft_size, std::complex<float>(0, 0));
+    
+    // Pre-calculate Blackman-Harris Window
+    d_fft_window.resize(d_fft_size);
+    for (int n = 0; n < d_fft_size; n++) {
+        d_fft_window[n] = 0.35875f 
+                        - 0.48829f * cosf(2.0f * M_PI * n / (d_fft_size - 1))
+                        + 0.14128f * cosf(4.0f * M_PI * n / (d_fft_size - 1))
+                        - 0.01168f * cosf(6.0f * M_PI * n / (d_fft_size - 1));
+    }
+
     d_look_samples = static_cast<uint64_t>(d_look_through_ms * d_sample_rate_hz / 1000.0);
     d_jam_samples = static_cast<uint64_t>(d_jam_cycle_ms * d_sample_rate_hz / 1000.0);
     update_waveform();
@@ -276,8 +286,15 @@ void interdictor_cpp_impl::perform_spectral_detection()
     if (d_fft_ptr < d_fft_size) return;
 
     gr::fft::fft<std::complex<float>, true> fft(d_fft_size);
+    std::vector<std::complex<float>> windowed_buffer(d_fft_size);
     std::vector<std::complex<float>> out(d_fft_size);
-    memcpy(fft.get_inbuf(), &d_fft_buffer[0], d_fft_size * sizeof(std::complex<float>));
+
+    // 1. Apply Window
+    for (int i = 0; i < d_fft_size; i++) {
+        windowed_buffer[i] = d_fft_buffer[i] * d_fft_window[i];
+    }
+
+    memcpy(fft.get_inbuf(), &windowed_buffer[0], d_fft_size * sizeof(std::complex<float>));
     fft.execute();
     memcpy(&out[0], fft.get_outbuf(), d_fft_size * sizeof(std::complex<float>));
 
@@ -286,25 +303,38 @@ void interdictor_cpp_impl::perform_spectral_detection()
     bool in_island = false;
     int start_bin = 0;
 
-    for (int i = 0; i < d_fft_size; i++) {
-        float mag_sq = out[i].real()*out[i].real() + out[i].imag()*out[i].imag();
-        float db = 10.0f * log10f(mag_sq / d_fft_size + 1e-12f);
+    // 2. Island Detection with edge case handling
+    for (int i = 0; i <= d_fft_size; i++) {
+        float mag_sq = 0;
+        float db = -200.0f;
+        
+        if (i < d_fft_size) {
+            mag_sq = out[i].real()*out[i].real() + out[i].imag()*out[i].imag();
+            // Normalize by FFT size squared for windowed power consistency
+            db = 10.0f * log10f(mag_sq / ((float)d_fft_size * (float)d_fft_size) + 1e-20f);
+        }
 
-        if (db > d_reactive_threshold_db) {
+        if (i < d_fft_size && db > d_reactive_threshold_db) {
             if (!in_island) { in_island = true; start_bin = i; }
         } else {
             if (in_island) {
                 in_island = false;
                 int end_bin = i - 1;
                 int center_bin = (start_bin + end_bin) / 2;
+                
+                // Frequency wrap-around handling
                 if (center_bin > d_fft_size / 2) center_bin -= d_fft_size;
+                
                 double cf = (double)center_bin * d_sample_rate_hz / d_fft_size;
-                double bw = (double)(end_bin - start_bin) * d_sample_rate_hz / d_fft_size;
+                double bw = (double)(end_bin - start_bin + 1) * d_sample_rate_hz / d_fft_size;
+                
+                // Sensitivity Floor: Minimum 1 bin bandwidth
+                if (bw <= 0) bw = d_sample_rate_hz / d_fft_size;
 
                 if (d_sticky_denial) {
                     bool exists = false;
                     for (const auto& existing : d_tracked_targets) {
-                        if (std::abs(existing.center_freq - cf) < (bw/2)) { exists = true; break; }
+                        if (std::abs(existing.center_freq - cf) < (bw/2 + 5000)) { exists = true; break; }
                     }
                     if (!exists) d_tracked_targets.push_back({cf, bw, true, 0.0});
                 } else {
@@ -376,8 +406,11 @@ int interdictor_cpp_impl::work(int noutput_items,
     for (int i = 0; i < noutput_items; i++) {
         d_cycle_counter++;
         if (d_is_looking) {
-            if (d_fft_ptr < d_fft_size) d_fft_buffer[d_fft_ptr++] = in[i];
-            if (d_cycle_counter >= d_look_samples) { d_is_looking = false; d_cycle_counter = 0; perform_spectral_detection(); }
+            if (d_fft_ptr < d_fft_size) {
+                d_fft_buffer[d_fft_ptr++] = in[i];
+                if (d_fft_ptr >= d_fft_size) perform_spectral_detection();
+            }
+            if (d_cycle_counter >= d_look_samples) { d_is_looking = false; d_cycle_counter = 0; }
         } else {
             if (d_cycle_counter >= d_jam_samples) { d_is_looking = true; d_cycle_counter = 0; }
         }

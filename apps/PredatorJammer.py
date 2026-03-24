@@ -293,8 +293,8 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if not self.hardware_connected and not self.sim_mode: return
         self.sys_logger.info("Restarting Flowgraph...")
         self.stop(); self.wait(); self.disconnect_all()
-        # Force axis update on restart
-        self.waterfall.set_sample_rate(self.samp_rate); self.waterfall.set_center_freq(self.center_freq)
+        # Force axis update on restart using correct GR 3.10 method
+        self.waterfall.set_frequency_range(self.center_freq, self.samp_rate)
         self.init_blocks(); self.start()
 
     def on_freq_change(self):
@@ -302,13 +302,14 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.center_freq = float(self.freq_input.text())
             if not self.sim_mode and self.source: self.source.set_center_freq(self.center_freq, 0)
             if self.sink: self.sink.set_center_freq(self.center_freq, 0)
-            self.waterfall.set_center_freq(self.center_freq); self.update_cal_display()
+            self.waterfall.set_frequency_range(self.center_freq, self.samp_rate)
+            self.update_cal_display()
         except: pass
 
     def on_samp_change(self):
         try:
             self.samp_rate = float(self.samp_input.text())
-            self.waterfall.set_sample_rate(self.samp_rate)
+            self.waterfall.set_frequency_range(self.center_freq, self.samp_rate)
         except: pass
 
     def on_hydra_toggle(self, checked):

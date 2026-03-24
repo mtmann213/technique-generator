@@ -51,6 +51,7 @@ private:
     std::vector<std::complex<float>> d_fft_buffer;
     int d_fft_ptr;
     int d_fft_size;
+    std::vector<float> d_fft_window;
     int d_dwell_counter;
 
     // Sticky Denial & Look-through
