@@ -320,7 +320,14 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.connect(self.interdictor, self.sink)
         
         self.file_sink = blocks.file_sink(gr.sizeof_gr_complex, "session.bin", False); self.file_sink.set_unbuffered(True)
-        self.connect(self.final_source, self.interdictor); self.connect(self.final_source, self.waterfall)
+        
+        # Mix environment and jammer output for the waterfall display
+        self.display_mixer = blocks.add_cc()
+        self.connect(self.final_source, (self.display_mixer, 0))
+        self.connect(self.interdictor, (self.display_mixer, 1))
+        
+        self.connect(self.final_source, self.interdictor)
+        self.connect(self.display_mixer, self.waterfall)
         
         # Apply states that are not in the C++ constructor
         if hasattr(self.interdictor, 'set_sticky_denial'):
