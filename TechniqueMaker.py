@@ -5,18 +5,24 @@ import subprocess
 import argparse
 
 def setup_env():
-    """Sets up the PYTHONPATH so local modules can be found."""
+    """Sets up the PYTHONPATH so local modules can be found, prioritizing system installations."""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     oot_python_path = os.path.join(current_dir, "gr-techniquemaker", "python")
     
-    # Add to current process
+    # Add to current process at the END, so system-installed compiled OOT modules take priority
     if oot_python_path not in sys.path:
-        sys.path.insert(0, oot_python_path)
+        sys.path.append(oot_python_path)
     
     # Set for subprocesses
     env = os.environ.copy()
     existing_pp = env.get("PYTHONPATH", "")
-    env["PYTHONPATH"] = f"{oot_python_path}{os.pathsep}{existing_pp}" if existing_pp else oot_python_path
+    # Append local path so system paths take precedence
+    env["PYTHONPATH"] = f"{existing_pp}{os.pathsep}{oot_python_path}" if existing_pp else oot_python_path
+    
+    # Also ensure the standard gnuradio install path is explicitly in the environment
+    system_path = "/usr/local/lib/python3/dist-packages:/usr/local/lib/python3.12/site-packages:/usr/local/lib/python3.12/dist-packages"
+    env["PYTHONPATH"] = f"{system_path}:{env['PYTHONPATH']}"
+    
     return env
 
 def main():
