@@ -21,6 +21,7 @@ public:
         double resample_ptr;
         double phase_acc;
         int detection_count;
+        int64_t sabotage_samples_remaining;
     };
 
     static sptr make(const std::string& technique,
@@ -65,6 +66,7 @@ public:
     virtual void set_sticky_denial(bool sticky) = 0;
     virtual void set_look_through_ms(double ms) = 0;
     virtual void set_jam_cycle_ms(double ms) = 0;
+    virtual void set_predictive_tracking(bool enabled) = 0;
     virtual void clear_persistent_targets() = 0;
     virtual void set_base_waveform(const std::vector<std::complex<float>>& waveform) = 0;
     

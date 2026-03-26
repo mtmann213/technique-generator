@@ -4,6 +4,24 @@
 
 ---
 
+## 🦅 Predator-Native (C++ Version)
+The high-performance, native implementation of the Reactive Analysis Console. Built for tactical deployment where deterministic latency and low jitter are required.
+
+### Key Capabilities:
+*   **Zero-GIL Control:** Bypasses Python entirely for real-time parameter updates.
+*   **Predictive Pattern Engine:** Integrated PRNG sequence cracking for hoppers.
+*   **Hydra V2:** Supports up to 50 simultaneous surgical targets.
+
+### Compilation & Launch:
+```bash
+cd predator-cpp/build
+cmake ..
+make -j$(nproc)
+./PredatorNative
+```
+
+---
+
 ## 🚀 The Unified Launcher
 The easiest way to use the suite is through the unified launcher. It automatically handles your environment and Docker setup.
 

@@ -246,3 +246,16 @@
 2026-03-24 16:29:13,813 - TechniqueMaker - INFO - Restarting Flowgraph...
 2026-03-24 16:29:14,646 - TechniqueMaker - INFO - Using high-performance C++ interdictor core.
 2026-03-24 16:29:15,658 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead into C++ core.
+2026-03-24 16:45:34,243 - TechniqueMaker - INFO - Connecting to USRP 34573DD...
+2026-03-24 16:45:36,407 - TechniqueMaker - INFO - Using high-performance C++ interdictor core.
+2026-03-24 16:45:37,288 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead.
+2026-03-24 16:45:37,332 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead.
+2026-03-24 16:45:39,760 - TechniqueMaker - INFO - Simulation Mode Started.
+2026-03-24 16:45:39,760 - TechniqueMaker - INFO - Restarting Flowgraph...
+2026-03-24 16:45:40,594 - TechniqueMaker - INFO - Using high-performance C++ interdictor core.
+2026-03-24 16:45:41,608 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead.
+2026-03-24 16:47:30,131 - TechniqueMaker - INFO - Denial Grid Cleared.
+2026-03-24 16:47:43,525 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead.
+2026-03-24 16:47:44,536 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead.
+2026-03-24 16:47:51,145 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead.
+2026-03-24 16:48:02,012 - TechniqueMaker - INFO - Denial Grid Cleared.

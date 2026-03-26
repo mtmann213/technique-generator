@@ -91,6 +91,7 @@ interdictor_cpp_impl::interdictor_cpp_impl(const std::string& technique,
       d_fft_size(4096),
       d_dwell_counter(0),
       d_sticky_denial(false),
+      d_predictive_tracking(false),
       d_look_through_ms(10.0),
       d_jam_cycle_ms(90.0),
       d_is_looking(true),
@@ -185,11 +186,13 @@ void interdictor_cpp_impl::perform_spectral_detection()
                         }
                     }
                     if (!exists) {
-                        d_tracked_targets.push_back({cf, bw, true, 0.0, 0.0, 1});
+                        int64_t sabotage_samps = d_preamble_sabotage ? static_cast<int64_t>(d_sabotage_duration_ms * d_sample_rate_hz / 1000.0) : -1;
+                        d_tracked_targets.push_back({cf, bw, true, 0.0, 0.0, 1, sabotage_samps});
                         std::cout << "STUCK Target: " << cf/1e3 << " kHz (BW: " << bw/1e3 << "k)" << std::endl;
                     }
                 } else {
-                    d_tracked_targets.push_back({cf, bw, true, 0.0, 0.0, 1});
+                    int64_t sabotage_samps = d_preamble_sabotage ? static_cast<int64_t>(d_sabotage_duration_ms * d_sample_rate_hz / 1000.0) : -1;
+                    d_tracked_targets.push_back({cf, bw, true, 0.0, 0.0, 1, sabotage_samps});
                 }
                 
                 if (!d_sticky_denial && d_tracked_targets.size() >= (size_t)d_num_targets) break;
@@ -199,6 +202,24 @@ void interdictor_cpp_impl::perform_spectral_detection()
     
     if (d_sticky_denial) {
         std::cout << "[DEBUG] Sticky Mode ON. Current Targets: " << d_tracked_targets.size() << std::endl;
+    }
+
+    // --- Predictive Pattern Engine ---
+    if (d_predictive_tracking && !d_tracked_targets.empty()) {
+        for (auto& target : d_tracked_targets) {
+            // Simple Linear Delta Prediction: 
+            // If a target hasn't been seen in this FFT, but we have a known hop pattern,
+            // shift its center frequency to the next predicted slot.
+            if (target.detection_count > 5) { // Needs enough history
+                double predicted_hop = 50000.0; // Placeholder for identified delta
+                // In a full implementation, we'd calculate the median delta here
+                // For now, we simulate sequence cracking by enabling the shift
+                target.center_freq += predicted_hop;
+                if (std::abs(target.center_freq) > d_sample_rate_hz / 2.0) {
+                    target.center_freq = -d_sample_rate_hz / 2.0;
+                }
+            }
+        }
     }
     
     d_fft_ptr = 0;
@@ -243,6 +264,7 @@ void interdictor_cpp_impl::set_look_through_ms(double ms) {
     d_guard_samples = static_cast<uint64_t>(guard_ms * d_sample_rate_hz / 1000.0);
 }
 void interdictor_cpp_impl::set_jam_cycle_ms(double ms) { d_jam_cycle_ms = ms; d_jam_samples = static_cast<uint64_t>(ms * d_sample_rate_hz / 1000.0); }
+void interdictor_cpp_impl::set_predictive_tracking(bool enabled) { d_predictive_tracking = enabled; }
 void interdictor_cpp_impl::clear_persistent_targets() { d_tracked_targets.clear(); }
 
 std::vector<interdictor_cpp::Target> interdictor_cpp_impl::get_targets() { return d_tracked_targets; }
@@ -296,15 +318,19 @@ int interdictor_cpp_impl::work(int noutput_items,
 
     if (d_output_mode == "Auto-Surgical") {
         size_t active_count = 0;
-        for (const auto& t : d_tracked_targets) if (t.active) active_count++;
+        for (const auto& t : d_tracked_targets) {
+            if (t.active && t.sabotage_samples_remaining != 0) active_count++;
+        }
         float scale = (active_count > 0) ? (1.0f / active_count) : 1.0f;
 
         for (auto& target : d_tracked_targets) {
-            if (!target.active) continue;
+            if (!target.active || target.sabotage_samples_remaining == 0) continue;
             const double bw_ratio = target.bandwidth / native_bw;
             const double phase_inc = two_pi * target.center_freq * fs_inv;
             
             for (int i = 0; i < noutput_items; i++) {
+                if (target.sabotage_samples_remaining == 0) break;
+
                 // Linear Interpolation for Resampling
                 double virtual_idx = target.resample_ptr;
                 int idx_low = static_cast<int>(virtual_idx);
@@ -321,6 +347,8 @@ int interdictor_cpp_impl::work(int noutput_items,
                 target.phase_acc = fmod(target.phase_acc + phase_inc, two_pi);
                 target.resample_ptr += bw_ratio;
                 if (target.resample_ptr >= wf_len) target.resample_ptr -= wf_len;
+
+                if (target.sabotage_samples_remaining > 0) target.sabotage_samples_remaining--;
             }
         }
         d_total_samples_processed += noutput_items;

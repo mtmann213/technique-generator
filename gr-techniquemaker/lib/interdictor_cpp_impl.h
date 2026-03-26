@@ -49,6 +49,7 @@ private:
 
     // Sticky Denial & Look-through
     bool d_sticky_denial;
+    bool d_predictive_tracking;
     double d_look_through_ms;
     double d_jam_cycle_ms;
     bool d_is_looking;
@@ -107,6 +108,7 @@ public:
     void set_sticky_denial(bool sticky) override;
     void set_look_through_ms(double ms) override;
     void set_jam_cycle_ms(double ms) override;
+    void set_predictive_tracking(bool enabled) override;
     void clear_persistent_targets() override;
     void set_base_waveform(const std::vector<std::complex<float>>& waveform) override;
     

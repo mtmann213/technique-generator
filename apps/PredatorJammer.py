@@ -206,7 +206,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.waterfall.set_intensity_range(-120, 20); self.pyqt_widget = sip.wrapinstance(self.waterfall.qwidget(), Qt.QWidget); self.middle_split.addWidget(self.pyqt_widget, stretch=5)
 
         # --- Track Log ---
-        self.history_panel = Qt.QVBoxLayout(); self.history_list = Qt.QListWidget(); self.history_list.setFixedWidth(180); self.history_list.setStyleSheet("background-color: #111; color: #0F0; font-family: monospace;"); self.middle_split.addLayout(self.history_panel); self.history_panel.addWidget(Qt.QLabel("DYNAMIC TRACK LOG")); self.history_panel.addWidget(self.history_list); clear_hist = Qt.QPushButton("Clear"); clear_hist.clicked.connect(self.history_list.clear); self.history_panel.addWidget(clear_hist)
+        self.history_panel = Qt.QVBoxLayout(); self.history_list = Qt.QListWidget(); self.history_list.setFixedWidth(250); self.history_list.setStyleSheet("background-color: #111; color: #0F0; font-family: monospace;"); self.middle_split.addLayout(self.history_panel); self.history_panel.addWidget(Qt.QLabel("DYNAMIC TRACK LOG")); self.history_panel.addWidget(self.history_list); clear_hist = Qt.QPushButton("Clear"); clear_hist.clicked.connect(self.history_list.clear); self.history_panel.addWidget(clear_hist)
 
         # --- Blocks ---
         self.source_node = self.interdictor = self.sink = self.file_sink = self.sim_src = None

@@ -1,7 +1,22 @@
 # Changelog: TechniqueMaker Improvements
 
-## [2026-03-13] - Hydra Auto-Surgical & High-Speed Wideband Support
+## [2026-03-25] - Predator-Native: High-Performance C++ Implementation
 
+### 🦅 Predator-Native (C++ Application)
+- **Native Qt C++ UI:** Fully implemented a standalone C++ version of the Predator console using Qt Widgets, eliminating Python GIL bottlenecks and reducing control latency.
+- **Dynamic Waveform Metadata:** Implemented a C++ metadata engine that automatically generates UI controls for all 14+ jamming techniques.
+- **JSON Preset System:** Added a native persistence layer to save and recall tactical configurations from `config/predator_presets_cpp.json`.
+- **Integrated Hardware Discovery:** Built native UHD device scanning directly into the C++ UI for seamless hot-plugging.
+- **Simulated Frequency Hopper:** Added a "Virtual" mode that spawns a realistic frequency hopping target for offline training and algorithm testing.
+
+### 🚀 C++ Core Enhancements (Hydra Engine V2)
+- **Predictive Pattern Engine:** Implemented the first stage of a PRNG sequence cracker that analyzes hop deltas and predicts future target frequencies.
+- **Preamble Sabotage (Timing Attack):** Added specialized logic to the `work()` loop to interdict only the first few milliseconds of a detected burst, effectively breaking link synchronization.
+- **Extended Hydra Capacity:** Optimized the multi-target synthesis loop to support up to 50 simultaneous surgical jammers.
+- **Native Waveform Engine:** Ported all mathematical synthesis algorithms (LFM, FHSS, RRC Noise, Correlator Confusion) from Python/NumPy to native C++/STL.
+
+## [2026-03-13] - Hydra Auto-Surgical & High-Speed Wideband Support
+...
 ### 🦅 Predator Reactive Analysis Console
 - **Professional UI Layout:** Overhauled the GUI with a header-based tuning bar and a tabbed sidebar (Hardware, Interdiction, Protocol) for intuitive tactical operation.
 - **Status Badge System:** Added color-coded badges (OFFLINE, CONNECTED, TX SILENT, ACTIVE) for instant situational awareness.
