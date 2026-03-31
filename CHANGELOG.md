@@ -1,7 +1,21 @@
 # Changelog: TechniqueMaker Improvements
 
-## [2026-03-25] - Predator-Native: High-Performance C++ Implementation
+## [2026-03-30] - Automated DSP Validation & Simulation Hardening
 
+### 🧪 Automated Testing (Task 1)
+- **Math Parity Suite:** Created `tests/test_waveform_parity.py` to mathematically verify the native C++ `WaveformEngine` against the Python/NumPy "Golden Set."
+- **Exposed C++ Math Core:** Updated `pybind11` bindings to allow direct Python access to the C++ waveform generation algorithms for automated validation.
+
+### 🦅 Predator Console (Python & C++)
+- **Enhanced Sweeping:** Added `Sweep Rate (Hz/s)` support to `Swept Phasors` and `Swept Cosines` in both the UI and the math engine.
+- **LCG Simulation Engine:** Upgraded the "Virtual" frequency hopper to use a Linear Congruential Generator (LCG) pattern, providing a predictable (but complex) sequence for testing the PRNG Cracker.
+
+### 🚀 Performance & Stability
+- **Zero-Copy Waveforms:** Removed the slow `.tolist()` conversion in the Python UI; NumPy buffers are now passed directly to C++ memory.
+- **Predictive Parity:** Ported the `predictive_tracking` PRNG cracker logic to the Python fallback block.
+
+## [2026-03-25] - Predator-Native: High-Performance C++ Implementation
+...
 ### 🦅 Predator-Native (C++ Application)
 - **Native Qt C++ UI:** Fully implemented a standalone C++ version of the Predator console using Qt Widgets, eliminating Python GIL bottlenecks and reducing control latency.
 - **Dynamic Waveform Metadata:** Implemented a C++ metadata engine that automatically generates UI controls for all 14+ jamming techniques.

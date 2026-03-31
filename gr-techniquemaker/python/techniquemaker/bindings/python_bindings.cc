@@ -10,11 +10,13 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/complex.h>
+#include <pybind11/numpy.h>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
 #include <gnuradio/techniquemaker/interdictor_cpp.h>
+#include "../../../../predator-cpp/src/WaveformEngine.hpp"
 
 namespace py = pybind11;
 
@@ -29,7 +31,8 @@ void bind_interdictor_cpp(py::module& m)
         .def_readwrite("active", &interdictor_cpp::Target::active)
         .def_readwrite("resample_ptr", &interdictor_cpp::Target::resample_ptr)
         .def_readwrite("phase_acc", &interdictor_cpp::Target::phase_acc)
-        .def_readwrite("detection_count", &interdictor_cpp::Target::detection_count);
+        .def_readwrite("detection_count", &interdictor_cpp::Target::detection_count)
+        .def_readwrite("sabotage_samples_remaining", &interdictor_cpp::Target::sabotage_samples_remaining);
 
     py::class_<interdictor_cpp,
                gr::sync_block,
@@ -78,8 +81,15 @@ void bind_interdictor_cpp(py::module& m)
         .def("set_sticky_denial", &interdictor_cpp::set_sticky_denial)
         .def("set_look_through_ms", &interdictor_cpp::set_look_through_ms)
         .def("set_jam_cycle_ms", &interdictor_cpp::set_jam_cycle_ms)
+        .def("set_predictive_tracking", &interdictor_cpp::set_predictive_tracking)
         .def("clear_persistent_targets", &interdictor_cpp::clear_persistent_targets)
-        .def("set_base_waveform", &interdictor_cpp::set_base_waveform)
+        .def("set_base_waveform", [](interdictor_cpp &self, py::array_t<std::complex<float>> input) {
+            auto buf = input.request();
+            if (buf.ndim != 1) throw std::runtime_error("Waveform must be a 1D array");
+            std::complex<float> *ptr = static_cast<std::complex<float> *>(buf.ptr);
+            std::vector<std::complex<float>> vec(ptr, ptr + buf.size);
+            self.set_base_waveform(vec);
+        })
         .def("get_targets", &interdictor_cpp::get_targets)
         .def("set_targets", &interdictor_cpp::set_targets);
 }
@@ -104,4 +114,11 @@ PYBIND11_MODULE(techniquemaker_python, m)
     py::module::import("gnuradio.gr");
 
     bind_interdictor_cpp(m);
+
+    // Waveform Engine Bindings for Automated Math Testing
+    py::class_<WaveformEngine>(m, "WaveformEngine")
+        .def_static("narrowbandNoise", &WaveformEngine::narrowbandNoise)
+        .def_static("differentialComb", &WaveformEngine::differentialComb)
+        .def_static("lfmChirp", &WaveformEngine::lfmChirp)
+        .def_static("ofdmShapedNoise", &WaveformEngine::ofdmShapedNoise);
 }

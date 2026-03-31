@@ -1,20 +1,34 @@
 {
-    "1": {
+    "WiFi Surgical (2.4G)": {
         "rx_gain": 40,
-        "tx_gain": 50,
-        "threshold": -45,
-        "warhead": "Narrowband Noise",
-        "num_targets": 1,
-        "dwell": 400,
-        "center_freq": 915000000.0
+        "tx_gain": 70,
+        "threshold": -50,
+        "template": "WiFi Preamble",
+        "num_targets": 3,
+        "center_freq": 2437000000.0,
+        "samp_rate": 20000000.0,
+        "preamble_sabotage": true,
+        "tx_sink_type": "SoapySDR"
     },
-    "2": {
+    "WiFi Dense (5.8G)": {
+        "rx_gain": 40,
+        "tx_gain": 75,
+        "threshold": -55,
+        "template": "Differential Comb",
+        "num_targets": 8,
+        "center_freq": 5745000000.0,
+        "samp_rate": 20000000.0,
+        "adaptive_bw": true,
+        "tx_sink_type": "SoapySDR"
+    },
+    "ISM Master (915M)": {
         "rx_gain": 40,
         "tx_gain": 50,
         "threshold": -45,
-        "warhead": "Swept Noise",
+        "template": "Narrowband Noise",
         "num_targets": 1,
-        "dwell": 400,
-        "center_freq": 915000000.0
+        "center_freq": 915000000.0,
+        "samp_rate": 2000000.0,
+        "tx_sink_type": "UHD"
     }
 }

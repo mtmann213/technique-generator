@@ -1,70 +1,66 @@
-# TechniqueMaker: Advanced RF Analysis & Signal Synthesis Suite
+# TechniqueMaker: Advanced Reactive Interdiction Suite
 
-**TechniqueMaker** is a professional-grade signal generation and electronic stress-testing toolkit. It provides a modular framework for generating complex interference patterns, automated signal tracking/interdiction using SDRs, and mass-producing labeled datasets for Machine Learning (ML) signal classification.
+TechniqueMaker is a high-performance SDR platform designed for protocol-aware RF interdiction. It provides a real-time C++/Python framework for detecting, tracking, and disrupting complex digital waveforms with sub-millisecond precision.
 
 ---
 
-## 🦅 Predator-Native (C++ Version)
-The high-performance, native implementation of the Reactive Analysis Console. Built for tactical deployment where deterministic latency and low jitter are required.
+## 🦅 Tactical Capabilities
 
-### Key Capabilities:
-*   **Zero-GIL Control:** Bypasses Python entirely for real-time parameter updates.
-*   **Predictive Pattern Engine:** Integrated PRNG sequence cracking for hoppers.
-*   **Hydra V2:** Supports up to 50 simultaneous surgical targets.
+### 1. Multi-Hardware Interdiction
+- **USRP (UHD):** Native support for B205-mini, B210, and N-series devices.
+- **Signal Hound (Soapy):** Integrated support for the **VSG60A** vector signal generator with absolute dBm level control.
+- **Sidekiq S4 (Epiq):** PCIe-based support for high-bandwidth, multi-channel operations.
 
-### Compilation & Launch:
+### 2. Advanced Waveform Warheads
+- **WiFi Preamble Sabotage:** Protocol-aware disruption of 802.11b/g/n preambles before payload delivery.
+- **Distributed Bandwidth Expansion (+BW):** Synchronized dual-SDR tuning to "Spectral Stitch" a continuous 40 MHz tactical block.
+- **Differential Comb:** High-density spectral dead-zones designed to defeat frequency-hopping targets.
+
+### 3. Precision Safety Engine
+- **Absolute Level Control:** Real-time dBm adjustments ( -120 to +10 dBm) to protect external power amplifiers.
+- **Calibration Matrix:** Automatic Gain-to-dBm mapping via the integrated RF System Calibrator.
+
+---
+
+## 📦 Standalone Tactical Deployment (Offline)
+
+The suite is designed for deployment on air-gapped, high-performance workstations using the **Universal Hardware Container (UHC)**.
+
+### 1. Export the Environment (Online)
+Build the image and package it for transfer:
 ```bash
-cd predator-cpp/build
-cmake ..
-make -j$(nproc)
-./PredatorNative
+docker build -t predator-jammer:latest .
+docker save predator-jammer:latest | gzip > predator_image.tar.gz
+```
+
+### 2. Deploy (Offline)
+Move `predator_image.tar.gz` and `run_standalone.sh` to the target machine via USB.
+```bash
+# Load the image
+gunzip -c predator_image.tar.gz | docker load
+
+# Launch with Hardware Passthrough (PCIe/USB)
+chmod +x run_standalone.sh
+./run_standalone.sh
 ```
 
 ---
 
-## 🚀 The Unified Launcher
-The easiest way to use the suite is through the unified launcher. It automatically handles your environment and Docker setup.
-
-```bash
-chmod +x TechniqueMaker.py
-./TechniqueMaker.py predator
-```
-
----
-
-## 🦅 Predator Reactive Analysis Console
-The flagship tool of the suite. Designed for real-time RF analysis and protocol-aware interdiction using USRP hardware.
-
-### Key Tactical Features:
-*   **Protocol-Aware Gating:** Targets specific phases of a digital link (Preamble Sabotage, Stability Stutter).
-*   **Tracking Loop Attacks:** Disrupts PLLs and frequency correction using Clock-Pull frequency ramping.
-*   **Adaptive BW Sculpting:** Automatically measures and matches the target signal's occupied bandwidth.
-*   **Hydra Multi-Tracking:** Track and interdict up to 8 simultaneous targets using peak suppression.
-*   **SigMF Logging:** Record entire RF sessions with compliant metadata for forensic playback.
+## 🛠️ Project Structure
+- **`apps/PredatorJammer.py`**: The primary tactical console for reactive operations.
+- **`apps/SystemCalibrator.py`**: Automated RF power and frequency calibration.
+- **`gr-techniquemaker/`**: C++ native DSP core for high-performance signal processing.
+- **`config/predator_presets.json`**: Tactical profiles for DAPS, WiFi, and ISM targets.
+- **`run_standalone.sh`**: Hardware-aware launcher with PCIe/USB driver injection.
 
 ---
 
-## 🤖 AI Dataset Factory
-Mass-produce SigMF-compliant datasets for training signal classification models. Organized, labeled, and randomized for high-quality deep learning pipelines.
+## 📄 Documentation
+- [Techniques Overview](docs/TECHNIQUES.md)
+- [Docker & Deployment Guide](docs/DOCKER_INSTRUCTIONS.md)
+- [Future Plans](docs/FUTURE_PLANS.md)
 
 ---
 
-## 📻 GNU Radio Integration
-TechniqueMaker includes a high-performance **OOT Module** (`gr-techniquemaker`).
-*   Vectorized DSP for 2 MHz+ real-time operation.
-*   Supports both Burst (PDU) and Continuous (Stream) modes.
-*   Fully programmable via Message Ports.
-
----
-
-## 🏗️ Project Structure
-*   `TechniqueMaker.py`: Master launcher.
-*   `apps/`: Core applications (`PredatorJammer.py`, `SystemCalibrator.py`, `BaseGui.py`).
-*   `docs/`: Documentation (`TECHNIQUES.md`, `DOCKER_INSTRUCTIONS.md`, etc.).
-*   `gr-techniquemaker/`: High-performance GNU Radio OOT Module.
-*   `config/`: User presets and calibration matrices.
-
-## 🛠️ Requirements
-*   **OS:** Linux (Ubuntu 22.04 recommended)
-*   **Hardware:** UHD-compatible SDRs (e.g., B205-mini)
-*   **Software:** Docker (optional), GNU Radio 3.10+, NumPy, SciPy, PyQt5
+## 🛡️ License
+This project is intended for authorized RF testing and electronic warfare research only. Ensure compliance with all local spectrum regulations before transmitting.

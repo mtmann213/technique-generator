@@ -1,5 +1,6 @@
 #include "MainWindow.hpp"
 #include "WaveformEngine.hpp"
+#include "TacticalLogger.hpp"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
@@ -177,7 +178,7 @@ void MainWindow::setupUi() {
     // Waterfall (Placeholder until connected)
     QWidget *wf_container = new QWidget();
     wf_container->setStyleSheet("background: black;");
-    QVBoxLayout *wf_layout = new QVBoxLayout(wf_container);
+    d_wf_layout = new QVBoxLayout(wf_container);
     middle_layout->addWidget(wf_container, 5);
 
     // Track Log
@@ -218,6 +219,7 @@ void MainWindow::onSavePresetClicked() {
     bool ok;
     QString name = QInputDialog::getText(this, "Save Preset", "Preset Name:", QLineEdit::Normal, "", &ok);
     if (!ok || name.isEmpty()) return;
+    LOG_INFO("Saving preset: " + name.toStdString());
 
     QFile file(d_preset_file);
     QJsonObject presets;
@@ -252,6 +254,7 @@ void MainWindow::onSavePresetClicked() {
 void MainWindow::onLoadPresetClicked() {
     QString name = d_preset_combo->currentText();
     if (name.isEmpty()) return;
+    LOG_INFO("Loading preset: " + name.toStdString());
 
     QFile file(d_preset_file);
     if (!file.open(QIODevice::ReadOnly)) return;
@@ -407,14 +410,21 @@ void MainWindow::onScanClicked() {
 void MainWindow::onConnectClicked() {
     if (d_connect_btn->isChecked()) {
         std::string selected = d_serial_combo->currentText().split(" ")[0].toStdString();
+        LOG_INFO("Connecting to device: " + selected);
         d_controller->setup(selected, d_samp_input->text().toDouble(), d_freq_input->text().toDouble());
         d_controller->start();
         
         // Replace black placeholder with real waterfall
         QWidget* wf_widget = d_controller->getWaterfallWidget();
         if (wf_widget) {
-            // Find the waterfall container and add it
-            // (Note: In a real app, we'd manage this more cleanly)
+            // Remove previous placeholder if it exists
+            QLayoutItem *child;
+            while ((child = d_wf_layout->takeAt(0)) != nullptr) {
+                if (child->widget()) child->widget()->hide();
+                delete child;
+            }
+            d_wf_layout->addWidget(wf_widget);
+            wf_widget->show();
         }
         
         d_status_badge->setText("CONNECTED");
@@ -422,6 +432,7 @@ void MainWindow::onConnectClicked() {
     } else {
         d_controller->stop();
         d_status_badge->setText("OFFLINE");
+        d_status_badge->setStyleSheet("font-size: 18px; font-weight: bold; background: #222; color: #555;");
     }
 }
 

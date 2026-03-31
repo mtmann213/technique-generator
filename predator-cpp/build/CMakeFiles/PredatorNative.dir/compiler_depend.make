@@ -3413,11 +3413,18 @@ CMakeFiles/PredatorNative.dir/PredatorNative_autogen/mocs_compilation.cpp.o: Pre
   /usr/include/fmt/format.h \
   /usr/include/fmt/ostream.h \
   /usr/include/gmpxx.h \
+  /usr/include/gnuradio/analog/api.h \
+  /usr/include/gnuradio/analog/noise_source.h \
+  /usr/include/gnuradio/analog/noise_type.h \
+  /usr/include/gnuradio/analog/sig_source.h \
+  /usr/include/gnuradio/analog/sig_source_waveform.h \
   /usr/include/gnuradio/api.h \
   /usr/include/gnuradio/attributes.h \
   /usr/include/gnuradio/basic_block.h \
   /usr/include/gnuradio/block.h \
   /usr/include/gnuradio/block_registry.h \
+  /usr/include/gnuradio/blocks/add_blk.h \
+  /usr/include/gnuradio/blocks/api.h \
   /usr/include/gnuradio/buffer.h \
   /usr/include/gnuradio/buffer_double_mapped.h \
   /usr/include/gnuradio/buffer_type.h \
@@ -3673,6 +3680,10 @@ CMakeFiles/PredatorNative.dir/PredatorNative_autogen/mocs_compilation.cpp.o: Pre
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QAbstractListModel \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QFile \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonArray \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonDocument \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonObject \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QObject \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QTimer \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qabstractitemmodel.h \
@@ -3684,15 +3695,22 @@ CMakeFiles/PredatorNative.dir/PredatorNative_autogen/mocs_compilation.cpp.o: Pre
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbasictimer.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbytearray.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbytearraylist.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcborcommon.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcborvalue.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qchar.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcompilerdetection.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qconfig.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontainerfwd.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontainertools_impl.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontiguouscache.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcoreapplication.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcoreevent.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qdatastream.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qdatetime.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qdebug.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qeventloop.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qfile.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qfiledevice.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qflags.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qgenericatomic.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qglobal.h \
@@ -3702,6 +3720,10 @@ CMakeFiles/PredatorNative.dir/PredatorNative_autogen/mocs_compilation.cpp.o: Pre
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qiodevice.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qitemselectionmodel.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qiterator.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonarray.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsondocument.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonobject.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonvalue.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qline.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qlist.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qlocale.h \
@@ -3737,8 +3759,11 @@ CMakeFiles/PredatorNative.dir/PredatorNative_autogen/mocs_compilation.cpp.o: Pre
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qsysinfo.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qsystemdetection.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtcore-config.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qtextstream.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtimer.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtypeinfo.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qurl.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/quuid.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvariant.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvarlengtharray.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvector.h \
@@ -6447,6 +6472,11 @@ CMakeFiles/PredatorNative.dir/src/InterdictionController.cpp.o: /home/dev2/Techn
   /usr/include/fmt/format.h \
   /usr/include/fmt/ostream.h \
   /usr/include/gmpxx.h \
+  /usr/include/gnuradio/analog/api.h \
+  /usr/include/gnuradio/analog/noise_source.h \
+  /usr/include/gnuradio/analog/noise_type.h \
+  /usr/include/gnuradio/analog/sig_source.h \
+  /usr/include/gnuradio/analog/sig_source_waveform.h \
   /usr/include/gnuradio/api.h \
   /usr/include/gnuradio/attributes.h \
   /usr/include/gnuradio/basic_block.h \
@@ -8272,11 +8302,18 @@ CMakeFiles/PredatorNative.dir/src/MainWindow.cpp.o: /home/dev2/TechniqueMaker/pr
   /usr/include/fmt/format.h \
   /usr/include/fmt/ostream.h \
   /usr/include/gmpxx.h \
+  /usr/include/gnuradio/analog/api.h \
+  /usr/include/gnuradio/analog/noise_source.h \
+  /usr/include/gnuradio/analog/noise_type.h \
+  /usr/include/gnuradio/analog/sig_source.h \
+  /usr/include/gnuradio/analog/sig_source_waveform.h \
   /usr/include/gnuradio/api.h \
   /usr/include/gnuradio/attributes.h \
   /usr/include/gnuradio/basic_block.h \
   /usr/include/gnuradio/block.h \
   /usr/include/gnuradio/block_registry.h \
+  /usr/include/gnuradio/blocks/add_blk.h \
+  /usr/include/gnuradio/blocks/api.h \
   /usr/include/gnuradio/buffer.h \
   /usr/include/gnuradio/buffer_double_mapped.h \
   /usr/include/gnuradio/buffer_type.h \
@@ -8532,6 +8569,10 @@ CMakeFiles/PredatorNative.dir/src/MainWindow.cpp.o: /home/dev2/TechniqueMaker/pr
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QAbstractListModel \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QFile \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonArray \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonDocument \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonObject \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QObject \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QTimer \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qabstractitemmodel.h \
@@ -8543,15 +8584,22 @@ CMakeFiles/PredatorNative.dir/src/MainWindow.cpp.o: /home/dev2/TechniqueMaker/pr
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbasictimer.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbytearray.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbytearraylist.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcborcommon.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcborvalue.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qchar.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcompilerdetection.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qconfig.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontainerfwd.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontainertools_impl.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontiguouscache.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcoreapplication.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcoreevent.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qdatastream.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qdatetime.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qdebug.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qeventloop.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qfile.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qfiledevice.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qflags.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qgenericatomic.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qglobal.h \
@@ -8561,6 +8609,10 @@ CMakeFiles/PredatorNative.dir/src/MainWindow.cpp.o: /home/dev2/TechniqueMaker/pr
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qiodevice.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qitemselectionmodel.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qiterator.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonarray.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsondocument.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonobject.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonvalue.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qline.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qlist.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qlocale.h \
@@ -8596,8 +8648,11 @@ CMakeFiles/PredatorNative.dir/src/MainWindow.cpp.o: /home/dev2/TechniqueMaker/pr
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qsysinfo.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qsystemdetection.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtcore-config.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qtextstream.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtimer.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtypeinfo.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qurl.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/quuid.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvariant.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvarlengtharray.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvector.h \
@@ -8637,6 +8692,7 @@ CMakeFiles/PredatorNative.dir/src/MainWindow.cpp.o: /home/dev2/TechniqueMaker/pr
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QFormLayout \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QGroupBox \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QHBoxLayout \
+  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QInputDialog \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QLabel \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QLayout \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QLineEdit \
@@ -8657,10 +8713,12 @@ CMakeFiles/PredatorNative.dir/src/MainWindow.cpp.o: /home/dev2/TechniqueMaker/pr
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qboxlayout.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qcheckbox.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qcombobox.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qdialog.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qformlayout.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qframe.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qgridlayout.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qgroupbox.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qinputdialog.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qlabel.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qlayout.h \
   /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qlayoutitem.h \
@@ -11598,11 +11656,18 @@ CMakeFiles/PredatorNative.dir/src/main.cpp.o: /home/dev2/TechniqueMaker/predator
   /usr/include/fmt/format.h \
   /usr/include/fmt/ostream.h \
   /usr/include/gmpxx.h \
+  /usr/include/gnuradio/analog/api.h \
+  /usr/include/gnuradio/analog/noise_source.h \
+  /usr/include/gnuradio/analog/noise_type.h \
+  /usr/include/gnuradio/analog/sig_source.h \
+  /usr/include/gnuradio/analog/sig_source_waveform.h \
   /usr/include/gnuradio/api.h \
   /usr/include/gnuradio/attributes.h \
   /usr/include/gnuradio/basic_block.h \
   /usr/include/gnuradio/block.h \
   /usr/include/gnuradio/block_registry.h \
+  /usr/include/gnuradio/blocks/add_blk.h \
+  /usr/include/gnuradio/blocks/api.h \
   /usr/include/gnuradio/buffer.h \
   /usr/include/gnuradio/buffer_double_mapped.h \
   /usr/include/gnuradio/buffer_type.h \
@@ -11858,6 +11923,10 @@ CMakeFiles/PredatorNative.dir/src/main.cpp.o: /home/dev2/TechniqueMaker/predator
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QAbstractListModel \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QFile \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonArray \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonDocument \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/QJsonObject \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QObject \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/QTimer \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qabstractitemmodel.h \
@@ -11869,15 +11938,22 @@ CMakeFiles/PredatorNative.dir/src/main.cpp.o: /home/dev2/TechniqueMaker/predator
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbasictimer.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbytearray.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qbytearraylist.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcborcommon.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcborvalue.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qchar.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcompilerdetection.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qconfig.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontainerfwd.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontainertools_impl.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qcontiguouscache.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcoreapplication.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qcoreevent.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qdatastream.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qdatetime.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qdebug.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qeventloop.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qfile.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qfiledevice.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qflags.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qgenericatomic.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qglobal.h \
@@ -11887,6 +11963,10 @@ CMakeFiles/PredatorNative.dir/src/main.cpp.o: /home/dev2/TechniqueMaker/predator
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qiodevice.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qitemselectionmodel.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qiterator.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonarray.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsondocument.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonobject.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qjsonvalue.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qline.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qlist.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qlocale.h \
@@ -11922,8 +12002,11 @@ CMakeFiles/PredatorNative.dir/src/main.cpp.o: /home/dev2/TechniqueMaker/predator
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qsysinfo.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qsystemdetection.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtcore-config.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qtextstream.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtimer.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qtypeinfo.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/qurl.h \
+  /usr/include/x86_64-linux-gnu/qt5/QtCore/quuid.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvariant.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvarlengtharray.h \
   /usr/include/x86_64-linux-gnu/qt5/QtCore/qvector.h \
@@ -12011,6 +12094,8 @@ CMakeFiles/PredatorNative.dir/src/main.cpp.o: /home/dev2/TechniqueMaker/predator
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
 
+
+/usr/include/x86_64-linux-gnu/qt5/QtWidgets/qdialog.h:
 
 /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QRadioButton:
 
@@ -12687,6 +12772,8 @@ PredatorNative_autogen/UVLADIE3JM/moc_MainWindow.cpp:
 /usr/share/cmake-3.28/Modules/FindPythonInterp.cmake:
 
 /usr/include/uhd/rfnoc/block_id.hpp:
+
+/usr/include/x86_64-linux-gnu/qt5/QtWidgets/qinputdialog.h:
 
 /usr/include/uhd/rfnoc/actions.hpp:
 
@@ -13481,6 +13568,8 @@ PredatorNative_autogen/mocs_compilation.cpp:
 /usr/include/boost/range/empty.hpp:
 
 /usr/include/boost/system/is_error_condition_enum.hpp:
+
+/usr/include/x86_64-linux-gnu/qt5/QtWidgets/QInputDialog:
 
 /usr/include/boost/mpl/empty.hpp:
 

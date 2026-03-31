@@ -1,4 +1,5 @@
 #include "InterdictionController.hpp"
+#include "TacticalLogger.hpp"
 #include <gnuradio/techniquemaker/interdictor_cpp.h>
 #include "../../gr-techniquemaker/lib/interdictor_cpp_impl.h"
 #include <gnuradio/blocks/add_blk.h>
@@ -122,6 +123,19 @@ QWidget* InterdictionController::getWaterfallWidget() {
 void InterdictionController::pollTelemetry() {
     if (d_interdictor) {
         auto targets = d_interdictor->get_targets();
+        
+        // Log new detections
+        static size_t last_count = 0;
+        if (targets.size() > last_count) {
+            for (size_t i = last_count; i < targets.size(); ++i) {
+                char buf[128];
+                snprintf(buf, sizeof(buf), "NEW TARGET DETECTED: %8.1f kHz (BW: %4.1f k)", 
+                         targets[i].center_freq / 1e3, targets[i].bandwidth / 1e3);
+                LOG_TACTICAL(std::string(buf));
+            }
+        }
+        last_count = targets.size();
+
         emit targetsUpdated(targets);
     }
 }

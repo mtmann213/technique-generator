@@ -74,9 +74,9 @@ CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/qt5/bin/uic
 CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/x86_64-linux-gnu/libgnuradio-qtgui.so.3.10.9.2
 CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/x86_64-linux-gnu/libgnuradio-analog.so.3.10.9.2
 CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/x86_64-linux-gnu/libgnuradio-filter.so.3.10.9.2
+CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/x86_64-linux-gnu/libgnuradio-uhd.so.3.10.9.2
 CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/x86_64-linux-gnu/libgnuradio-runtime.so.3.10.9.2
 CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/x86_64-linux-gnu/libgnuradio-blocks.so.3.10.9.2
-CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/x86_64-linux-gnu/libgnuradio-uhd.so.3.10.9.2
 CMakeFiles/PredatorNative_autogen_timestamp_deps: /usr/lib/x86_64-linux-gnu/libgnuradio-fft.so.3.10.9.2
 
 PredatorNative_autogen_timestamp_deps: CMakeFiles/PredatorNative_autogen_timestamp_deps

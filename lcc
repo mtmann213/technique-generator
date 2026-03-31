@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# lcc - Local Claude Code launcher
+# Points Claude Code at a local LLM served by llama.cpp on your GB10 device
+
+LCC_HOST="${LCC_HOST:-127.0.0.1}" # Default to localhost
+LCC_PORT="${LCC_PORT:-8000}"
+LCC_BASE_URL="http://${LCC_HOST}:${LCC_PORT}"
+
+# ANSI color codes
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# No model argument, show help and check server
+if [[ -z "$1" ]]; then
+    echo -e "${BOLD}Local Claude Code Launcher${NC}"
+    echo ""
+    if curl -sf "${LCC_BASE_URL}/health" > /dev/null 2>&1; then
+        echo -e "${GREEN}  llama-server is reachable at ${LCC_BASE_URL}${NC}"
+        # Auto-detect model if jq is present
+        if command -v jq &>/dev/null; then
+            MODEL=$(curl -sf "${LCC_BASE_URL}/v1/models" | jq -r '.data[0].id')
+            if [[ -n "$MODEL" ]]; then
+                echo -e "${CYAN}  Auto-detected model: ${BOLD}${MODEL}${NC}"
+                echo ""
+                echo -e "To launch: ${GREEN}./lcc ${MODEL}${NC}"
+            fi
+        fi
+    else
+        echo -e "${RED}  Cannot reach llama-server at ${LCC_BASE_URL}${NC}"
+        echo -e "  Make sure your local provider is running and supports the Anthropic API."
+    fi
+    exit 0
+fi
+
+MODEL="$1"
+shift  # remaining args pass through to claude
+
+echo -e "${GREEN}Launching Claude Code via local LLM: ${BOLD}${MODEL}${NC}"
+export ANTHROPIC_BASE_URL="${LCC_BASE_URL}"
+export ANTHROPIC_AUTH_TOKEN="local"
+export ANTHROPIC_API_KEY="local-key" # Sometimes needs a placeholder
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+
+exec claude --model "$MODEL" "$@"

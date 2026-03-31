@@ -1639,6 +1639,7 @@ CMakeFiles/PredatorNative.dir/src/InterdictionController.cpp.o: \
  /usr/include/gnuradio/blocks/api.h \
  /usr/include/gnuradio/analog/noise_source.h \
  /usr/include/gnuradio/analog/noise_type.h \
+ /home/dev2/TechniqueMaker/predator-cpp/src/TacticalLogger.hpp \
  /home/dev2/TechniqueMaker/predator-cpp/src/../../gr-techniquemaker/lib/interdictor_cpp_impl.h \
  /usr/include/x86_64-linux-gnu/qt5/QtCore/QtGlobal \
  /usr/include/x86_64-linux-gnu/qt5/QtCore/qglobal.h \

@@ -115,6 +115,7 @@ class techniquepdu(gr.sync_block):
         self.frame_duration_ms = frame_duration_ms
         self.enable_command_port = enable_command_port
         self.output_mode = output_mode
+        self.predictive_tracking = False
 
         # Internal State
         self._phase = np.zeros(16)
@@ -206,6 +207,13 @@ class techniquepdu(gr.sync_block):
                         
                         if len(new_targets) != len(self._last_report_freqs):
                             self._last_report_freqs = new_targets
+
+        # --- Predictive Tracking ---
+        if self.predictive_tracking and self._last_report_freqs:
+            # Shift predicted frequencies if no recent detection
+            if self._dwell_counter <= 0:
+                self._last_report_freqs = [f + 50000.0 for f in self._last_report_freqs]
+                self._dwell_counter = n + 100 # Reset dwell for predicted hop
 
         if self.manual_mode: self._target_freqs[0] = self.manual_freq; self._dwell_counter = n + 100
 
@@ -333,3 +341,4 @@ class techniquepdu(gr.sync_block):
     def set_frame_duration_ms(self, v): self.frame_duration_ms = float(v)
     def set_enable_command_port(self, v): self.enable_command_port = bool(v)
     def set_output_mode(self, v): self.output_mode = str(v); self._need_regen = True
+    def set_predictive_tracking(self, v): self.predictive_tracking = bool(v)

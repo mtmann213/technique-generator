@@ -62,6 +62,7 @@ private:
 
     // UI Elements
     QFormLayout *d_param_layout;
+    QVBoxLayout *d_wf_layout;
     QComboBox *d_serial_combo;
     QComboBox *d_template_combo;
     QComboBox *d_preset_combo;

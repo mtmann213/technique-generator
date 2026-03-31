@@ -259,3 +259,206 @@
 2026-03-24 16:47:44,536 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead.
 2026-03-24 16:47:51,145 - TechniqueMaker - INFO - Loaded Narrowband Noise warhead.
 2026-03-24 16:48:02,012 - TechniqueMaker - INFO - Denial Grid Cleared.
+2026-03-30 22:27:44,044 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:27:47,442 - TechniqueMaker - INFO - Dual TX Enabled
+2026-03-30 22:29:13,070 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:29:19,272 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:30:24,465 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:39:17,654 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:39:17,655 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:39:24,695 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:39:25,204 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:39:34,417 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 22:39:35,533 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2437.0 MHz
+2026-03-30 22:39:35,534 - TechniqueMaker - INFO - Secondary SDR linked to Master (TX1)
+2026-03-30 22:40:28,132 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:40:28,193 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:43:04,835 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:43:04,835 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:43:08,227 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:43:08,736 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:43:16,180 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 22:43:24,894 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2457.0 MHz
+2026-03-30 22:43:47,928 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2437.0 MHz
+2026-03-30 22:43:47,929 - TechniqueMaker - INFO - Secondary SDR linked to Master (TX1)
+2026-03-30 22:44:04,353 - TechniqueMaker - INFO - TX2 Center Frequency updated: 912.0 MHz
+2026-03-30 22:44:18,323 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2437.0 MHz
+2026-03-30 22:44:18,323 - TechniqueMaker - INFO - Secondary SDR linked to Master (TX1)
+2026-03-30 22:44:25,014 - TechniqueMaker - INFO - TX2 Center Frequency updated: 912.0 MHz
+2026-03-30 22:44:25,100 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:44:35,778 - TechniqueMaker - WARNING - Dual-Warhead Fallback: cannot import name 'interdictor_cpp' from 'techniquemaker' (/home/dev2/TechniqueMaker/gr-techniquemaker/build/python/techniquemaker/__init__.pyc)
+2026-03-30 22:44:35,779 - TechniqueMaker - ERROR - Hardware connection failed: __init__(): incompatible constructor arguments. The following argument types are supported:
+    1. gnuradio.soapy.soapy_python.sink(device: str, type: str, nchan: int, dev_args: str, stream_args: str, tune_args: List[str], other_settings: List[str])
+
+Invoked with: 'driver=vsg60,serial=24248760', 'fc32', 1, '', ''
+2026-03-30 22:44:35,779 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:44:41,146 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:44:42,132 - TechniqueMaker - WARNING - Dual-Warhead Fallback: cannot import name 'interdictor_cpp' from 'techniquemaker' (/home/dev2/TechniqueMaker/gr-techniquemaker/build/python/techniquemaker/__init__.pyc)
+2026-03-30 22:44:42,132 - TechniqueMaker - ERROR - Hardware connection failed: __init__(): incompatible constructor arguments. The following argument types are supported:
+    1. gnuradio.soapy.soapy_python.sink(device: str, type: str, nchan: int, dev_args: str, stream_args: str, tune_args: List[str], other_settings: List[str])
+
+Invoked with: 'driver=vsg60,serial=24248760', 'fc32', 1, '', ''
+2026-03-30 22:44:42,132 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:49:05,411 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:49:05,411 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:49:12,763 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:49:13,274 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:49:18,716 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:49:21,167 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:49:21,168 - TechniqueMaker - ERROR - Hardware connection failed: sink: Wrong number of channels and tune arguments
+2026-03-30 22:49:21,169 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:50:13,201 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:50:13,201 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:50:15,432 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:50:15,941 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:50:21,796 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:50:24,345 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:50:24,371 - TechniqueMaker - ERROR - Hardware connection failed: SoapySDR::Device::make() no match
+2026-03-30 22:50:24,372 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:50:33,663 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-30 22:50:36,333 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:50:37,318 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:50:38,340 - TechniqueMaker - ERROR - Hardware connection failed: destination already in use by edge usrp_source1:0->interdictor_cpp0:0
+2026-03-30 22:50:38,340 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:50:50,051 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:50:50,554 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:50:55,534 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 22:50:58,228 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2457.0 MHz
+2026-03-30 22:50:58,228 - TechniqueMaker - INFO - Spectral Stitch Mode Active (+BW Offset)
+2026-03-30 22:51:02,556 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:51:03,540 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:51:08,502 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457480 (B205mini)
+
+2026-03-30 22:51:08,502 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:51:22,646 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:51:22,646 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:51:24,411 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:51:24,924 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:51:26,930 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-30 22:51:31,150 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2457.0 MHz
+2026-03-30 22:51:31,150 - TechniqueMaker - INFO - Spectral Stitch Mode Active (+BW Offset)
+2026-03-30 22:51:35,333 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 22:51:37,028 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:51:39,463 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:51:44,442 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457480 (B205mini)
+
+2026-03-30 22:51:44,442 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:52:53,887 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:52:53,887 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:52:57,086 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:52:57,595 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:53:04,428 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 22:53:05,684 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2457.0 MHz
+2026-03-30 22:53:05,684 - TechniqueMaker - INFO - Spectral Stitch Mode Active (+BW Offset)
+2026-03-30 22:53:07,754 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:53:10,209 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:53:10,214 - TechniqueMaker - ERROR - Hardware connection failed: SoapySDR::Device::make() no match
+2026-03-30 22:53:10,214 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:53:18,607 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-30 22:53:20,531 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:53:21,515 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:53:22,526 - TechniqueMaker - INFO - Staging Secondary SDR 3457480 (B205mini)...
+2026-03-30 22:53:28,492 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457480 (B205mini)
+
+2026-03-30 22:53:28,492 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:53:54,919 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:53:55,422 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:53:57,864 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:53:58,849 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:53:59,834 - TechniqueMaker - INFO - Staging Secondary SDR 3457480 (B205mini)...
+2026-03-30 22:54:05,805 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457480 (B205mini)
+
+2026-03-30 22:54:05,806 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:54:25,000 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:54:25,000 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:54:26,650 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:54:27,160 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:54:36,549 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 22:54:38,520 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:54:39,023 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:54:48,705 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-30 22:54:49,473 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:54:51,918 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:54:52,935 - TechniqueMaker - INFO - Staging Secondary SDR 3457480 (B205mini)...
+2026-03-30 22:54:58,900 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457480 (B205mini)
+
+2026-03-30 22:54:58,900 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:55:13,012 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:55:13,013 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:55:14,777 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:55:15,289 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:55:22,855 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:55:25,411 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:55:25,416 - TechniqueMaker - ERROR - Hardware connection failed: SoapySDR::Device::make() no match
+2026-03-30 22:55:25,416 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:55:35,696 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:55:35,696 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:55:38,302 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-30 22:55:38,905 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:55:39,414 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:55:41,007 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:55:43,568 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:55:44,730 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-03-30 22:55:44,898 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-03-30 22:56:01,471 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 22:56:05,063 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2457.0 MHz
+2026-03-30 22:56:05,063 - TechniqueMaker - INFO - Spectral Stitch Mode Active (+BW Offset)
+2026-03-30 22:56:21,598 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:56:22,397 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:56:23,383 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:56:24,367 - TechniqueMaker - INFO - Staging Secondary SDR 3457480 (B205mini)...
+2026-03-30 22:56:30,335 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457480 (B205mini)
+
+2026-03-30 22:56:30,335 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:56:43,658 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 22:56:43,658 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 22:56:45,458 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-30 22:56:45,854 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 22:56:46,364 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-30 22:56:50,950 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:56:53,386 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:56:54,549 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-03-30 22:56:54,720 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-03-30 22:57:00,663 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 22:57:02,575 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 22:57:03,470 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 22:57:04,455 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 22:57:05,439 - TechniqueMaker - INFO - Staging Secondary SDR 3457480 (B205mini)...
+2026-03-30 22:57:11,415 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457480 (B205mini)
+
+2026-03-30 22:57:11,415 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-30 23:04:19,279 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 23:04:23,351 - TechniqueMaker - INFO - Found 2 devices.
+2026-03-30 23:04:32,560 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 23:04:37,590 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-30 23:04:37,590 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-30 23:04:39,682 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 23:04:40,195 - TechniqueMaker - INFO - Found 2 devices.
+2026-03-30 23:04:43,962 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-30 23:04:47,328 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-30 23:04:50,801 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2457.0 MHz
+2026-03-30 23:04:50,801 - TechniqueMaker - INFO - Spectral Stitch Mode Active (+BW Offset)
+2026-03-30 23:04:52,104 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-30 23:04:52,607 - TechniqueMaker - INFO - Found 2 devices.
+2026-03-30 23:05:16,905 - TechniqueMaker - INFO - Connecting to USRP 3457464...
+2026-03-30 23:05:27,551 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-03-30 23:05:28,557 - TechniqueMaker - INFO - Staging Secondary SDR 3457480 (B205mini)...
+2026-03-30 23:05:34,530 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457480 (B205mini)
+
+2026-03-30 23:05:34,530 - TechniqueMaker - INFO - Disconnecting hardware...

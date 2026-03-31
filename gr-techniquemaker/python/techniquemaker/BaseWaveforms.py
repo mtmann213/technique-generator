@@ -153,14 +153,18 @@ def phasor_tones(frequencies_str: str, sample_rate_hz: float, technique_length_s
     for f in freqs: out += np.exp(1j * 2 * np.pi * f * time)
     return _normalize_signal(out, target_value, normalization_type)
 
-def swept_phasors(sweep_hz: float, tones: int, sample_rate_hz: float, technique_length_seconds: float, target_value: float = 1.0, normalization_type: Literal["peak", "rms"] = "peak", filter_type: str = "none") -> NDArray:
-    time = _create_time_array(sample_rate_hz, technique_length_seconds); out = np.zeros(len(time), dtype=np.complex128); freqs = np.linspace(-sweep_hz/2, sweep_hz/2, tones, endpoint=False); m_sw = sweep_hz / tones
-    for f0 in freqs: f = (m_sw / technique_length_seconds) * time + f0; out += np.exp(1j * 2 * np.pi * np.cumsum(f) / sample_rate_hz)
+def swept_phasors(sweep_hz: float, tones: int, sample_rate_hz: float, technique_length_seconds: float, sweep_rate_hz_s: float = 0, target_value: float = 1.0, normalization_type: Literal["peak", "rms"] = "peak", filter_type: str = "none") -> NDArray:
+    if sweep_rate_hz_s > 0: effective_duration = sweep_hz / sweep_rate_hz_s
+    else: effective_duration = technique_length_seconds
+    time = _create_time_array(sample_rate_hz, technique_length_seconds); out = np.zeros(len(time), dtype=np.complex128); freqs = np.linspace(-sweep_hz/2, sweep_hz/2, tones, endpoint=False); m_sw = sweep_hz / effective_duration
+    for f0 in freqs: f = (m_sw / 1.0) * (time % effective_duration) + f0; out += np.exp(1j * 2 * np.pi * np.cumsum(f) / sample_rate_hz)
     return _normalize_signal(out, target_value, normalization_type)
 
-def swept_cosines(sweep_hz: float, tones: int, sample_rate_hz: float, technique_length_seconds: float, target_value: float = 1.0, normalization_type: Literal["peak", "rms"] = "peak", filter_type: str = "none") -> NDArray:
-    time = _create_time_array(sample_rate_hz, technique_length_seconds); out = np.zeros(len(time)); freqs = np.linspace(-sweep_hz/2, sweep_hz/2, tones, endpoint=False); m_sw = sweep_hz / tones
-    for f0 in freqs: f = (m_sw / technique_length_seconds) * time + f0; out += np.cos(2 * np.pi * np.cumsum(f) / sample_rate_hz)
+def swept_cosines(sweep_hz: float, tones: int, sample_rate_hz: float, technique_length_seconds: float, sweep_rate_hz_s: float = 0, target_value: float = 1.0, normalization_type: Literal["peak", "rms"] = "peak", filter_type: str = "none") -> NDArray:
+    if sweep_rate_hz_s > 0: effective_duration = sweep_hz / sweep_rate_hz_s
+    else: effective_duration = technique_length_seconds
+    time = _create_time_array(sample_rate_hz, technique_length_seconds); out = np.zeros(len(time)); freqs = np.linspace(-sweep_hz/2, sweep_hz/2, tones, endpoint=False); m_sw = sweep_hz / effective_duration
+    for f0 in freqs: f = (m_sw / 1.0) * (time % effective_duration) + f0; out += np.cos(2 * np.pi * np.cumsum(f) / sample_rate_hz)
     return _normalize_signal(out, target_value, normalization_type)
 
 def FM_cosine(sweep_range_hz: float, modulated_frequency: float, sample_rate_hz: float, technique_length_seconds: float, target_value: float = 1.0, normalization_type: Literal["peak", "rms"] = "peak", filter_type: str = "none") -> NDArray:
@@ -217,6 +221,38 @@ def songMaker(songName: str, bandwidth_hz: float, sample_rate_hz: float, target_
     parts = []
     for j in range(len(A)): parts.append(noteMaker(A[j],B[j],BPMval,sample_rate_hz,bandwidth_hz))
     return _normalize_signal(np.concatenate(parts) if parts else np.array([]), target_value, normalization_type)
+
+def wifi_preamble(
+    sample_rate_hz: float,
+    technique_length_seconds: float,
+    mode: Literal["802.11b", "802.11g"] = "802.11b",
+    target_value: float = 1.0,
+    normalization_type: Literal["peak", "rms"] = "peak"
+) -> NDArray[np.complex128]:
+    """Generates a WiFi-like preamble sync pattern for sabotage attacks."""
+    total_samples = math.floor(sample_rate_hz * technique_length_seconds)
+    out = np.zeros(total_samples, dtype=np.complex128)
+    
+    if mode == "802.11b":
+        # Barker 11 code
+        barker = np.array([1, 1, 1, -1, -1, -1, 1, -1, -1, 1, -1], dtype=np.complex128)
+        # 11 Mcps, 1 Mbps DBPSK
+        sps = max(1, int(sample_rate_hz / 11e6)) 
+        pattern = np.repeat(barker, sps)
+    else:
+        # Simplified L-STF (Short Training Field) for 802.11g/n
+        # 10 repetitions of a 0.8us sequence
+        seq = np.array([0, 0, 1+1j, 0, 0, 0, -1-1j, 0, 0, 0, 1+1j, 0, 0, 0, -1-1j, 0, 0, 0, -1-1j, 0, 0, 0, 1+1j, 0, 0, 0, 0, 0, 0, 0, -1-1j, 0, 0, 0, -1-1j, 0, 0, 0, 1+1j, 0, 0, 0, 1+1j, 0, 0, 0, 1+1j, 0, 0, 0, 1+1j, 0, 0], dtype=np.complex128)
+        td = np.fft.ifft(np.fft.ifftshift(seq))
+        pattern = np.tile(td, 10)
+    
+    # Repeat the pattern throughout the duration
+    p_len = len(pattern)
+    for i in range(0, total_samples, p_len):
+        chunk = min(p_len, total_samples - i)
+        out[i:i+chunk] = pattern[:chunk]
+        
+    return _normalize_signal(out, target_value, normalization_type)
 
 def differential_comb_creator(
     spike_spacing_hz: float,
@@ -322,6 +358,7 @@ waveform_definitions = {
         "params": [
             {"name": "sweep_hz", "title": "Sweep (Hz)", "type": "entry", "default": "500000"},
             {"name": "tones", "title": "Tones", "type": "entry", "default": "5"},
+            {"name": "sweep_rate_hz_s", "title": "Sweep Rate (Hz/s)", "type": "entry", "default": "0"},
             {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
             {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
         ]
@@ -331,6 +368,7 @@ waveform_definitions = {
         "params": [
             {"name": "sweep_hz", "title": "Sweep (Hz)", "type": "entry", "default": "500000"},
             {"name": "tones", "title": "Tones", "type": "entry", "default": "5"},
+            {"name": "sweep_rate_hz_s", "title": "Sweep Rate (Hz/s)", "type": "entry", "default": "0"},
             {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "2000000"},
             {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.1"}
         ]
@@ -388,6 +426,14 @@ waveform_definitions = {
             {"name": "bandwidth_hz", "title": "Target BW (Hz)", "type": "entry", "default": "1000000"},
             {"name": "pulse_interval_ms", "title": "Pulse Gap (ms)", "type": "entry", "default": "10.0"},
             {"name": "confusion_mode", "title": "Mode", "type": "options", "choices": ["phase_flip", "timing_jitter", "both"], "default": "both"}
+        ]
+    },
+    "WiFi Preamble": {
+        "func": wifi_preamble,
+        "params": [
+            {"name": "sample_rate_hz", "title": "Sample Rate (Hz)", "type": "entry", "default": "20000000"},
+            {"name": "technique_length_seconds", "title": "Length (s)", "type": "entry", "default": "0.01"},
+            {"name": "mode", "title": "Protocol Mode", "type": "options", "choices": ["802.11b", "802.11g"], "default": "802.11b"}
         ]
     }
 }

@@ -1737,6 +1737,7 @@ CMakeFiles/PredatorNative.dir/src/MainWindow.cpp.o: \
  /usr/include/x86_64-linux-gnu/qt5/QtCore/QAbstractListModel \
  /usr/include/x86_64-linux-gnu/qt5/QtCore/qabstractitemmodel.h \
  /home/dev2/TechniqueMaker/predator-cpp/src/WaveformEngine.hpp \
+ /home/dev2/TechniqueMaker/predator-cpp/src/TacticalLogger.hpp \
  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QVBoxLayout \
  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/qboxlayout.h \
  /usr/include/x86_64-linux-gnu/qt5/QtWidgets/QHBoxLayout \
