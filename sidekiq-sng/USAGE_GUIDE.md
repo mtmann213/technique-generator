@@ -1,112 +1,96 @@
-# Sidekiq-Native Generator (SNG) Tactical Manual v1.11
+# Sidekiq-Native Generator (SNG) Tactical Manual v1.12
 
 This tool provides high-performance C++ waveform generation for the Epiq Sidekiq S4/X4. It is designed for air-gapped deployment and high-power interdiction (50W PA safety).
 
 ## 🚀 General Usage
 ```bash
-./sng --tech <name> --bw <hz> --rate <hz> [options]
+./sng --tech <name> --bw <hz> --rate <hz> --len <s> [options]
 ```
 
-### 🗄️ File Output Options
-* By default, SNG saves waveforms as **32-bit Complex Floats (CF32)** in `technique.bin`.
-* If your playback tool requires **16-bit Complex Integers (SC16)**, add the `--sc16` flag.
+### 🎛️ Universal Flags (Apply to ALL techniques)
+*   **`--len <s>`**: Total duration of the generated signal (default 0.01s).
+*   **`--amp <0.0-1.0>`**: Digital scaling (default 0.5). Lower this if you see DAC clipping.
+*   **`--sc16`**: Formats the output for native Sidekiq S4/X4 playback.
+*   **`--out <file>`**: Name of the output binary file.
 
-### 🎛️ Hardware & Tuning Flags
-*   **`--freq <hz>`**: **Only used with `--stream`**. Sets the Sidekiq center frequency.
-*   **`--gain <db>`**: **Only used with `--stream`**. Sets TX gain (Capped at 30dB for 50W PA safety).
-*   **`--amp <0.0-1.0>`**: Sets digital scaling (default 0.5 for safety).
+### 📡 Hardware Flags (Only for `--stream` mode)
+*   **`--freq <hz>`**: Sets the Sidekiq center frequency.
+*   **`--gain <db>`**: Sets TX gain (Capped at 30dB for 50W PA safety).
+*   **`--stream`**: Transmit directly to hardware instead of saving a file.
 
 ---
 
 ## 🛠️ Available Techniques & Templates
 
 ### 1. Narrowband Noise (`noise`)
-Standard broadband interference. Best for basic denial of service.
+Standard broadband interference.
 ```bash
 ./sng --tech noise --bw 1000000 --rate 2000000 --len 0.1 --sc16 --out surgical_noise.bin
 ```
 
 ### 2. Phase-Shifted Noise (`phase-noise`)
-Noise with periodic phase rotations. Designed to break correlation-based receivers (DSSS/DAPS).
+Breaks correlation-based receivers (DSSS/DAPS).
 ```bash
-# Break a link with 180-deg inversions occurring at 10kHz
-./sng --tech phase-noise --bw 5000000 --rate 20000000 --shift 180 --shift-rate 10000 --sc16 --out daps_crusher.bin
+./sng --tech phase-noise --bw 5000000 --rate 20000000 --len 0.1 --shift 180 --shift-rate 10000 --sc16 --out daps_crusher.bin
 ```
 
 ### 3. Differential Comb (`comb`)
-Generates multiple high-power spikes across the bandwidth. Efficient for multi-channel disruption.
+Concentrates power into high-energy spectral spikes.
 ```bash
 ./sng --tech comb --spikes 10 --spacing 100000 --rate 5000000 --len 0.1 --sc16 --out channel_trap.bin
 ```
 
 ### 4. LFM Chirp (`chirp`)
-A linear frequency modulated sweep. Excellent for sweeping across a protocol's control channel.
+Linear frequency sweep to break protocol synchronization.
 ```bash
 ./sng --tech chirp --bw 10000000 --rate 25000000 --len 0.01 --sc16 --out protocol_sweep.bin
 ```
 
 ### 5. OFDM-Shaped Noise (`ofdm`)
-Generates noise that mimics the spectral shape of an 802.11 or LTE signal.
+Stealthy noise that mimics Wi-Fi/LTE spectral signatures.
 ```bash
-# Match a 20MHz Wi-Fi signal structure (16.6MHz occupied BW)
 ./sng --tech ofdm --bw 16600000 --rate 20000000 --len 0.04 --sc16 --out wifi_mimic.bin
 ```
 
 ### 6. FHSS Noise (`fhss`)
-Simulates a fast frequency hopper. Best for barraging multiple channels or shadowing targets.
+Fast frequency hopper barrage.
 ```bash
-# Jump between 3 channels every 10ms (100 hops/sec)
-./sng --tech fhss --hops "-1000000 0 1000000" --hop-dur 0.01 --bw 500000 --rate 10000000 --sc16 --out fast_hopper.bin
+./sng --tech fhss --hops "-1M 0 1M" --hop-dur 0.01 --bw 500k --rate 10M --len 0.1 --sc16 --out fast_hopper.bin
 ```
 
 ### 7. Correlator Confusion (`confusion`)
-Defeats DSSS/CDMA by injecting phase-flipped "phantom" spreading codes.
+Injects timing/phase jitter into DSSS receivers.
 ```bash
-# Attack a DSSS link with timing jitter and phase flips every 10ms
-./sng --tech confusion --bw 11000000 --rate 25000000 --pulse-gap 10 --sc16 --out daps_unlocker.bin
+./sng --tech confusion --bw 11000000 --rate 25000000 --len 0.1 --pulse-gap 10 --sc16 --out daps_unlocker.bin
 ```
 
 ### 8. Noise Tones (`noise-tones`)
-Surgical interdiction of multiple specific frequencies using broadened noise clouds.
+Surgical noise clouds at specific discrete frequencies.
 ```bash
-# Hit 3 specific control channels, each with a 25kHz wide noise cloud
-./sng --tech noise-tones --hops "-500000 0 500000" --bw 25000 --rate 5000000 --sc16 --out multi_tone_cloud.bin
+./sng --tech noise-tones --hops "-500k 500k" --bw 25000 --rate 5M --len 0.1 --sc16 --out tone_clouds.bin
 ```
 
 ### 9. Chunked Noise (`chunked-noise`)
-Divides the bandwidth into bins and fills a subset with noise. Supports dynamic jitter.
+Spectral shredder with dynamic re-shuffling.
 ```bash
-# Shred a 20MHz Wi-Fi channel with 10 noise chunks shuffling at 500Hz
-./sng --tech chunked-noise --bw 20000000 --spikes 10 --sweep-rate 500 --rate 40000000 --sc16 --out packet_shredder.bin
+./sng --tech chunked-noise --bw 20M --spikes 10 --sweep-rate 500 --rate 40M --len 0.1 --sc16 --out shredder.bin
 ```
 
 ### 10. RRC Modulated Noise (`rrc`)
-Protocol-matched noise that mimics the spectral footprint of a single-carrier digital link (BPSK/QPSK).
+Protocol-matched noise for single-carrier digital links.
 ```bash
-# Jam a 1Msps link with a 0.35 rolloff filter
-./sng --tech rrc --bw 1000000 --rolloff 0.35 --rate 5000000 --len 0.1 --sc16 --out link_match.bin
+./sng --tech rrc --bw 1M --rolloff 0.35 --rate 5M --len 0.1 --sc16 --out rrc_match.bin
 ```
 
 ### 11. FM Cosine (`fm-cosine`)
-Frequency modulated interference. Creates a "wobbling" signal around center.
-*   **Key Args:** `--bw` (Total deviation), `--mod-rate` (Wobble speed)
-*   **Example Template:**
+Frequency-modulated "wobbler" interference.
 ```bash
-# Wobble a signal +/- 50kHz at a 1kHz rate
-./sng --tech fm-cosine --bw 100000 --mod-rate 1000 --rate 2000000 --sc16 --out fm_wobbler.bin
+./sng --tech fm-cosine --bw 100000 --mod-rate 1000 --rate 2000000 --len 0.1 --sc16 --out fm_wobble.bin
 ```
 
 ---
 
 ## ⚠️ Safety & Power Management
-When using with a **50W Power Amplifier**:
-1.  **Gain Limit:** The tool enforces a hard cap of **30 dB** on the `--gain` flag.
-2.  **Digital Scaling:** All waveforms are pre-scaled to 0.5 amplitude by default. Use `--amp 1.0` only if the signal is too weak.
-3.  **Startup:** Always start with `--gain 0` and increase in small increments while monitoring your SpecAn.
-
-## 💾 Offline Compilation
-On the target machine:
-```bash
-cd sidekiq-sng
-make
-```
+1.  **Gain Limit:** enforced 30dB cap.
+2.  **Digital Scaling:** Default is 0.5.
+3.  **Procedure:** Start at `--gain 0` and increase slowly.
