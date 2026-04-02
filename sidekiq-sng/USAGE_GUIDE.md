@@ -1,96 +1,76 @@
-# Sidekiq-Native Generator (SNG) Tactical Manual v1.12
+# Sidekiq-Native Generator (SNG) Tactical Manual v1.13
 
 This tool provides high-performance C++ waveform generation for the Epiq Sidekiq S4/X4. It is designed for air-gapped deployment and high-power interdiction (50W PA safety).
 
-## 🚀 General Usage
+## 🚀 Quick Launch
 ```bash
 ./sng --tech <name> --bw <hz> --rate <hz> --len <s> [options]
 ```
 
-### 🎛️ Universal Flags (Apply to ALL techniques)
-*   **`--len <s>`**: Total duration of the generated signal (default 0.01s).
-*   **`--amp <0.0-1.0>`**: Digital scaling (default 0.5). Lower this if you see DAC clipping.
-*   **`--sc16`**: Formats the output for native Sidekiq S4/X4 playback.
-*   **`--out <file>`**: Name of the output binary file.
+### 🎛️ Universal Flags
+*   **`--len <s>`**: Total duration (default 0.01s).
+*   **`--amp <0.0-1.0>`**: Digital scaling (default 0.5). Use 1.0 for max power.
+*   **`--sc16`**: Formats for native Sidekiq playback (16-bit complex int).
+*   **`--out <file>`**: Filename (default: technique.bin).
 
-### 📡 Hardware Flags (Only for `--stream` mode)
-*   **`--freq <hz>`**: Sets the Sidekiq center frequency.
-*   **`--gain <db>`**: Sets TX gain (Capped at 30dB for 50W PA safety).
-*   **`--stream`**: Transmit directly to hardware instead of saving a file.
+### 📡 Hardware Flags (Streaming Mode)
+*   **`--freq <hz>`**: Center frequency.
+*   **`--gain <db>`**: TX gain (Enforced 30dB cap).
+*   **`--stream`**: Direct hardware transmission.
 
 ---
 
-## 🛠️ Available Techniques & Templates
+## 🛠️ Tactical Protocol Templates (Quick-Start)
 
-### 1. Narrowband Noise (`noise`)
-Standard broadband interference.
+| Target Link | Technique | BW Arg | Rate Arg | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Wi-Fi 2.4GHz** | `ofdm` | `--bw 16600000` | `--rate 20000000` | Mimics 802.11 sync |
+| **Bluetooth (Fast)** | `fhss` | `--bw 1000000` | `--rate 10000000` | Use multiple hops |
+| **DSSS / DAPS** | `confusion`| `--bw 11000000` | `--rate 25000000` | Break synchronization |
+| **LTE (Narrow)** | `rrc` | `--bw 1400000` | `--rate 5000000` | Match pulse shaping |
+| **Generic Denial** | `noise` | `--bw 5000000` | `--rate 10000000` | Brute force jam |
+
+---
+
+## 🔧 Air-Gap Troubleshooting & Contingencies
+
+### 1. "Shared Library Not Found" (Missing Drivers)
+If you have the Sidekiq `.so` file on a USB, copy it to the local folder and run:
 ```bash
-./sng --tech noise --bw 1000000 --rate 2000000 --len 0.1 --sc16 --out surgical_noise.bin
+LD_LIBRARY_PATH=. ./sng [args]
 ```
 
-### 2. Phase-Shifted Noise (`phase-noise`)
-Breaks correlation-based receivers (DSSS/DAPS).
+### 2. "Resource Busy / Device in Use"
+If another program is locking the Sidekiq hardware:
 ```bash
-./sng --tech phase-noise --bw 5000000 --rate 20000000 --len 0.1 --shift 180 --shift-rate 10000 --sc16 --out daps_crusher.bin
+# Find and kill the process using the radio
+fuser -k /dev/sidekiq* 
 ```
 
-### 3. Differential Comb (`comb`)
-Concentrates power into high-energy spectral spikes.
-```bash
-./sng --tech comb --spikes 10 --spacing 100000 --rate 5000000 --len 0.1 --sc16 --out channel_trap.bin
-```
+### 3. "Underflow / UUUU" (Sample Drops)
+If you see 'U's in the console, your CPU is too slow for the requested sample rate.
+*   **Fix:** Lower the `--rate` (e.g., from 40M to 20M).
+*   **Fix:** Generate to a file first (`--out`), then use a dedicated player.
 
-### 4. LFM Chirp (`chirp`)
-Linear frequency sweep to break protocol synchronization.
+### 4. Verify Data (Sanity Check)
+Run this to see if the generated file has data (should not be all zeros):
 ```bash
-./sng --tech chirp --bw 10000000 --rate 25000000 --len 0.01 --sc16 --out protocol_sweep.bin
-```
-
-### 5. OFDM-Shaped Noise (`ofdm`)
-Stealthy noise that mimics Wi-Fi/LTE spectral signatures.
-```bash
-./sng --tech ofdm --bw 16600000 --rate 20000000 --len 0.04 --sc16 --out wifi_mimic.bin
-```
-
-### 6. FHSS Noise (`fhss`)
-Fast frequency hopper barrage.
-```bash
-./sng --tech fhss --hops "-1M 0 1M" --hop-dur 0.01 --bw 500k --rate 10M --len 0.1 --sc16 --out fast_hopper.bin
-```
-
-### 7. Correlator Confusion (`confusion`)
-Injects timing/phase jitter into DSSS receivers.
-```bash
-./sng --tech confusion --bw 11000000 --rate 25000000 --len 0.1 --pulse-gap 10 --sc16 --out daps_unlocker.bin
-```
-
-### 8. Noise Tones (`noise-tones`)
-Surgical noise clouds at specific discrete frequencies.
-```bash
-./sng --tech noise-tones --hops "-500k 500k" --bw 25000 --rate 5M --len 0.1 --sc16 --out tone_clouds.bin
-```
-
-### 9. Chunked Noise (`chunked-noise`)
-Spectral shredder with dynamic re-shuffling.
-```bash
-./sng --tech chunked-noise --bw 20M --spikes 10 --sweep-rate 500 --rate 40M --len 0.1 --sc16 --out shredder.bin
-```
-
-### 10. RRC Modulated Noise (`rrc`)
-Protocol-matched noise for single-carrier digital links.
-```bash
-./sng --tech rrc --bw 1M --rolloff 0.35 --rate 5M --len 0.1 --sc16 --out rrc_match.bin
-```
-
-### 11. FM Cosine (`fm-cosine`)
-Frequency-modulated "wobbler" interference.
-```bash
-./sng --tech fm-cosine --bw 100000 --mod-rate 1000 --rate 2000000 --len 0.1 --sc16 --out fm_wobble.bin
+# Check the first few bytes of the output
+hexdump -C technique.bin | head -n 10
 ```
 
 ---
 
 ## ⚠️ Safety & Power Management
-1.  **Gain Limit:** enforced 30dB cap.
-2.  **Digital Scaling:** Default is 0.5.
-3.  **Procedure:** Start at `--gain 0` and increase slowly.
+1.  **PA Protection:** Tool enforces a 30dB gain cap.
+2.  **Order of Ops:** Always run with `--gain 0` first. Watch your SpecAn.
+3.  **Heat:** Sidekiq S4/X4 can get HOT during long streams. Ensure active cooling.
+
+## 💾 Compilation
+```bash
+cd sidekiq-sng
+# Standard build:
+make
+# Build with streaming support:
+make soapy
+```
