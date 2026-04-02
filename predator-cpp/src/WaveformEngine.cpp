@@ -84,6 +84,20 @@ void WaveformEngine::applySpectralShaping(std::vector<std::complex<float>>& samp
     }
 }
 
+void WaveformEngine::applyFrequencyShift(std::vector<std::complex<float>>& samples, double shift_hz, double sample_rate_hz) {
+    if (shift_hz == 0 || samples.empty()) return;
+    
+    const double two_pi = 2.0 * M_PI;
+    double phase_inc = two_pi * shift_hz / sample_rate_hz;
+    double phase = 0.0;
+
+    for (auto& s : samples) {
+        std::complex<float> rotation(static_cast<float>(cos(phase)), static_cast<float>(sin(phase)));
+        s *= rotation;
+        phase = fmod(phase + phase_inc, two_pi);
+    }
+}
+
 std::vector<double> WaveformEngine::rootRaisedCosineFilter(double symbol_rate_hz, double sample_rate_hz, double rolloff, int num_taps) {
     if (num_taps % 2 == 0) num_taps++;
     double Ts = 1.0 / symbol_rate_hz;

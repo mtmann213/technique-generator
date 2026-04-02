@@ -219,6 +219,7 @@ private:
     static std::vector<double> createTimeArray(double sample_rate_hz, double technique_length_seconds);
     static void normalizeSignal(std::vector<std::complex<float>>& samples, float target_value, std::string normalization_type);
     static void applySpectralShaping(std::vector<std::complex<float>>& samples, double bandwidth_hz, double sample_rate_hz, std::string filter_type, double rolloff = 0.35);
+    static void applyFrequencyShift(std::vector<std::complex<float>>& samples, double shift_hz, double sample_rate_hz);
 };
 
 #endif // WAVEFORM_ENGINE_H

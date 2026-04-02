@@ -15,19 +15,17 @@
 #endif
 
 void print_help() {
-    std::cout << "Sidekiq-Native Generator (SNG) v1.11" << std::endl;
+    std::cout << "Sidekiq-Native Generator (SNG) v1.15" << std::endl;
     std::cout << "Usage: ./sng --tech <name> --bw <hz> --rate <hz> [options]" << std::endl;
-    std::cout << "\nAvailable Techniques:" << std::endl;
-    std::cout << "  noise, phase-noise, comb, chirp, ofdm, fhss, confusion, noise-tones, chunked-noise, rrc, fm-cosine" << std::endl;
     std::cout << "\nOptions:" << std::endl;
-    std::cout << "  --bw <hz>          Overall width (deviation for fm-cosine)" << std::endl;
-    std::cout << "  --mod-rate <hz>    Modulation frequency (for fm-cosine, default 1000)" << std::endl;
-    std::cout << "  --spikes <n>       Number of elements" << std::endl;
-    std::cout << "  --sweep-rate <hz>  Shuffle rate" << std::endl;
-    std::cout << "  --len <s>          Duration (Min: 0.001, default 0.01)" << std::endl;
+    std::cout << "  --stream           Stream directly to hardware" << std::endl;
+    std::cout << "  --chan <0-3>       Physical Hardware Channel (default 0)" << std::endl;
+    std::cout << "  --freq <hz>        Hardware Center Frequency" << std::endl;
+    std::cout << "  --gain <db>        Hardware TX Gain (Enforced 30dB cap)" << std::endl;
+    std::cout << "  --offset <hz>      Software Frequency Offset" << std::endl;
     std::cout << "  --sc16             Save as 16-bit complex integer (SC16)" << std::endl;
     std::cout << "  --amp <val>        Digital amplitude (0.0 - 1.0, default 0.5)" << std::endl;
-    std::cout << "  --out <file>       Output binary file (default: technique.bin)" << std::endl;
+    std::cout << "  --out <file>       Output binary file" << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -40,7 +38,9 @@ int main(int argc, char* argv[]) {
     double rate = 2e6;
     double len = 0.01;
     double freq = 2412e6;
+    double offset = 0.0;
     double gain = 0.0;
+    int chan = 0;
     double shift = 180.0;
     double shift_rate = 1000.0;
     double mod_rate = 1000.0;
@@ -62,6 +62,8 @@ int main(int argc, char* argv[]) {
         else if (arg == "--rate" && i + 1 < argc) rate = std::stod(argv[++i]);
         else if (arg == "--len" && i + 1 < argc) len = std::stod(argv[++i]);
         else if (arg == "--freq" && i + 1 < argc) freq = std::stod(argv[++i]);
+        else if (arg == "--chan" && i + 1 < argc) chan = std::stoi(argv[++i]);
+        else if (arg == "--offset" && i + 1 < argc) offset = std::stod(argv[++i]);
         else if (arg == "--gain" && i + 1 < argc) gain = std::stod(argv[++i]);
         else if (arg == "--shift" && i + 1 < argc) shift = std::stod(argv[++i]);
         else if (arg == "--shift-rate" && i + 1 < argc) shift_rate = std::stod(argv[++i]);
@@ -79,14 +81,14 @@ int main(int argc, char* argv[]) {
         else if (arg == "--sc16") format_sc16 = true;
         else if (arg == "--out" && i + 1 < argc) out_file = argv[++i];
     }
-// Safety Checks
-if (gain > 30.0) gain = 30.0;
-if (amp > 1.0) amp = 1.0;
-if (len < 0.001) len = 0.001;
 
-(void)freq; // Silence unused variable warning if not streaming
+    if (gain > 30.0) gain = 30.0;
+    if (amp > 1.0) amp = 1.0;
+    if (len < 0.001) len = 0.001;
 
-std::cout << "Generating " << tech << "..." << std::endl;
+    (void)freq; (void)chan; // Silence warnings
+
+    std::cout << "Generating " << tech << "..." << std::endl;
     std::vector<std::complex<float>> wf;
     float famp = static_cast<float>(amp);
 
@@ -109,18 +111,23 @@ std::cout << "Generating " << tech << "..." << std::endl;
     else if (tech == "fm-cosine") wf = WaveformEngine::fmCosine(bw, mod_rate, rate, len, famp);
     else { std::cerr << "Unknown technique: " << tech << std::endl; return 1; }
 
+    if (offset != 0.0) {
+        std::cout << "  (Applying " << offset/1e3 << " kHz software offset)" << std::endl;
+        WaveformEngine::applyFrequencyShift(wf, offset, rate);
+    }
+
     if (wf.empty()) { std::cerr << "Error: Generated waveform is empty." << std::endl; return 1; }
 
     if (do_stream) {
 #ifdef USE_SOAPY
-        std::cout << "Streaming directly to hardware..." << std::endl;
+        std::cout << "Streaming to Sidekiq Channel " << chan << "..." << std::endl;
         try {
             SoapySDR::Device *device = SoapySDR::Device::make("driver=sidekiq");
             if (!device) return 1;
-            device->setSampleRate(SOAPY_SDR_TX, 0, rate);
-            device->setFrequency(SOAPY_SDR_TX, 0, freq);
-            device->setGain(SOAPY_SDR_TX, 0, gain);
-            SoapySDR::Stream *txStream = device->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CF32, {0});
+            device->setSampleRate(SOAPY_SDR_TX, chan, rate);
+            device->setFrequency(SOAPY_SDR_TX, chan, freq);
+            device->setGain(SOAPY_SDR_TX, chan, gain);
+            SoapySDR::Stream *txStream = device->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CF32, {(size_t)chan});
             device->activateStream(txStream);
             std::cout << "TRANSMITTING. Press Ctrl+C to kill." << std::endl;
             while (true) {
