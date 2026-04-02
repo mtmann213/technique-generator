@@ -587,19 +587,30 @@ std::vector<std::complex<float>> WaveformEngine::differentialComb(
     
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> phase_dist(0.0, 2.0f * static_cast<float>(M_PI));
+    std::normal_distribution<float> noise_dist(0.0, 1.0);
     
-    int K = spike_count / 2;
-    for (int k = -K; k <= K; ++k) {
-        double freq = k * spike_spacing_hz;
-        float phase_offset = phase_dist(gen);
+    // Symmetric Centering Logic: Ensures 0Hz is mid-point
+    double offset_start = -((double)(spike_count - 1) / 2.0) * spike_spacing_hz;
+
+    for (int k = 0; k < spike_count; ++k) {
+        double f_center = offset_start + (double)k * spike_spacing_hz;
+        double phase_acc = 0;
+        
+        // Internal widening parameter (10% of spacing)
+        float widening_factor = static_cast<float>(spike_spacing_hz * 0.1 / sample_rate_hz);
+
         for (size_t i = 0; i < time.size(); ++i) {
-            float phase = static_cast<float>(2.0 * M_PI * freq * time[i] + phase_offset);
-            out[i] += std::exp(std::complex<float>(0, phase));
+            phase_acc += 2.0 * M_PI * f_center / sample_rate_hz;
+            std::complex<float> spike = std::exp(std::complex<float>(0, static_cast<float>(phase_acc)));
+            
+            // Widening via small random phase jitter
+            if (widening_factor > 0) {
+                spike *= std::exp(std::complex<float>(0, noise_dist(gen) * widening_factor));
+            }
+            out[i] += spike;
         }
     }
     
-    applySpectralShaping(out, spike_spacing_hz * spike_count, sample_rate_hz, filter_type);
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
@@ -634,8 +645,8 @@ std::vector<WaveformEngine::Technique> WaveformEngine::getTechniques() {
 
     // Differential Comb
     Technique dc = {"Differential Comb", {
-        {"spike_spacing_hz", "Spacing (Hz)", "entry", "30000", {}},
-        {"spike_count", "Spike Count", "entry", "10", {}},
+        {"spike_count", "Num Spikes", "entry", "10"},
+        {"spike_spacing_hz", "Spacing (Hz)", "entry", "30000"},
         {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
     }};
     add_universal(dc);
