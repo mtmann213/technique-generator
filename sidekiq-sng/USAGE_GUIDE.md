@@ -1,4 +1,4 @@
-# Sidekiq-Native Generator (SNG) Tactical Manual v1.7
+# Sidekiq-Native Generator (SNG) Tactical Manual v1.9
 
 This tool provides high-performance C++ waveform generation for the Epiq Sidekiq S4/X4. It is designed for air-gapped deployment and high-power interdiction (50W PA safety).
 
@@ -71,6 +71,20 @@ Surgical interdiction of multiple specific frequencies using broadened noise clo
 ```bash
 # Hit 3 specific control channels, each with a 25kHz wide noise cloud
 ./sng --tech noise-tones --hops "-500000 0 500000" --bw 25000 --rate 5000000 --sc16 --out multi_tone_cloud.bin
+```
+
+### 9. Chunked Noise (`chunked-noise`)
+Divides the bandwidth into bins and fills a subset with noise. Designed to "shred" wideband packets.
+```bash
+# Shred a 20MHz Wi-Fi channel with 10 noise chunks
+./sng --tech chunked-noise --bw 20000000 --spikes 10 --rate 40000000 --sc16 --out packet_shredder.bin
+```
+
+### 10. RRC Modulated Noise (`rrc`)
+Protocol-matched noise that mimics the spectral footprint of a single-carrier digital link (BPSK/QPSK).
+```bash
+# Jam a 1Msps link with a 0.35 rolloff filter
+./sng --tech rrc --bw 1000000 --rolloff 0.35 --rate 5000000 --len 0.1 --sc16 --out link_match.bin
 ```
 
 ---
