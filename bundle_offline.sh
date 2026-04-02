@@ -1,19 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Bundles the Sidekiq-Native Generator for air-gapped transfer
 
-IMAGE_NAME="techniquemaker"
-BUNDLE_FILE="techniquemaker_offline_bundle.tar"
+echo "--- Packaging Sidekiq-SNG ---"
+ZIP_NAME="sidekiq_sng_v1.zip"
 
-echo "--- Starting Offline Bundle Generation ---"
-echo "Step 1: Building Docker Image (Requires Internet)..."
-docker build -t $IMAGE_NAME .
+# Ensure we are in the root
+cd "$(dirname "$0")"
 
-echo "Step 2: Exporting Image to Tarball..."
-docker save $IMAGE_NAME > $BUNDLE_FILE
+# Remove old bundle if exists
+rm -f "$ZIP_NAME"
 
-echo "--- Bundle Complete! ---"
-echo "File created: $BUNDLE_FILE"
-echo ""
-echo "TO DEPLOY ON NO-INTERNET DEVICE:"
-echo "1. Copy $BUNDLE_FILE to the target machine via USB."
-echo "2. Run: docker load < $BUNDLE_FILE"
-echo "3. Run: ./run_docker.sh predator"
+# Create zip
+zip -r "$ZIP_NAME" sidekiq-sng/
+
+echo "-----------------------------------"
+echo "Bundle Created: $ZIP_NAME"
+echo "Move this file to your air-gapped machine via USB."
+echo "-----------------------------------"

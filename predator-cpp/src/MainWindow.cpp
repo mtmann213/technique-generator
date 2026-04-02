@@ -364,6 +364,8 @@ void MainWindow::updateWaveform() {
 
     if (template_name == "Narrowband Noise") {
         wf = WaveformEngine::narrowbandNoise(get_val("bandwidth_hz").toDouble(), samp_rate, get_val("technique_length_seconds").toDouble(), get_val("interference_type").toStdString(), target, norm, filter);
+    } else if (template_name == "Phase-Shifted Noise") {
+        wf = WaveformEngine::phaseShiftedNoise(get_val("bandwidth_hz").toDouble(), samp_rate, get_val("technique_length_seconds").toDouble(), get_val("phase_shift_deg").toDouble(), get_val("shift_rate_hz").toDouble(), target, norm, filter);
     } else if (template_name == "Differential Comb") {
         wf = WaveformEngine::differentialComb(get_val("spike_spacing_hz").toDouble(), get_val("spike_count").toInt(), samp_rate, get_val("technique_length_seconds").toDouble(), target, norm, filter);
     } else if (template_name == "RRC Modulated Noise") {
