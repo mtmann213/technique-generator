@@ -79,12 +79,14 @@ int main(int argc, char* argv[]) {
         else if (arg == "--sc16") format_sc16 = true;
         else if (arg == "--out" && i + 1 < argc) out_file = argv[++i];
     }
+// Safety Checks
+if (gain > 30.0) gain = 30.0;
+if (amp > 1.0) amp = 1.0;
+if (len < 0.001) len = 0.001;
 
-    if (gain > 30.0) gain = 30.0;
-    if (amp > 1.0) amp = 1.0;
-    if (len < 0.001) len = 0.001;
+(void)freq; // Silence unused variable warning if not streaming
 
-    std::cout << "Generating " << tech << "..." << std::endl;
+std::cout << "Generating " << tech << "..." << std::endl;
     std::vector<std::complex<float>> wf;
     float famp = static_cast<float>(amp);
 

@@ -83,6 +83,7 @@ public:
         int chunks,
         double sample_rate_hz,
         double technique_length_seconds,
+        double sweep_rate_hz = 0,
         std::string interference_type = "complex",
         float target_value = 1.0,
         std::string normalization_type = "peak",
