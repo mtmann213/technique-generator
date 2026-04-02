@@ -13,6 +13,7 @@ include(GrPlatform) #define LIB_SUFFIX
 
 list(APPEND techniquemaker_sources
     interdictor_cpp_impl.cc
+    ../../predator-cpp/src/WaveformEngine.cpp
 )
 
 set(techniquemaker_sources

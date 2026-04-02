@@ -364,20 +364,23 @@ std::vector<std::complex<float>> WaveformEngine::sweptPhasors(
     int tones,
     double sample_rate_hz,
     double technique_length_seconds,
+    double sweep_rate_hz_s,
     float target_value,
     std::string normalization_type,
     std::string filter_type
 ) {
     if (tones <= 0) return {};
+    double effective_duration = (sweep_rate_hz_s > 0) ? (sweep_hz / sweep_rate_hz_s) : technique_length_seconds;
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size(), std::complex<float>(0, 0));
     
-    double m_sw = sweep_hz / tones;
+    double m_sw = sweep_hz / effective_duration;
     for (int k = 0; k < tones; ++k) {
         double f0 = -sweep_hz / 2.0 + k * (sweep_hz / tones);
         double phase_acc = 0;
         for (size_t i = 0; i < time.size(); ++i) {
-            double freq = (m_sw / technique_length_seconds) * time[i] + f0;
+            double t_curr = fmod(time[i], effective_duration);
+            double freq = m_sw * t_curr + f0;
             phase_acc += 2.0 * M_PI * freq / sample_rate_hz;
             out[i] += std::exp(std::complex<float>(0, static_cast<float>(phase_acc)));
         }
@@ -392,20 +395,23 @@ std::vector<std::complex<float>> WaveformEngine::sweptCosines(
     int tones,
     double sample_rate_hz,
     double technique_length_seconds,
+    double sweep_rate_hz_s,
     float target_value,
     std::string normalization_type,
     std::string filter_type
 ) {
     if (tones <= 0) return {};
+    double effective_duration = (sweep_rate_hz_s > 0) ? (sweep_hz / sweep_rate_hz_s) : technique_length_seconds;
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size(), std::complex<float>(0, 0));
     
-    double m_sw = sweep_hz / tones;
+    double m_sw = sweep_hz / effective_duration;
     for (int k = 0; k < tones; ++k) {
         double f0 = -sweep_hz / 2.0 + k * (sweep_hz / tones);
         double phase_acc = 0;
         for (size_t i = 0; i < time.size(); ++i) {
-            double freq = (m_sw / technique_length_seconds) * time[i] + f0;
+            double t_curr = fmod(time[i], effective_duration);
+            double freq = m_sw * t_curr + f0;
             phase_acc += 2.0 * M_PI * freq / sample_rate_hz;
             out[i] += std::complex<float>(static_cast<float>(std::cos(phase_acc)), 0.0f);
         }
@@ -655,8 +661,9 @@ std::vector<WaveformEngine::Technique> WaveformEngine::getTechniques() {
 
     // Swept Phasors
     Technique sph = {"Swept Phasors", {
-        {"sweep_hz", "Sweep (Hz)", "entry", "500000", {}},
-        {"tones", "Tones", "entry", "5", {}},
+        {"sweep_hz", "Sweep (Hz)", "entry", "500000"},
+        {"tones", "Tones", "entry", "5"},
+        {"sweep_rate_hz_s", "Sweep Rate (Hz/s)", "entry", "0"},
         {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
     }};
     add_universal(sph);
@@ -664,8 +671,9 @@ std::vector<WaveformEngine::Technique> WaveformEngine::getTechniques() {
 
     // Swept Cosines
     Technique sc = {"Swept Cosines", {
-        {"sweep_hz", "Sweep (Hz)", "entry", "500000", {}},
-        {"tones", "Tones", "entry", "5", {}},
+        {"sweep_hz", "Sweep (Hz)", "entry", "500000"},
+        {"tones", "Tones", "entry", "5"},
+        {"sweep_rate_hz_s", "Sweep Rate (Hz/s)", "entry", "0"},
         {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
     }};
     add_universal(sc);

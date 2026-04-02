@@ -462,3 +462,59 @@ Device Address:
     serial: 3457480 (B205mini)
 
 2026-03-30 23:05:34,530 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-31 07:36:54,401 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-31 07:36:54,401 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-31 07:36:57,852 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-31 07:37:04,091 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-31 07:37:09,179 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-31 07:37:12,158 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2457.0 MHz
+2026-03-31 07:37:12,158 - TechniqueMaker - INFO - Spectral Stitch Mode Active (+BW Offset)
+2026-03-31 07:37:23,778 - TechniqueMaker - INFO - Connecting to USRP 3457480...
+2026-03-31 07:37:34,591 - TechniqueMaker - WARNING - Dual-Warhead Fallback: /usr/local/lib/python3.12/dist-packages/gnuradio/techniquemaker/techniquemaker_python.cpython-312-x86_64-linux-gnu.so: undefined symbol: _ZN14WaveformEngine8lfmChirpEddddfNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_
+2026-03-31 07:37:34,595 - TechniqueMaker - ERROR - Hardware connection failed: SoapySDR::Device::make() no match
+2026-03-31 07:37:34,596 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-31 07:37:36,335 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-31 07:37:36,335 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-31 07:37:38,079 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-03-31 07:37:38,590 - TechniqueMaker - INFO - Found 3 devices.
+2026-03-31 07:37:39,790 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-31 07:37:41,481 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-03-31 07:37:42,151 - TechniqueMaker - INFO - TX2 Center Frequency updated: 2457.0 MHz
+2026-03-31 07:37:42,151 - TechniqueMaker - INFO - Spectral Stitch Mode Active (+BW Offset)
+2026-03-31 07:37:48,321 - TechniqueMaker - INFO - Connecting to USRP 3457480...
+2026-03-31 07:37:50,932 - TechniqueMaker - WARNING - Dual-Warhead Fallback: /usr/local/lib/python3.12/dist-packages/gnuradio/techniquemaker/techniquemaker_python.cpython-312-x86_64-linux-gnu.so: undefined symbol: _ZN14WaveformEngine8lfmChirpEddddfNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_
+2026-03-31 07:37:52,106 - TechniqueMaker - INFO - Staging Secondary SDR 3457464 (B205mini)...
+2026-03-31 07:37:58,222 - TechniqueMaker - ERROR - Hardware connection failed: LookupError: KeyError: No devices found for ----->
+Device Address:
+    serial: 3457464 (B205mini)
+
+2026-03-31 07:37:58,223 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-31 07:38:07,651 - TechniqueMaker - INFO - Secondary SDR Disabled
+2026-03-31 07:38:09,055 - TechniqueMaker - INFO - Connecting to USRP 3457480...
+2026-03-31 07:38:10,201 - TechniqueMaker - WARNING - Dual-Warhead Fallback: /usr/local/lib/python3.12/dist-packages/gnuradio/techniquemaker/techniquemaker_python.cpython-312-x86_64-linux-gnu.so: undefined symbol: _ZN14WaveformEngine8lfmChirpEddddfNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_
+2026-03-31 07:38:11,348 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-31 07:38:11,383 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-31 07:38:26,304 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-03-31 07:38:26,304 - TechniqueMaker - INFO - Spectral Stitch Mode Disabled
+2026-03-31 07:38:35,048 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-03-31 07:38:37,723 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-03-31 07:38:41,015 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-03-31 07:38:49,747 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-03-31 07:38:54,121 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-03-31 07:39:22,254 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-31 07:39:22,254 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-03-31 07:39:26,851 - TechniqueMaker - INFO - Restarting Flowgraph...
+2026-03-31 07:39:27,999 - TechniqueMaker - WARNING - Dual-Warhead Fallback: /usr/local/lib/python3.12/dist-packages/gnuradio/techniquemaker/techniquemaker_python.cpython-312-x86_64-linux-gnu.so: undefined symbol: _ZN14WaveformEngine8lfmChirpEddddfNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_
+2026-03-31 07:39:40,317 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-03-31 07:39:42,149 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-03-31 07:39:45,033 - TechniqueMaker - INFO - Connecting to USRP 3457480...
+2026-03-31 07:39:46,181 - TechniqueMaker - WARNING - Dual-Warhead Fallback: /usr/local/lib/python3.12/dist-packages/gnuradio/techniquemaker/techniquemaker_python.cpython-312-x86_64-linux-gnu.so: undefined symbol: _ZN14WaveformEngine8lfmChirpEddddfNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES5_
+2026-03-31 07:39:47,330 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-31 07:39:47,359 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-03-31 07:39:58,191 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Differential Comb] [TX2: Narrowband Noise]
+2026-03-31 07:40:04,078 - TechniqueMaker - INFO - Loaded Warheads: [TX1: RRC Modulated Noise] [TX2: Narrowband Noise]
+2026-03-31 07:40:04,094 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-03-31 07:40:07,492 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-03-31 07:40:09,028 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-03-31 07:40:10,678 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-03-31 07:40:23,896 - TechniqueMaker - INFO - Disconnecting hardware...

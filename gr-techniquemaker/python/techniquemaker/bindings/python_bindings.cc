@@ -117,8 +117,31 @@ PYBIND11_MODULE(techniquemaker_python, m)
 
     // Waveform Engine Bindings for Automated Math Testing
     py::class_<WaveformEngine>(m, "WaveformEngine")
-        .def_static("narrowbandNoise", &WaveformEngine::narrowbandNoise)
-        .def_static("differentialComb", &WaveformEngine::differentialComb)
-        .def_static("lfmChirp", &WaveformEngine::lfmChirp)
-        .def_static("ofdmShapedNoise", &WaveformEngine::ofdmShapedNoise);
+        .def_static("narrowbandNoise", &WaveformEngine::narrowbandNoise,
+            py::arg("bandwidth_hz"), py::arg("sample_rate_hz"), py::arg("technique_length_seconds"),
+            py::arg("interference_type") = "complex", py::arg("target_value") = 1.0,
+            py::arg("normalization_type") = "peak", py::arg("filter_type") = "none")
+        .def_static("differentialComb", &WaveformEngine::differentialComb,
+            py::arg("spike_spacing_hz"), py::arg("spike_count"), py::arg("sample_rate_hz"),
+            py::arg("technique_length_seconds"), py::arg("target_value") = 1.0,
+            py::arg("normalization_type") = "peak", py::arg("filter_type") = "none")
+        .def_static("lfmChirp", &WaveformEngine::lfmChirp,
+            py::arg("start_freq_hz"), py::arg("end_freq_hz"), py::arg("sample_rate_hz"),
+            py::arg("technique_length_seconds"), py::arg("target_value") = 1.0,
+            py::arg("normalization_type") = "peak", py::arg("filter_type") = "none")
+        .def_static("ofdmShapedNoise", &WaveformEngine::ofdmShapedNoise,
+            py::arg("fft_size"), py::arg("num_subcarriers"), py::arg("cp_length"),
+            py::arg("sample_rate_hz"), py::arg("technique_length_seconds"),
+            py::arg("target_value") = 1.0, py::arg("normalization_type") = "peak",
+            py::arg("filter_type") = "none")
+        .def_static("sweptPhasors", &WaveformEngine::sweptPhasors,
+            py::arg("sweep_hz"), py::arg("tones"), py::arg("sample_rate_hz"),
+            py::arg("technique_length_seconds"), py::arg("sweep_rate_hz_s") = 0.0,
+            py::arg("target_value") = 1.0, py::arg("normalization_type") = "peak",
+            py::arg("filter_type") = "none")
+        .def_static("sweptCosines", &WaveformEngine::sweptCosines,
+            py::arg("sweep_hz"), py::arg("tones"), py::arg("sample_rate_hz"),
+            py::arg("technique_length_seconds"), py::arg("sweep_rate_hz_s") = 0.0,
+            py::arg("target_value") = 1.0, py::arg("normalization_type") = "peak",
+            py::arg("filter_type") = "none");
 }

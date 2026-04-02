@@ -379,9 +379,9 @@ void MainWindow::updateWaveform() {
     } else if (template_name == "Phasor Tones") {
         wf = WaveformEngine::phasorTones(get_val("frequencies_str").toStdString(), samp_rate, get_val("technique_length_seconds").toDouble(), target, norm, filter);
     } else if (template_name == "Swept Phasors") {
-        wf = WaveformEngine::sweptPhasors(get_val("sweep_hz").toDouble(), get_val("tones").toInt(), samp_rate, get_val("technique_length_seconds").toDouble(), target, norm, filter);
+        wf = WaveformEngine::sweptPhasors(get_val("sweep_hz").toDouble(), get_val("tones").toInt(), samp_rate, get_val("technique_length_seconds").toDouble(), get_val("sweep_rate_hz_s").toDouble(), target, norm, filter);
     } else if (template_name == "Swept Cosines") {
-        wf = WaveformEngine::sweptCosines(get_val("sweep_hz").toDouble(), get_val("tones").toInt(), samp_rate, get_val("technique_length_seconds").toDouble(), target, norm, filter);
+        wf = WaveformEngine::sweptCosines(get_val("sweep_hz").toDouble(), get_val("tones").toInt(), samp_rate, get_val("technique_length_seconds").toDouble(), get_val("sweep_rate_hz_s").toDouble(), target, norm, filter);
     } else if (template_name == "FM Cosine") {
         wf = WaveformEngine::fmCosine(get_val("sweep_range_hz").toDouble(), get_val("modulated_frequency").toDouble(), samp_rate, get_val("technique_length_seconds").toDouble(), target, norm, filter);
     } else if (template_name == "LFM Chirp") {

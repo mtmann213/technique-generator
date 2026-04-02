@@ -5,7 +5,17 @@
 #include <complex>
 #include <string>
 
-class WaveformEngine {
+#if defined(_WIN32)
+    #if defined(WAVEFORM_ENGINE_EXPORT)
+        #define WAVEFORM_ENGINE_API __declspec(dllexport)
+    #else
+        #define WAVEFORM_ENGINE_API __declspec(dllimport)
+    #endif
+#else
+    #define WAVEFORM_ENGINE_API __attribute__((visibility("default")))
+#endif
+
+class WAVEFORM_ENGINE_API WaveformEngine {
 public:
     struct Parameter {
         std::string name;
@@ -113,6 +123,7 @@ public:
         int tones,
         double sample_rate_hz,
         double technique_length_seconds,
+        double sweep_rate_hz_s = 0,
         float target_value = 1.0,
         std::string normalization_type = "peak",
         std::string filter_type = "none"
@@ -123,6 +134,7 @@ public:
         int tones,
         double sample_rate_hz,
         double technique_length_seconds,
+        double sweep_rate_hz_s = 0,
         float target_value = 1.0,
         std::string normalization_type = "peak",
         std::string filter_type = "none"

@@ -808,7 +808,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
                     func = wf_def['func']; kwargs = self.current_template_kwargs.copy()
                     import inspect; sig = inspect.signature(func); valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
                     numpy_array = func(**valid_kwargs)
-                    complex_float_array = np.array(numpy_array, dtype=np.complex64).tolist()
+                    complex_float_array = np.array(numpy_array, dtype=np.complex64)
                     self.interdictor.set_base_waveform(complex_float_array)
             
             # Warhead 2
@@ -822,7 +822,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
                     # (This part can be expanded for independent TX2 param UI later)
                     valid_kwargs2 = {k: v for k, v in self.current_template_kwargs.items() if k in sig2.parameters}
                     numpy_array2 = func2(**valid_kwargs2)
-                    complex_float_array2 = np.array(numpy_array2, dtype=np.complex64).tolist()
+                    complex_float_array2 = np.array(numpy_array2, dtype=np.complex64)
                     self.interdictor2.set_base_waveform(complex_float_array2)
                     
             self.sys_logger.info(f"Loaded Warheads: [TX1: {self.template}] [TX2: {self.tx2_template}]")
