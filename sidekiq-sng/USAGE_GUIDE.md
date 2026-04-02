@@ -25,10 +25,11 @@ Standard broadband interference. Best for basic denial of service.
 
 ### 2. Phase-Shifted Noise (`phase-noise`)
 Noise with periodic phase rotations. Designed to break correlation-based receivers (DSSS/DAPS).
-*   **Key Args:** `--bw`, `--rate`, `--shift`
+*   **Key Args:** `--bw`, `--rate`, `--shift`, `--shift-rate`
 *   **Example Template:**
 ```bash
-./sng --tech phase-noise --bw 5000000 --rate 10000000 --shift 180 --freq 5745000000 --gain 5 --stream
+# Break a link with 180-deg inversions occurring at 10kHz
+./sng --tech phase-noise --bw 5000000 --rate 20000000 --shift 180 --shift-rate 10000 --amp 0.6 --sc16 --out daps_crusher.bin
 ```
 
 ### 3. Differential Comb (`comb`)

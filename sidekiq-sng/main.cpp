@@ -15,7 +15,7 @@
 #endif
 
 void print_help() {
-    std::cout << "Sidekiq-Native Generator (SNG) v1.2" << std::endl;
+    std::cout << "Sidekiq-Native Generator (SNG) v1.3" << std::endl;
     std::cout << "Usage: ./sng --tech <name> --bw <hz> --rate <hz> [options]" << std::endl;
     std::cout << "\nAvailable Techniques:" << std::endl;
     std::cout << "  noise, phase-noise, comb, chirp, ofdm" << std::endl;
@@ -25,6 +25,7 @@ void print_help() {
     std::cout << "  --freq <hz>        Center Frequency for streaming" << std::endl;
     std::cout << "  --len <s>          Duration (Min: 0.001, default 0.01)" << std::endl;
     std::cout << "  --shift <deg>      Phase Shift (for phase-noise)" << std::endl;
+    std::cout << "  --shift-rate <hz>  Phase Shift Rate (for phase-noise, default 1000)" << std::endl;
     std::cout << "  --sc16             Save output as 16-bit complex integer (SC16) instead of 32-bit float" << std::endl;
     std::cout << "  --amp <val>        Digital amplitude scaling (0.0 - 1.0, default 0.5)" << std::endl;
     std::cout << "  --out <file>       Output binary file (default: technique.bin)" << std::endl;
@@ -40,6 +41,7 @@ int main(int argc, char* argv[]) {
     double freq = 2412e6;
     double gain = 0.0;
     double shift = 180.0;
+    double shift_rate = 1000.0;
     double amp = 0.5;
     bool do_stream = false;
     bool format_sc16 = false;
@@ -54,6 +56,7 @@ int main(int argc, char* argv[]) {
         else if (arg == "--freq" && i + 1 < argc) freq = std::stod(argv[++i]);
         else if (arg == "--gain" && i + 1 < argc) gain = std::stod(argv[++i]);
         else if (arg == "--shift" && i + 1 < argc) shift = std::stod(argv[++i]);
+        else if (arg == "--shift-rate" && i + 1 < argc) shift_rate = std::stod(argv[++i]);
         else if (arg == "--amp" && i + 1 < argc) amp = std::stod(argv[++i]);
         else if (arg == "--stream") do_stream = true;
         else if (arg == "--sc16") format_sc16 = true;
@@ -70,7 +73,7 @@ int main(int argc, char* argv[]) {
 
     float famp = static_cast<float>(amp);
     if (tech == "noise") wf = WaveformEngine::narrowbandNoise(bw, rate, len, "complex", famp);
-    else if (tech == "phase-noise") wf = WaveformEngine::phaseShiftedNoise(bw, rate, len, shift, 1000.0, famp);
+    else if (tech == "phase-noise") wf = WaveformEngine::phaseShiftedNoise(bw, rate, len, shift, shift_rate, famp);
     else if (tech == "comb") wf = WaveformEngine::differentialComb(bw/10, 10, rate, len, famp);
     else if (tech == "chirp") wf = WaveformEngine::lfmChirp(-bw/2, bw/2, rate, len, famp);
     else if (tech == "ofdm") wf = WaveformEngine::ofdmShapedNoise(64, 48, 16, rate, len, famp);
