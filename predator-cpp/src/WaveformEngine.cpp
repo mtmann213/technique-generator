@@ -244,6 +244,7 @@ std::vector<std::complex<float>> WaveformEngine::chunkedNoise(
     int chunks,
     double sample_rate_hz,
     double technique_length_seconds,
+    double sweep_rate_hz,
     std::string interference_type,
     float target_value,
     std::string normalization_type,
@@ -253,23 +254,30 @@ std::vector<std::complex<float>> WaveformEngine::chunkedNoise(
     double bw = technique_width_hz / chunks;
     std::vector<std::complex<float>> noise = narrowbandNoise(bw, sample_rate_hz, technique_length_seconds, interference_type, 1.0f, "peak", filter_type);
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
+    std::vector<std::complex<float>> out(time.size());
     
     std::vector<double> centers(chunks);
     for (int i = 0; i < chunks; ++i) {
         centers[i] = -technique_width_hz / 2.0 + bw / 2.0 + i * bw;
     }
     
-    std::vector<int> order(chunks);
-    std::iota(order.begin(), order.end(), 0);
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::shuffle(order.begin(), order.end(), gen);
-    
-    std::vector<std::complex<float>> out(time.size());
+    std::vector<int> order(chunks);
+    std::iota(order.begin(), order.end(), 0);
+
+    // Dynamic Shuffling Logic
+    size_t samples_per_shuffle = (sweep_rate_hz > 0) ? static_cast<size_t>(sample_rate_hz / sweep_rate_hz) : out.size();
+
     for (size_t i = 0; i < time.size(); ++i) {
-        int idx = static_cast<int>(std::floor(time[i] / technique_length_seconds * chunks));
-        idx = std::max(0, std::min(chunks - 1, idx));
-        double freq = centers[order[idx]];
+        if (i % samples_per_shuffle == 0) {
+            std::shuffle(order.begin(), order.end(), gen);
+        }
+        
+        int segment_idx = static_cast<int>(std::floor(fmod(time[i], (samples_per_shuffle / sample_rate_hz)) / (samples_per_shuffle / sample_rate_hz) * chunks));
+        segment_idx = std::max(0, std::min(chunks - 1, segment_idx));
+        
+        double freq = centers[order[segment_idx]];
         float phase = static_cast<float>(2.0 * M_PI * freq * time[i]);
         out[i] = noise[i] * std::exp(std::complex<float>(0, phase));
     }
@@ -677,6 +685,7 @@ std::vector<WaveformEngine::Technique> WaveformEngine::getTechniques() {
     Technique cn = {"Chunked Noise", {
         {"technique_width_hz", "Width (Hz)", "entry", "1000000", {}},
         {"chunks", "Chunks", "entry", "10", {}},
+        {"sweep_rate_hz", "Shuffle Rate (Hz)", "entry", "0", {}},
         {"technique_length_seconds", "Length (s)", "entry", "0.1", {}},
         {"interference_type", "Type", "options", "complex", {"complex", "real", "sinc"}}
     }};

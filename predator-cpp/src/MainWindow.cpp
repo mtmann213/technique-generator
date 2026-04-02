@@ -373,7 +373,7 @@ void MainWindow::updateWaveform() {
     } else if (template_name == "Swept Noise") {
         wf = WaveformEngine::sweptNoise(get_val("sweep_hz").toDouble(), get_val("bandwidth_hz").toDouble(), samp_rate, get_val("technique_length_seconds").toDouble(), get_val("sweep_type").toStdString(), get_val("sweep_rate_hz_s").toDouble(), get_val("interference_type").toStdString(), target, norm, filter);
     } else if (template_name == "Chunked Noise") {
-        wf = WaveformEngine::chunkedNoise(get_val("technique_width_hz").toDouble(), get_val("chunks").toInt(), samp_rate, get_val("technique_length_seconds").toDouble(), get_val("interference_type").toStdString(), target, norm, filter);
+        wf = WaveformEngine::chunkedNoise(get_val("technique_width_hz").toDouble(), get_val("chunks").toInt(), samp_rate, get_val("technique_length_seconds").toDouble(), get_val("sweep_rate_hz").toDouble(), get_val("interference_type").toStdString(), target, norm, filter);
     } else if (template_name == "Noise Tones") {
         wf = WaveformEngine::noiseTones(get_val("frequencies_str").toStdString(), get_val("bandwidth_hz").toDouble(), samp_rate, get_val("technique_length_seconds").toDouble(), get_val("interference_type").toStdString(), target, norm, filter);
     } else if (template_name == "Cosine Tones") {

@@ -15,18 +15,18 @@
 #endif
 
 void print_help() {
-    std::cout << "Sidekiq-Native Generator (SNG) v1.9" << std::endl;
+    std::cout << "Sidekiq-Native Generator (SNG) v1.11" << std::endl;
     std::cout << "Usage: ./sng --tech <name> --bw <hz> --rate <hz> [options]" << std::endl;
     std::cout << "\nAvailable Techniques:" << std::endl;
-    std::cout << "  noise, phase-noise, comb, chirp, ofdm, fhss, confusion, noise-tones, chunked-noise, rrc" << std::endl;
+    std::cout << "  noise, phase-noise, comb, chirp, ofdm, fhss, confusion, noise-tones, chunked-noise, rrc, fm-cosine" << std::endl;
     std::cout << "\nOptions:" << std::endl;
-    std::cout << "  --bw <hz>          Symbol rate (for rrc) or width" << std::endl;
-    std::cout << "  --rolloff <val>    RRC Roll-off factor (default 0.35)" << std::endl;
-    std::cout << "  --hops \"f1 f2\"     Frequency list" << std::endl;
+    std::cout << "  --bw <hz>          Overall width (deviation for fm-cosine)" << std::endl;
+    std::cout << "  --mod-rate <hz>    Modulation frequency (for fm-cosine, default 1000)" << std::endl;
     std::cout << "  --spikes <n>       Number of elements" << std::endl;
-    std::cout << "  --len <s>          Duration (default 0.01)" << std::endl;
+    std::cout << "  --sweep-rate <hz>  Shuffle rate" << std::endl;
+    std::cout << "  --len <s>          Duration (Min: 0.001, default 0.01)" << std::endl;
     std::cout << "  --sc16             Save as 16-bit complex integer (SC16)" << std::endl;
-    std::cout << "  --amp <val>        Digital amplitude (default 0.5)" << std::endl;
+    std::cout << "  --amp <val>        Digital amplitude (0.0 - 1.0, default 0.5)" << std::endl;
     std::cout << "  --out <file>       Output binary file (default: technique.bin)" << std::endl;
 }
 
@@ -43,6 +43,8 @@ int main(int argc, char* argv[]) {
     double gain = 0.0;
     double shift = 180.0;
     double shift_rate = 1000.0;
+    double mod_rate = 1000.0;
+    double sweep_rate = 0.0;
     double rolloff = 0.35;
     int spikes = 10;
     double spacing = 30000.0;
@@ -63,6 +65,8 @@ int main(int argc, char* argv[]) {
         else if (arg == "--gain" && i + 1 < argc) gain = std::stod(argv[++i]);
         else if (arg == "--shift" && i + 1 < argc) shift = std::stod(argv[++i]);
         else if (arg == "--shift-rate" && i + 1 < argc) shift_rate = std::stod(argv[++i]);
+        else if (arg == "--mod-rate" && i + 1 < argc) mod_rate = std::stod(argv[++i]);
+        else if (arg == "--sweep-rate" && i + 1 < argc) sweep_rate = std::stod(argv[++i]);
         else if (arg == "--rolloff" && i + 1 < argc) rolloff = std::stod(argv[++i]);
         else if (arg == "--spikes" && i + 1 < argc) spikes = std::stoi(argv[++i]);
         else if (arg == "--spacing" && i + 1 < argc) spacing = std::stod(argv[++i]);
@@ -98,15 +102,16 @@ int main(int argc, char* argv[]) {
     else if (tech == "fhss") wf = WaveformEngine::fhssNoise(hops, hop_dur, bw, rate, len, "complex", famp);
     else if (tech == "confusion") wf = WaveformEngine::correlatorConfusion(bw, rate, len, pulse_gap, mode, famp);
     else if (tech == "noise-tones") wf = WaveformEngine::noiseTones(hops, bw, rate, len, "complex", famp);
-    else if (tech == "chunked-noise") wf = WaveformEngine::chunkedNoise(bw, spikes, rate, len, "complex", famp);
+    else if (tech == "chunked-noise") wf = WaveformEngine::chunkedNoise(bw, spikes, rate, len, sweep_rate, "complex", famp);
     else if (tech == "rrc") wf = WaveformEngine::rrcModulatedNoise(bw, rate, rolloff, len, famp);
+    else if (tech == "fm-cosine") wf = WaveformEngine::fmCosine(bw, mod_rate, rate, len, famp);
     else { std::cerr << "Unknown technique: " << tech << std::endl; return 1; }
 
     if (wf.empty()) { std::cerr << "Error: Generated waveform is empty." << std::endl; return 1; }
 
     if (do_stream) {
 #ifdef USE_SOAPY
-        std::cout << "Streaming to hardware..." << std::endl;
+        std::cout << "Streaming directly to hardware..." << std::endl;
         try {
             SoapySDR::Device *device = SoapySDR::Device::make("driver=sidekiq");
             if (!device) return 1;

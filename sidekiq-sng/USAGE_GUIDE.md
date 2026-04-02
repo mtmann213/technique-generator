@@ -1,4 +1,4 @@
-# Sidekiq-Native Generator (SNG) Tactical Manual v1.9
+# Sidekiq-Native Generator (SNG) Tactical Manual v1.11
 
 This tool provides high-performance C++ waveform generation for the Epiq Sidekiq S4/X4. It is designed for air-gapped deployment and high-power interdiction (50W PA safety).
 
@@ -74,10 +74,10 @@ Surgical interdiction of multiple specific frequencies using broadened noise clo
 ```
 
 ### 9. Chunked Noise (`chunked-noise`)
-Divides the bandwidth into bins and fills a subset with noise. Designed to "shred" wideband packets.
+Divides the bandwidth into bins and fills a subset with noise. Supports dynamic jitter.
 ```bash
-# Shred a 20MHz Wi-Fi channel with 10 noise chunks
-./sng --tech chunked-noise --bw 20000000 --spikes 10 --rate 40000000 --sc16 --out packet_shredder.bin
+# Shred a 20MHz Wi-Fi channel with 10 noise chunks shuffling at 500Hz
+./sng --tech chunked-noise --bw 20000000 --spikes 10 --sweep-rate 500 --rate 40000000 --sc16 --out packet_shredder.bin
 ```
 
 ### 10. RRC Modulated Noise (`rrc`)
@@ -85,6 +85,15 @@ Protocol-matched noise that mimics the spectral footprint of a single-carrier di
 ```bash
 # Jam a 1Msps link with a 0.35 rolloff filter
 ./sng --tech rrc --bw 1000000 --rolloff 0.35 --rate 5000000 --len 0.1 --sc16 --out link_match.bin
+```
+
+### 11. FM Cosine (`fm-cosine`)
+Frequency modulated interference. Creates a "wobbling" signal around center.
+*   **Key Args:** `--bw` (Total deviation), `--mod-rate` (Wobble speed)
+*   **Example Template:**
+```bash
+# Wobble a signal +/- 50kHz at a 1kHz rate
+./sng --tech fm-cosine --bw 100000 --mod-rate 1000 --rate 2000000 --sc16 --out fm_wobbler.bin
 ```
 
 ---
