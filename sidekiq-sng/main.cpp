@@ -25,6 +25,7 @@ void print_help() {
     std::cout << "  --freq <hz>        Center Frequency for streaming" << std::endl;
     std::cout << "  --len <s>          Duration (default 0.5)" << std::endl;
     std::cout << "  --shift <deg>      Phase Shift (for phase-noise)" << std::endl;
+    std::cout << "  --sc16             Save output as 16-bit complex integer (SC16) instead of 32-bit float" << std::endl;
     std::cout << "  --out <file>       Output binary file (default: technique.bin)" << std::endl;
 }
 
@@ -39,19 +40,21 @@ int main(int argc, char* argv[]) {
     double gain = 0.0;
     double shift = 180.0;
     bool do_stream = false;
+    bool format_sc16 = false;
     std::string out_file = "technique.bin";
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--tech") tech = argv[++i];
-        else if (arg == "--bw") bw = std::stod(argv[++i]);
-        else if (arg == "--rate") rate = std::stod(argv[++i]);
-        else if (arg == "--len") len = std::stod(argv[++i]);
-        else if (arg == "--freq") freq = std::stod(argv[++i]);
-        else if (arg == "--gain") gain = std::stod(argv[++i]);
-        else if (arg == "--shift") shift = std::stod(argv[++i]);
+        if (arg == "--tech" && i + 1 < argc) tech = argv[++i];
+        else if (arg == "--bw" && i + 1 < argc) bw = std::stod(argv[++i]);
+        else if (arg == "--rate" && i + 1 < argc) rate = std::stod(argv[++i]);
+        else if (arg == "--len" && i + 1 < argc) len = std::stod(argv[++i]);
+        else if (arg == "--freq" && i + 1 < argc) freq = std::stod(argv[++i]);
+        else if (arg == "--gain" && i + 1 < argc) gain = std::stod(argv[++i]);
+        else if (arg == "--shift" && i + 1 < argc) shift = std::stod(argv[++i]);
         else if (arg == "--stream") do_stream = true;
-        else if (arg == "--out") out_file = argv[++i];
+        else if (arg == "--sc16") format_sc16 = true;
+        else if (arg == "--out" && i + 1 < argc) out_file = argv[++i];
     }
 
     // Safety Check: Max Gain for 50W Amp protection
@@ -73,6 +76,8 @@ int main(int argc, char* argv[]) {
     else if (tech == "ofdm") wf = WaveformEngine::ofdmShapedNoise(64, 48, 16, rate, len, 0.5f);
     else { std::cerr << "Unknown technique: " << tech << std::endl; return 1; }
 
+    if (wf.empty()) { std::cerr << "Error: Generated waveform is empty." << std::endl; return 1; }
+
     if (do_stream) {
 #ifdef USE_SOAPY
         std::cout << "Streaming to Sidekiq S4 at " << freq/1e6 << " MHz (Gain: " << gain << " dB)..." << std::endl;
@@ -88,11 +93,19 @@ int main(int argc, char* argv[]) {
             device->activateStream(txStream);
 
             std::cout << "TRANSMITTING. Press Ctrl+C to kill." << std::endl;
-            const void *buffs[] = {wf.data()};
             while (true) {
-                int ret = device->writeStream(txStream, buffs, wf.size(), 0);
-                if (ret < 0) break;
+                size_t total_written = 0;
+                while (total_written < wf.size()) {
+                    const void *buffs[] = {wf.data() + total_written};
+                    int ret = device->writeStream(txStream, buffs, wf.size() - total_written, 0);
+                    if (ret < 0) {
+                        std::cerr << "\nWrite error: " << ret << std::endl;
+                        goto end_stream;
+                    }
+                    total_written += ret;
+                }
             }
+end_stream:
             
             device->deactivateStream(txStream);
             device->closeStream(txStream);
@@ -106,7 +119,16 @@ int main(int argc, char* argv[]) {
     } else {
         std::cout << "Saving " << wf.size() << " samples to " << out_file << "..." << std::endl;
         std::ofstream out(out_file, std::ios::binary);
-        out.write(reinterpret_cast<const char*>(wf.data()), wf.size() * sizeof(std::complex<float>));
+        if (format_sc16) {
+            std::vector<int16_t> sc16_data(wf.size() * 2);
+            for (size_t i = 0; i < wf.size(); ++i) {
+                sc16_data[i*2] = static_cast<int16_t>(wf[i].real() * 32767.0f);
+                sc16_data[i*2+1] = static_cast<int16_t>(wf[i].imag() * 32767.0f);
+            }
+            out.write(reinterpret_cast<const char*>(sc16_data.data()), sc16_data.size() * sizeof(int16_t));
+        } else {
+            out.write(reinterpret_cast<const char*>(wf.data()), wf.size() * sizeof(std::complex<float>));
+        }
         out.close();
         std::cout << "Done." << std::endl;
     }

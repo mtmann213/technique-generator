@@ -7,6 +7,10 @@ This tool provides high-performance C++ waveform generation for the Epiq Sidekiq
 ./sng --tech <name> --bw <hz> --rate <hz> [options]
 ```
 
+### 🗄️ File Output Options
+* By default, SNG saves waveforms as **32-bit Complex Floats (CF32)** in `technique.bin`.
+* If your playback tool requires **16-bit Complex Integers (SC16)**, add the `--sc16` flag.
+
 ---
 
 ## 🛠️ Available Techniques & Templates
