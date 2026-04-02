@@ -50,9 +50,41 @@ void WaveformEngine::normalizeSignal(std::vector<std::complex<float>>& samples, 
 }
 
 void WaveformEngine::applySpectralShaping(std::vector<std::complex<float>>& samples, double bandwidth_hz, double sample_rate_hz, std::string filter_type, double rolloff) {
-    if (filter_type == "none" || samples.empty()) return;
-    // Filter design (firwin, lfilter) bypassed in this native port.
-    // Core signal synthesis is prioritized over spectral shaping.
+    if (samples.empty()) return;
+    
+    // For standalone SNG, we implement a simple frequency-domain brick-wall filter
+    // 1. Convert to frequency domain (simplified for performance)
+    size_t n = samples.size();
+    double bin_hz = sample_rate_hz / n;
+    int cut_bins = static_cast<int>((bandwidth_hz / 2.0) / bin_hz);
+
+    // Note: A full FFT would be better, but for a standalone zero-dep tool,
+    // we use a time-domain windowed-sinc convolution if filter_type is set.
+    if (filter_type == "rectangular" || filter_type == "none") {
+        // Windowed Sinc approach
+        double fc = (bandwidth_hz / 2.0) / sample_rate_hz;
+        int M = 64; // Filter order
+        std::vector<float> h(M + 1);
+        for (int i = 0; i <= M; ++i) {
+            if (i == M/2) h[i] = 2.0f * fc;
+            else {
+                float x = M_PI * (i - M/2);
+                h[i] = std::sin(2.0f * fc * x) / x;
+            }
+            // Hamming window
+            h[i] *= (0.54f - 0.46f * std::cos(2.0f * M_PI * i / M));
+        }
+
+        // Convolve
+        std::vector<std::complex<float>> original = samples;
+        for (size_t i = 0; i < n; ++i) {
+            std::complex<float> sum(0, 0);
+            for (int j = 0; j <= M; ++j) {
+                if (i >= (size_t)j) sum += original[i - j] * h[j];
+            }
+            samples[i] = sum;
+        }
+    }
 }
 
 std::vector<double> WaveformEngine::rootRaisedCosineFilter(double symbol_rate_hz, double sample_rate_hz, double rolloff, int num_taps) {

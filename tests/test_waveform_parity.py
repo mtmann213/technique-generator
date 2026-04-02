@@ -3,14 +3,12 @@ import sys
 import numpy as np
 import pytest
 
-# Ensure local OOT module is in path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(current_dir, "..", "gr-techniquemaker", "build", "python"))
-sys.path.insert(0, os.path.join(current_dir, "..", "gr-techniquemaker", "python"))
+# Ensure system packages are searched for the installed OOT module
+sys.path.append('/usr/local/lib/python3.12/dist-packages')
 
 try:
-    from techniquemaker import techniquepdu, BaseWaveforms
-    import techniquemaker_python as tm_cpp # The C++ Bindings
+    from gnuradio.techniquemaker import BaseWaveforms
+    from gnuradio.techniquemaker import techniquemaker_python as tm_cpp # The C++ Bindings
 except ImportError as e:
     print(f"Error: Could not find techniquemaker module. Build it first! {e}")
     sys.exit(1)
@@ -24,10 +22,10 @@ def test_narrowband_noise_parity():
     py_wf = BaseWaveforms.narrowband_noise_creator(bw, samp_rate, dur)
     
     # Generate C++ Output (Using the bindings)
-    # Note: We'll add a helper to tm_cpp or use the interdictor block
-    # For now, let's assume we can call the WaveformEngine static methods if bound
-    # If not, we test via the techniquepdu/interdictor_cpp blocks
-    pass
+    cpp_wf = tm_cpp.WaveformEngine.narrowbandNoise(bw, samp_rate, dur)
+    
+    assert len(py_wf) == len(cpp_wf)
+    assert np.max(np.abs(cpp_wf)) > 0
 
 @pytest.mark.parametrize("tech_name", [
     "Narrowband Noise", "Differential Comb", "LFM Chirp", "OFDM-Shaped Noise"
@@ -41,10 +39,22 @@ def test_all_waveforms_statistical_validity(tech_name):
     # and has similar RMS power to the original.
     if tech_name == "Narrowband Noise":
         py_wf = BaseWaveforms.narrowband_noise_creator(100e3, samp_rate, dur)
-        # tm_cpp call would go here
-    
-    assert np.max(np.abs(py_wf)) > 0
-    assert not np.any(np.isnan(py_wf))
+        cpp_wf = tm_cpp.WaveformEngine.narrowbandNoise(100e3, samp_rate, dur)
+    elif tech_name == "Differential Comb":
+        py_wf = BaseWaveforms.differential_comb_creator(30e3, 10, samp_rate, dur)
+        cpp_wf = tm_cpp.WaveformEngine.differentialComb(30e3, 10, samp_rate, dur)
+    elif tech_name == "LFM Chirp":
+        py_wf = BaseWaveforms.lfm_chirp(-500e3, 500e3, samp_rate, dur)
+        cpp_wf = tm_cpp.WaveformEngine.lfmChirp(-500e3, 500e3, samp_rate, dur)
+    elif tech_name == "OFDM-Shaped Noise":
+        py_wf = BaseWaveforms.ofdm_shaped_noise(64, 48, 16, samp_rate, dur)
+        cpp_wf = tm_cpp.WaveformEngine.ofdmShapedNoise(64, 48, 16, samp_rate, dur)
+    else:
+        return
+        
+    assert np.max(np.abs(cpp_wf)) > 0
+    assert not np.any(np.isnan(cpp_wf))
+    assert len(py_wf) == len(cpp_wf)
 
 def test_lfm_chirp_math():
     """Verify LFM phase math parity."""
@@ -54,6 +64,9 @@ def test_lfm_chirp_math():
     t = 0.01
     
     py_wf = BaseWaveforms.lfm_chirp(f0, f1, fs, t)
+    cpp_wf = tm_cpp.WaveformEngine.lfmChirp(f0, f1, fs, t)
     
     # Check for expected properties (constant envelope)
-    np.testing.assert_allclose(np.abs(py_wf), 1.0, atol=1e-5)
+    np.testing.assert_allclose(np.abs(cpp_wf), 1.0, atol=1e-5)
+    # Check if lengths match
+    assert len(py_wf) == len(cpp_wf)
