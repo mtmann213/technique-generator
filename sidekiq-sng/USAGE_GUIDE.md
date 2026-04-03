@@ -1,4 +1,4 @@
-# Sidekiq-Native Generator (SNG) Tactical Manual v1.15
+# Sidekiq-Native Generator (SNG) Tactical Manual v1.16
 
 This tool provides high-performance C++ waveform generation for the Epiq Sidekiq S4/X4. It is designed for air-gapped deployment and high-power interdiction (50W PA safety).
 
@@ -19,6 +19,7 @@ This tool provides high-performance C++ waveform generation for the Epiq Sidekiq
 *   **`--chan <0-3>`**: **X4 only**. Selects physical TX channel (default 0).
 *   **`--gain <db>`**: TX gain (Enforced 30dB cap).
 *   **`--stream`**: Direct hardware transmission.
+*   **`--probe`**: List all available hardware channels and exit.
 
 ---
 
@@ -45,6 +46,7 @@ Standard broadband interference.
 ### 2. Phase-Shifted Noise (`phase-noise`)
 Breaks correlation-based receivers (DSSS/DAPS).
 ```bash
+# Break a link with 180-deg inversions occurring at 10kHz
 ./sng --tech phase-noise --bw 5000000 --rate 20000000 --len 0.1 --shift 180 --shift-rate 10000 --sc16 --out daps_crusher.bin
 ```
 
@@ -69,12 +71,14 @@ Stealthy noise that mimics Wi-Fi/LTE spectral signatures.
 ### 6. FHSS Noise (`fhss`)
 Fast frequency hopper barrage.
 ```bash
-./sng --tech fhss --hops "-1M 0 1M" --hop-dur 0.01 --bw 500k --rate 10M --len 0.1 --sc16 --out fast_hopper.bin
+# Jump between 3 channels every 10ms (100 hops/sec)
+./sng --tech fhss --hops "-1000000 0 1000000" --hop-dur 0.01 --bw 500000 --rate 10000000 --sc16 --out fast_hopper.bin
 ```
 
 ### 7. Correlator Confusion (`confusion`)
 Injects timing/phase jitter into DSSS receivers.
 ```bash
+# Attack a DSSS link with timing jitter and phase flips every 10ms
 ./sng --tech confusion --bw 11000000 --rate 25000000 --len 0.1 --pulse-gap 10 --sc16 --out daps_unlocker.bin
 ```
 
@@ -105,6 +109,13 @@ Frequency-modulated "wobbler" interference.
 ---
 
 ## 🔧 Air-Gap Troubleshooting & Contingencies
+
+### 0. Check Hardware Channels (Probe)
+Run the probe command to see available antennas and their names (e.g., TX1, TRX):
+```bash
+# Requires SoapySDR support
+./sng --probe
+```
 
 ### 1. "Shared Library Not Found" (Missing Drivers)
 If you have the Sidekiq .so file on a USB, copy it to the local folder and run:

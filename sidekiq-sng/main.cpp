@@ -15,9 +15,10 @@
 #endif
 
 void print_help() {
-    std::cout << "Sidekiq-Native Generator (SNG) v1.15" << std::endl;
+    std::cout << "Sidekiq-Native Generator (SNG) v1.16" << std::endl;
     std::cout << "Usage: ./sng --tech <name> --bw <hz> --rate <hz> [options]" << std::endl;
     std::cout << "\nOptions:" << std::endl;
+    std::cout << "  --probe            List all available hardware channels and exit" << std::endl;
     std::cout << "  --stream           Stream directly to hardware" << std::endl;
     std::cout << "  --chan <0-3>       Physical Hardware Channel (default 0)" << std::endl;
     std::cout << "  --freq <hz>        Hardware Center Frequency" << std::endl;
@@ -52,12 +53,14 @@ int main(int argc, char* argv[]) {
     std::string mode = "both";
     double amp = 0.5;
     bool do_stream = false;
+    bool do_probe = false;
     bool format_sc16 = false;
     std::string out_file = "technique.bin";
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--tech" && i + 1 < argc) tech = argv[++i];
+        if (arg == "--probe") do_probe = true;
+        else if (arg == "--tech" && i + 1 < argc) tech = argv[++i];
         else if (arg == "--bw" && i + 1 < argc) bw = std::stod(argv[++i]);
         else if (arg == "--rate" && i + 1 < argc) rate = std::stod(argv[++i]);
         else if (arg == "--len" && i + 1 < argc) len = std::stod(argv[++i]);
@@ -82,11 +85,33 @@ int main(int argc, char* argv[]) {
         else if (arg == "--out" && i + 1 < argc) out_file = argv[++i];
     }
 
+    if (do_probe) {
+#ifdef USE_SOAPY
+        std::cout << "Probing Sidekiq Hardware..." << std::endl;
+        try {
+            SoapySDR::Device *device = SoapySDR::Device::make("driver=sidekiq");
+            if (!device) { std::cerr << "No Sidekiq found!" << std::endl; return 1; }
+            
+            size_t num_tx = device->getNumChannels(SOAPY_SDR_TX);
+            std::cout << "Available Transmit Channels: " << num_tx << std::endl;
+            for (size_t i = 0; i < num_tx; ++i) {
+                std::cout << "  Channel " << i << ": " << device->getChannelInfo(SOAPY_SDR_TX, i).at("label") << std::endl;
+            }
+            SoapySDR::Device::unmake(device);
+        } catch (const std::exception &ex) {
+            std::cerr << "Probe failed: " << ex.what() << std::endl;
+        }
+#else
+        std::cerr << "Probe requires SoapySDR support. Compile with 'make soapy'." << std::endl;
+#endif
+        return 0;
+    }
+
     if (gain > 30.0) gain = 30.0;
     if (amp > 1.0) amp = 1.0;
     if (len < 0.001) len = 0.001;
 
-    (void)freq; (void)chan; // Silence warnings
+    (void)freq; (void)chan;
 
     std::cout << "Generating " << tech << "..." << std::endl;
     std::vector<std::complex<float>> wf;
