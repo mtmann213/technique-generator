@@ -214,6 +214,8 @@ public:
         std::string filter_type = "none"
     );
 
+    static void applyFrequencyShift(std::vector<std::complex<float>>& samples, double shift_hz, double sample_rate_hz);
+
 private:
     static std::vector<double> rootRaisedCosineFilter(double symbol_rate_hz, double sample_rate_hz, double rolloff, int num_taps);
     static std::vector<double> createTimeArray(double sample_rate_hz, double technique_length_seconds);

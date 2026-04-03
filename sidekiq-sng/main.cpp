@@ -49,7 +49,18 @@ int main(int argc, char* argv[]) {
     bool format_sc16 = false;
     std::string out_file = "technique.bin";
 
-    // ... argument parsing same as v2.0 ...
+    // Technique params
+    std::string hops = "-200000 0 200000";
+    double hop_dur = 0.01;
+    double shift = 180.0;
+    double shift_rate = 1000.0;
+    double mod_rate = 1000.0;
+    double sweep_rate = 0.0;
+    double rolloff = 0.35;
+    double spacing = 30000.0;
+    double pulse_gap = 10.0;
+    std::string mode = "both";
+
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "--probe") do_probe = true;
@@ -62,6 +73,17 @@ int main(int argc, char* argv[]) {
         else if (arg == "--offset" && i + 1 < argc) offset = std::stod(argv[++i]);
         else if (arg == "--gain" && i + 1 < argc) gain = std::stod(argv[++i]);
         else if (arg == "--amp" && i + 1 < argc) amp = std::stod(argv[++i]);
+        else if (arg == "--shift" && i + 1 < argc) shift = std::stod(argv[++i]);
+        else if (arg == "--shift-rate" && i + 1 < argc) shift_rate = std::stod(argv[++i]);
+        else if (arg == "--mod-rate" && i + 1 < argc) mod_rate = std::stod(argv[++i]);
+        else if (arg == "--sweep-rate" && i + 1 < argc) sweep_rate = std::stod(argv[++i]);
+        else if (arg == "--rolloff" && i + 1 < argc) rolloff = std::stod(argv[++i]);
+        else if (arg == "--spikes" && i + 1 < argc) spikes = std::stoi(argv[++i]);
+        else if (arg == "--spacing" && i + 1 < argc) spacing = std::stod(argv[++i]);
+        else if (arg == "--hops" && i + 1 < argc) hops = argv[++i];
+        else if (arg == "--hop-dur" && i + 1 < argc) hop_dur = std::stod(argv[++i]);
+        else if (arg == "--pulse-gap" && i + 1 < argc) pulse_gap = std::stod(argv[++i]);
+        else if (arg == "--mode" && i + 1 < argc) mode = argv[++i];
         else if (arg == "--stream") do_stream = true;
         else if (arg == "--sc16") format_sc16 = true;
         else if (arg == "--out" && i + 1 < argc) out_file = argv[++i];
@@ -80,11 +102,9 @@ int main(int argc, char* argv[]) {
             for (size_t i = 0; i < num_tx; ++i) {
                 std::cout << "Software Index [" << i << "]:" << std::endl;
                 
-                // 1. Check for Label
                 auto info = device->getChannelInfo(SOAPY_SDR_TX, i);
                 if (info.count("label")) std::cout << "  Hardware Label: " << info.at("label") << std::endl;
                 
-                // 2. Check Antennas (This often lists J-labels)
                 std::vector<std::string> ants = device->listAntennas(SOAPY_SDR_TX, i);
                 std::cout << "  Physical Ports (Antennas): ";
                 for (const auto& a : ants) std::cout << a << " ";
@@ -99,8 +119,6 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // ... Rest of v2.0 logic (Stitching, Generating, Streaming) ...
-    // [I'm keeping the rest of the file logic here for the actual write]
     std::vector<size_t> channels;
     std::stringstream ss(chan_str);
     std::string item;
@@ -108,12 +126,42 @@ int main(int argc, char* argv[]) {
 
     if (gain > 30.0) gain = 30.0;
     if (amp > 1.0) amp = 1.0;
+    if (len < 0.001) len = 0.001;
+
+    (void)freq;
+
+    std::cout << "--- SNG v2.1 Multi-Channel Setup ---" << std::endl;
+    std::cout << "Targeting Channels: ";
+    for (auto c : channels) std::cout << c << " ";
+    std::cout << "\nTotal Bandwidth: " << bw/1e6 << " MHz" << std::endl;
+
     std::vector<std::vector<std::complex<float>>> channel_data;
     double sub_bw = bw / channels.size();
     float famp = static_cast<float>(amp);
 
     for (size_t i = 0; i < channels.size(); ++i) {
-        std::vector<std::complex<float>> wf = WaveformEngine::narrowbandNoise(sub_bw, rate, len, "complex", famp);
+        std::cout << "  Generating segment " << i << " for Channel " << channels[i] << "..." << std::endl;
+        std::vector<std::complex<float>> wf;
+        
+        if (tech == "noise") wf = WaveformEngine::narrowbandNoise(sub_bw, rate, len, "complex", famp);
+        else if (tech == "phase-noise") wf = WaveformEngine::phaseShiftedNoise(sub_bw, rate, len, shift, shift_rate, famp);
+        else if (tech == "comb") wf = WaveformEngine::differentialComb(spacing, spikes, rate, len, famp);
+        else if (tech == "chirp") wf = WaveformEngine::lfmChirp(-sub_bw/2, sub_bw/2, rate, len, famp);
+        else if (tech == "ofdm") {
+            double spacing_hz = rate / 64.0;
+            int num_subcarriers = static_cast<int>(sub_bw / spacing_hz);
+            if (num_subcarriers > 52) num_subcarriers = 52; 
+            if (num_subcarriers < 1) num_subcarriers = 1;
+            wf = WaveformEngine::ofdmShapedNoise(64, num_subcarriers, 16, rate, len, famp);
+        }
+        else if (tech == "fhss") wf = WaveformEngine::fhssNoise(hops, hop_dur, sub_bw, rate, len, "complex", famp);
+        else if (tech == "confusion") wf = WaveformEngine::correlatorConfusion(sub_bw, rate, len, pulse_gap, mode, famp);
+        else if (tech == "noise-tones") wf = WaveformEngine::noiseTones(hops, sub_bw, rate, len, "complex", famp);
+        else if (tech == "chunked-noise") wf = WaveformEngine::chunkedNoise(sub_bw, spikes, rate, len, sweep_rate, "complex", famp);
+        else if (tech == "rrc") wf = WaveformEngine::rrcModulatedNoise(sub_bw, rate, rolloff, len, famp);
+        else if (tech == "fm-cosine") wf = WaveformEngine::fmCosine(sub_bw, mod_rate, rate, len, famp);
+        else { std::cerr << "Unknown technique: " << tech << std::endl; return 1; }
+
         double stitch_offset = (static_cast<double>(i) - (static_cast<double>(channels.size()) - 1.0) / 2.0) * sub_bw;
         if (stitch_offset != 0.0) WaveformEngine::applyFrequencyShift(wf, stitch_offset, rate);
         if (offset != 0.0) WaveformEngine::applyFrequencyShift(wf, offset, rate);
@@ -140,7 +188,16 @@ int main(int argc, char* argv[]) {
 #endif
     } else {
         std::ofstream out(out_file, std::ios::binary);
-        out.write(reinterpret_cast<const char*>(channel_data[0].data()), channel_data[0].size() * sizeof(std::complex<float>));
+        if (format_sc16) {
+            std::vector<int16_t> sc16_data(channel_data[0].size() * 2);
+            for (size_t i = 0; i < channel_data[0].size(); ++i) {
+                sc16_data[i*2] = static_cast<int16_t>(channel_data[0][i].real() * 32767.0f);
+                sc16_data[i*2+1] = static_cast<int16_t>(channel_data[0][i].imag() * 32767.0f);
+            }
+            out.write(reinterpret_cast<const char*>(sc16_data.data()), sc16_data.size() * sizeof(int16_t));
+        } else {
+            out.write(reinterpret_cast<const char*>(channel_data[0].data()), channel_data[0].size() * sizeof(std::complex<float>));
+        }
     }
     return 0;
 }
