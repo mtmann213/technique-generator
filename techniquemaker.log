@@ -518,3 +518,7 @@ Device Address:
 2026-03-31 07:40:09,028 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
 2026-03-31 07:40:10,678 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
 2026-03-31 07:40:23,896 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-04-03 14:06:36,590 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-04-03 14:06:36,591 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-04-03 14:08:23,681 - TechniqueMaker - INFO - Secondary SDR Enabled
+2026-04-03 14:08:29,336 - TechniqueMaker - INFO - Secondary SDR Disabled

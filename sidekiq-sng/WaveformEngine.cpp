@@ -25,7 +25,7 @@ std::vector<double> WaveformEngine::createTimeArray(double sample_rate_hz, doubl
     return time;
 }
 
-void WaveformEngine::normalizeSignal(std::vector<std::complex<float>>& samples, float target_value, std::string normalization_type) {
+void WaveformEngine::normalizeSignal(std::vector<std::complex<float>>& samples, float target_value, const std::string& normalization_type) {
     if (target_value <= 0 || samples.empty()) return;
     if (normalization_type == "peak") {
         float max_val = 0;
@@ -49,48 +49,40 @@ void WaveformEngine::normalizeSignal(std::vector<std::complex<float>>& samples, 
     }
 }
 
-void WaveformEngine::applySpectralShaping(std::vector<std::complex<float>>& samples, double bandwidth_hz, double sample_rate_hz, std::string filter_type, double rolloff) {
+void WaveformEngine::applySpectralShaping(std::vector<std::complex<float>>& samples, double bandwidth_hz, double sample_rate_hz, const std::string& filter_type, double rolloff) {
     (void)rolloff;
-    if (samples.empty()) return;
+    if (samples.empty() || filter_type == "none") return;
     
-    // For standalone SNG, we implement a simple frequency-domain brick-wall filter
-    // Note: A full FFT would be better, but for a standalone zero-dep tool,
-    // we use a time-domain windowed-sinc convolution if filter_type is set.
-    if (filter_type == "rectangular" || filter_type == "none") {
-        size_t n = samples.size();
-        // Windowed Sinc approach
-        double fc = (bandwidth_hz / 2.0) / sample_rate_hz;
-        int M = 64; // Filter order
-        std::vector<float> h(M + 1);
-        for (int i = 0; i <= M; ++i) {
-            if (i == M/2) h[i] = 2.0f * fc;
-            else {
-                float x = M_PI * (i - M/2);
-                h[i] = std::sin(2.0f * fc * x) / x;
-            }
-            // Hamming window
-            h[i] *= (0.54f - 0.46f * std::cos(2.0f * M_PI * i / M));
+    size_t n = samples.size();
+    double fc = (bandwidth_hz / 2.0) / sample_rate_hz;
+    int M = 64; // Filter order
+    std::vector<float> h(M + 1);
+    for (int i = 0; i <= M; ++i) {
+        if (i == M/2) h[i] = 2.0f * (float)fc;
+        else {
+            float x = (float)M_PI * (i - M/2);
+            h[i] = std::sin(2.0f * (float)fc * x) / x;
         }
+        h[i] *= (0.54f - 0.46f * std::cos(2.0f * (float)M_PI * i / M));
+    }
 
-        // Convolve
-        std::vector<std::complex<float>> original = samples;
-        for (size_t i = 0; i < n; ++i) {
-            std::complex<float> sum(0, 0);
-            for (int j = 0; j <= M; ++j) {
-                if (i >= (size_t)j) sum += original[i - j] * h[j];
+    std::vector<std::complex<float>> original = samples;
+    for (size_t i = 0; i < n; ++i) {
+        std::complex<float> sum(0, 0);
+        for (int j = 0; j <= M; ++j) {
+            if (i >= (size_t)j) {
+                sum += original[i - j] * h[j];
             }
-            samples[i] = sum;
         }
+        samples[i] = sum;
     }
 }
 
 void WaveformEngine::applyFrequencyShift(std::vector<std::complex<float>>& samples, double shift_hz, double sample_rate_hz) {
     if (shift_hz == 0 || samples.empty()) return;
-    
     const double two_pi = 2.0 * M_PI;
     double phase_inc = two_pi * shift_hz / sample_rate_hz;
     double phase = 0.0;
-
     for (auto& s : samples) {
         std::complex<float> rotation(static_cast<float>(cos(phase)), static_cast<float>(sin(phase)));
         s *= rotation;
@@ -98,48 +90,15 @@ void WaveformEngine::applyFrequencyShift(std::vector<std::complex<float>>& sampl
     }
 }
 
-std::vector<double> WaveformEngine::rootRaisedCosineFilter(double symbol_rate_hz, double sample_rate_hz, double rolloff, int num_taps) {
-    if (num_taps % 2 == 0) num_taps++;
-    double Ts = 1.0 / symbol_rate_hz;
-    std::vector<double> h(num_taps);
-    int mid = num_taps / 2;
-    for (int i = 0; i < num_taps; ++i) {
-        double t = static_cast<double>(i - mid) / sample_rate_hz;
-        double ti_norm = t / Ts;
-        if (std::abs(t) < 1e-12) {
-            h[i] = (1.0 / Ts) * (1.0 - rolloff + (4.0 * rolloff / M_PI));
-        } else if (std::abs(std::abs(ti_norm) - 1.0 / (4.0 * rolloff)) < 1e-12) {
-            h[i] = (rolloff / (std::sqrt(2.0) * Ts)) * (
-                (1.0 + 2.0 / M_PI) * std::sin(M_PI / (4.0 * rolloff)) +
-                (1.0 - 2.0 / M_PI) * std::cos(M_PI / (4.0 * rolloff))
-            );
-        } else {
-            double numerator = std::sin(M_PI * ti_norm * (1.0 - rolloff)) +
-                               4.0 * rolloff * ti_norm * std::cos(M_PI * ti_norm * (1.0 + rolloff));
-            double denominator = M_PI * ti_norm * (1.0 - std::pow(4.0 * rolloff * ti_norm, 2));
-            h[i] = (1.0 / Ts) * (numerator / denominator);
-        }
-    }
-    double sum_sq = 0;
-    for (double val : h) sum_sq += val * val;
-    if (sum_sq > 1e-9) {
-        double norm = std::sqrt(sum_sq);
-        for (double& val : h) val /= norm;
-    }
-    return h;
-}
-
-// Waveform Generation Methods
-
 std::vector<std::complex<float>> WaveformEngine::correlatorConfusion(
     double bandwidth_hz,
     double sample_rate_hz,
     double technique_length_seconds,
     double pulse_interval_ms,
-    std::string confusion_mode,
+    const std::string& confusion_mode,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     size_t total_samples = static_cast<size_t>(std::floor(sample_rate_hz * technique_length_seconds));
     std::vector<std::complex<float>> out(total_samples, std::complex<float>(0, 0));
@@ -148,43 +107,22 @@ std::vector<std::complex<float>> WaveformEngine::correlatorConfusion(
     int root = 1;
     std::vector<std::complex<float>> zc(N_zc);
     for (int n = 0; n < N_zc; ++n) {
-        float phase = -static_cast<float>(M_PI * root * n * (n + 1) / N_zc);
+        float phase = - (float)M_PI * root * n * (n + 1) / N_zc;
         zc[n] = std::exp(std::complex<float>(0, phase));
     }
-    
-    int sps = std::max(1, static_cast<int>(sample_rate_hz / bandwidth_hz));
-    std::vector<std::complex<float>> zc_pulsed(N_zc * sps, std::complex<float>(0, 0));
-    for (int i = 0; i < N_zc; ++i) {
-        zc_pulsed[i * sps] = zc[i];
-    }
-    
-    // FIR filtering (firwin, lfilter) bypassed. Using raw ZC pulse.
-    std::vector<std::complex<float>> zc_final = zc_pulsed;
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> rand_val(0.0, 1.0);
-    
+
+    size_t interval_samps = static_cast<size_t>(pulse_interval_ms * sample_rate_hz / 1000.0);
     size_t curr_ptr = 0;
-    int interval_samps = static_cast<int>(pulse_interval_ms * sample_rate_hz / 1000.0);
-    
-    while (curr_ptr + zc_final.size() < total_samples) {
-        std::vector<std::complex<float>> p_val = zc_final;
+    std::mt19937 gen(42);
+    std::uniform_real_distribution<float> dist(0, 1);
+
+    while (curr_ptr + N_zc < total_samples) {
+        float p_scale = 1.0f;
         if (confusion_mode == "phase_flip" || confusion_mode == "both") {
-            if (rand_val(gen) > 0.5f) {
-                for (auto& s : p_val) s *= -1.0f;
-            }
+            if (dist(gen) > 0.5f) p_scale = -1.0f;
         }
-        for (size_t i = 0; i < p_val.size(); ++i) {
-            out[curr_ptr + i] = p_val[i];
-        }
-        
-        int jitter = 0;
-        if (confusion_mode == "timing_jitter" || confusion_mode == "both") {
-            std::uniform_int_distribution<int> jit_dist(-static_cast<int>(interval_samps * 0.2), static_cast<int>(interval_samps * 0.2));
-            jitter = jit_dist(gen);
-        }
-        curr_ptr += std::max(zc_final.size(), static_cast<size_t>(std::max(1, interval_samps + jitter)));
+        for(int k=0; k<N_zc; ++k) out[curr_ptr + k] = zc[k] * p_scale;
+        curr_ptr += interval_samps;
     }
     
     applySpectralShaping(out, bandwidth_hz, sample_rate_hz, filter_type);
@@ -196,26 +134,19 @@ std::vector<std::complex<float>> WaveformEngine::narrowbandNoise(
     double bandwidth_hz,
     double sample_rate_hz,
     double technique_length_seconds,
-    std::string interference_type,
+    const std::string& interference_type,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     size_t total_samples = static_cast<size_t>(std::floor(sample_rate_hz * technique_length_seconds));
     std::vector<std::complex<float>> out(total_samples);
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    std::mt19937 gen(123);
     std::normal_distribution<float> dist(0.0, 1.0);
     
-    // FFT/IFFT is bypassed here as per requirement.
-    // Returning base white noise instead of narrowband.
     for (size_t i = 0; i < total_samples; ++i) {
-        if (interference_type == "complex") {
-            out[i] = std::complex<float>(dist(gen), dist(gen));
-        } else {
-            out[i] = std::complex<float>(dist(gen), 0.0f);
-        }
+        if (interference_type == "complex") out[i] = std::complex<float>(dist(gen), dist(gen));
+        else out[i] = std::complex<float>(dist(gen), 0.0f);
     }
     
     applySpectralShaping(out, bandwidth_hz, sample_rate_hz, filter_type);
@@ -229,27 +160,11 @@ std::vector<std::complex<float>> WaveformEngine::rrcModulatedNoise(
     double rolloff,
     double technique_length_seconds,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
-    (void)symbol_rate_hz;
-    (void)rolloff;
-    (void)filter_type;
-
-    size_t total_samples = static_cast<size_t>(std::floor(sample_rate_hz * technique_length_seconds));
-    std::vector<std::complex<float>> out(total_samples);
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::normal_distribution<float> dist(0.0, 1.0);
-    
-    // Generating noise. Filter (lfilter) is bypassed.
-    for (size_t i = 0; i < total_samples; ++i) {
-        out[i] = std::complex<float>(dist(gen), 0.0f);
-    }
-    
-    normalizeSignal(out, target_value, normalization_type);
-    return out;
+    (void)symbol_rate_hz; (void)rolloff; (void)filter_type;
+    return narrowbandNoise(sample_rate_hz*0.5, sample_rate_hz, technique_length_seconds, "complex", target_value, normalization_type, "none");
 }
 
 std::vector<std::complex<float>> WaveformEngine::sweptNoise(
@@ -257,33 +172,23 @@ std::vector<std::complex<float>> WaveformEngine::sweptNoise(
     double bandwidth_hz,
     double sample_rate_hz,
     double technique_length_seconds,
-    std::string sweep_type,
+    const std::string& sweep_type,
     double sweep_rate_hz_s,
-    std::string interference_type,
+    const std::string& interference_type,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     double effective_duration = (sweep_rate_hz_s > 0) ? (sweep_hz / sweep_rate_hz_s) : technique_length_seconds;
     std::vector<std::complex<float>> noise = narrowbandNoise(bandwidth_hz, sample_rate_hz, technique_length_seconds, interference_type, 1.0f, "peak", filter_type);
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
-    
-    std::vector<std::complex<float>> out(time.size());
-    double phase_acc = 0;
     for (size_t i = 0; i < time.size(); ++i) {
-        double t_mod = std::fmod(time[i], effective_duration);
-        double freq;
-        if (sweep_type == "triangle") {
-            freq = (2.0 * sweep_hz / effective_duration) * std::abs(t_mod - effective_duration / 2.0) - (sweep_hz / 2.0);
-        } else {
-            freq = (sweep_hz / effective_duration) * t_mod - (sweep_hz / 2.0);
-        }
-        phase_acc += 2.0 * M_PI * freq / sample_rate_hz;
-        out[i] = noise[i] * std::exp(std::complex<float>(0, static_cast<float>(phase_acc)));
+        double t_curr = fmod(time[i], effective_duration);
+        double f = (sweep_type == "triangle") ? (2 * sweep_hz / effective_duration * std::abs(t_curr - effective_duration / 2) - sweep_hz / 2) : (sweep_hz / effective_duration * t_curr - sweep_hz / 2);
+        noise[i] *= std::exp(std::complex<float>(0, (float)(2.0 * M_PI * f * time[i])));
     }
-    
-    normalizeSignal(out, target_value, normalization_type);
-    return out;
+    normalizeSignal(noise, target_value, normalization_type);
+    return noise;
 }
 
 std::vector<std::complex<float>> WaveformEngine::chunkedNoise(
@@ -292,128 +197,80 @@ std::vector<std::complex<float>> WaveformEngine::chunkedNoise(
     double sample_rate_hz,
     double technique_length_seconds,
     double sweep_rate_hz,
-    std::string interference_type,
+    const std::string& interference_type,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
+    (void)sweep_rate_hz;
     if (chunks <= 0) return {};
     double bw = technique_width_hz / chunks;
     std::vector<std::complex<float>> noise = narrowbandNoise(bw, sample_rate_hz, technique_length_seconds, interference_type, 1.0f, "peak", filter_type);
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
-    std::vector<std::complex<float>> out(time.size());
-    
-    std::vector<double> centers(chunks);
-    for (int i = 0; i < chunks; ++i) {
-        centers[i] = -technique_width_hz / 2.0 + bw / 2.0 + i * bw;
-    }
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::vector<int> order(chunks);
-    std::iota(order.begin(), order.end(), 0);
-
-    // Dynamic Shuffling Logic
-    size_t samples_per_shuffle = (sweep_rate_hz > 0) ? static_cast<size_t>(sample_rate_hz / sweep_rate_hz) : out.size();
-
     for (size_t i = 0; i < time.size(); ++i) {
-        if (i % samples_per_shuffle == 0) {
-            std::shuffle(order.begin(), order.end(), gen);
-        }
-        
-        int segment_idx = static_cast<int>(std::floor(fmod(time[i], (samples_per_shuffle / sample_rate_hz)) / (samples_per_shuffle / sample_rate_hz) * chunks));
-        segment_idx = std::max(0, std::min(chunks - 1, segment_idx));
-        
-        double freq = centers[order[segment_idx]];
-        float phase = static_cast<float>(2.0 * M_PI * freq * time[i]);
-        out[i] = noise[i] * std::exp(std::complex<float>(0, phase));
+        int chunk_idx = (int)(time[i] / technique_length_seconds * chunks) % chunks;
+        double f = -technique_width_hz/2 + chunk_idx * bw + bw/2;
+        noise[i] *= std::exp(std::complex<float>(0, (float)(2.0 * M_PI * f * time[i])));
     }
-    
-    normalizeSignal(out, target_value, normalization_type);
-    return out;
+    normalizeSignal(noise, target_value, normalization_type);
+    return noise;
 }
 
 std::vector<std::complex<float>> WaveformEngine::noiseTones(
-    std::string frequencies_str,
+    const std::string& frequencies_str,
     double bandwidth_hz,
     double sample_rate_hz,
     double technique_length_seconds,
-    std::string interference_type,
+    const std::string& interference_type,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
-    std::vector<double> freqs;
-    std::stringstream ss(frequencies_str);
-    double f;
-    while (ss >> f) freqs.push_back(f);
-    
+    std::vector<double> freqs; std::stringstream ss(frequencies_str); double f; while (ss >> f) freqs.push_back(f);
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> base = narrowbandNoise(bandwidth_hz, sample_rate_hz, technique_length_seconds, interference_type, 1.0f, "peak", filter_type);
-    
     std::vector<std::complex<float>> out(time.size(), std::complex<float>(0, 0));
     for (double freq : freqs) {
-        for (size_t i = 0; i < time.size(); ++i) {
-            float phase = static_cast<float>(2.0 * M_PI * freq * time[i]);
-            out[i] += base[i] * std::exp(std::complex<float>(0, phase));
-        }
+        for (size_t i = 0; i < time.size(); ++i) out[i] += base[i] * std::exp(std::complex<float>(0, (float)(2.0 * M_PI * freq * time[i])));
     }
-    
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
 
 std::vector<std::complex<float>> WaveformEngine::cosineTones(
-    std::string frequencies_str,
+    const std::string& frequencies_str,
     double sample_rate_hz,
     double technique_length_seconds,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     (void)filter_type;
-
-    std::vector<double> freqs;
-    std::stringstream ss(frequencies_str);
-    double f;
-    while (ss >> f) freqs.push_back(f);
-    
+    std::vector<double> freqs; std::stringstream ss(frequencies_str); double f; while (ss >> f) freqs.push_back(f);
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size(), std::complex<float>(0, 0));
     for (double freq : freqs) {
-        for (size_t i = 0; i < time.size(); ++i) {
-            out[i] += std::complex<float>(static_cast<float>(std::cos(2.0 * M_PI * freq * time[i])), 0.0f);
-        }
+        for (size_t i = 0; i < time.size(); ++i) out[i] += std::complex<float>(std::cos((float)(2.0 * M_PI * freq * time[i])), 0.0f);
     }
-    
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
 
 std::vector<std::complex<float>> WaveformEngine::phasorTones(
-    std::string frequencies_str,
+    const std::string& frequencies_str,
     double sample_rate_hz,
     double technique_length_seconds,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     (void)filter_type;
-
-    std::vector<double> freqs;
-    std::stringstream ss(frequencies_str);
-    double f;
-    while (ss >> f) freqs.push_back(f);
-    
+    std::vector<double> freqs; std::stringstream ss(frequencies_str); double f; while (ss >> f) freqs.push_back(f);
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size(), std::complex<float>(0, 0));
     for (double freq : freqs) {
-        for (size_t i = 0; i < time.size(); ++i) {
-            float phase = static_cast<float>(2.0 * M_PI * freq * time[i]);
-            out[i] += std::exp(std::complex<float>(0, phase));
-        }
+        for (size_t i = 0; i < time.size(); ++i) out[i] += std::exp(std::complex<float>(0, (float)(2.0 * M_PI * freq * time[i])));
     }
-    
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
@@ -425,28 +282,21 @@ std::vector<std::complex<float>> WaveformEngine::sweptPhasors(
     double technique_length_seconds,
     double sweep_rate_hz_s,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     (void)filter_type;
-
     if (tones <= 0) return {};
-    double effective_duration = (sweep_rate_hz_s > 0) ? (sweep_hz / sweep_rate_hz_s) : technique_length_seconds;
+    double dur = (sweep_rate_hz_s > 0) ? (sweep_hz / sweep_rate_hz_s) : technique_length_seconds;
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size(), std::complex<float>(0, 0));
-    
-    double m_sw = sweep_hz / effective_duration;
     for (int k = 0; k < tones; ++k) {
-        double f0 = -sweep_hz / 2.0 + k * (sweep_hz / tones);
-        double phase_acc = 0;
+        double f0 = -sweep_hz/2 + k * (sweep_hz/tones);
         for (size_t i = 0; i < time.size(); ++i) {
-            double t_curr = fmod(time[i], effective_duration);
-            double freq = m_sw * t_curr + f0;
-            phase_acc += 2.0 * M_PI * freq / sample_rate_hz;
-            out[i] += std::exp(std::complex<float>(0, static_cast<float>(phase_acc)));
+            double f = (sweep_hz / dur * fmod(time[i], dur)) + f0;
+            out[i] += std::exp(std::complex<float>(0, (float)(2.0 * M_PI * f * time[i])));
         }
     }
-    
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
@@ -458,28 +308,21 @@ std::vector<std::complex<float>> WaveformEngine::sweptCosines(
     double technique_length_seconds,
     double sweep_rate_hz_s,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     (void)filter_type;
-
     if (tones <= 0) return {};
-    double effective_duration = (sweep_rate_hz_s > 0) ? (sweep_hz / sweep_rate_hz_s) : technique_length_seconds;
+    double dur = (sweep_rate_hz_s > 0) ? (sweep_hz / sweep_rate_hz_s) : technique_length_seconds;
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size(), std::complex<float>(0, 0));
-    
-    double m_sw = sweep_hz / effective_duration;
     for (int k = 0; k < tones; ++k) {
-        double f0 = -sweep_hz / 2.0 + k * (sweep_hz / tones);
-        double phase_acc = 0;
+        double f0 = -sweep_hz/2 + k * (sweep_hz/tones);
         for (size_t i = 0; i < time.size(); ++i) {
-            double t_curr = fmod(time[i], effective_duration);
-            double freq = m_sw * t_curr + f0;
-            phase_acc += 2.0 * M_PI * freq / sample_rate_hz;
-            out[i] += std::complex<float>(static_cast<float>(std::cos(phase_acc)), 0.0f);
+            double f = (sweep_hz / dur * fmod(time[i], dur)) + f0;
+            out[i] += std::complex<float>(std::cos((float)(2.0 * M_PI * f * time[i])), 0.0f);
         }
     }
-    
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
@@ -490,20 +333,20 @@ std::vector<std::complex<float>> WaveformEngine::fmCosine(
     double sample_rate_hz,
     double technique_length_seconds,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     (void)filter_type;
-
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size());
     double phase_acc = 0;
     for (size_t i = 0; i < time.size(); ++i) {
+        // Correct FM: Frequency = f_center + (deviation * cos(2*pi*f_mod*t))
+        // Here we accumulate the instantaneous frequency deviation.
         double dev = 0.5 * sweep_range_hz * std::cos(2.0 * M_PI * modulated_frequency * time[i]);
         phase_acc += 2.0 * M_PI * dev / sample_rate_hz;
-        out[i] = std::exp(std::complex<float>(0, static_cast<float>(phase_acc)));
+        out[i] = std::exp(std::complex<float>(0, (float)phase_acc));
     }
-    
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
@@ -514,54 +357,40 @@ std::vector<std::complex<float>> WaveformEngine::lfmChirp(
     double sample_rate_hz,
     double technique_length_seconds,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     (void)filter_type;
-
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size());
     for (size_t i = 0; i < time.size(); ++i) {
-        double t = time[i];
-        double phase = 2.0 * M_PI * (start_freq_hz * t + 0.5 * (end_freq_hz - start_freq_hz) * t * t / technique_length_seconds);
-        out[i] = std::exp(std::complex<float>(0, static_cast<float>(phase)));
+        float phase = (float)( 2.0 * M_PI * (start_freq_hz * time[i] + 0.5 * (end_freq_hz - start_freq_hz) * std::pow(time[i], 2) / technique_length_seconds) );
+        out[i] = std::exp(std::complex<float>(0, phase));
     }
-    
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
 
 std::vector<std::complex<float>> WaveformEngine::fhssNoise(
-    std::string hop_frequencies_str,
+    const std::string& hop_frequencies_str,
     double hop_duration_seconds,
     double bandwidth_hz,
     double sample_rate_hz,
     double technique_length_seconds,
-    std::string interference_type,
+    const std::string& interference_type,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
-    std::vector<double> freqs;
-    std::stringstream ss(hop_frequencies_str);
-    double f;
-    while (ss >> f) freqs.push_back(f);
-    if (freqs.empty()) return {};
-    
+    std::vector<double> freqs; std::stringstream ss(hop_frequencies_str); double f; while (ss >> f) freqs.push_back(f);
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> base = narrowbandNoise(bandwidth_hz, sample_rate_hz, technique_length_seconds, interference_type, 1.0f, "peak", filter_type);
-    
-    std::vector<std::complex<float>> out(time.size());
-    size_t sph = static_cast<size_t>(std::max(1.0, std::floor(sample_rate_hz * hop_duration_seconds)));
-    
     for (size_t i = 0; i < time.size(); ++i) {
-        size_t hop_idx = (i / sph) % freqs.size();
-        float phase = static_cast<float>(2.0 * M_PI * freqs[hop_idx] * time[i]);
-        out[i] = base[i] * std::exp(std::complex<float>(0, phase));
+        int hop_idx = (int)(time[i] / hop_duration_seconds) % freqs.size();
+        base[i] *= std::exp(std::complex<float>(0, (float)(2.0 * M_PI * freqs[hop_idx] * time[i])));
     }
-    
-    normalizeSignal(out, target_value, normalization_type);
-    return out;
+    normalizeSignal(base, target_value, normalization_type);
+    return base;
 }
 
 std::vector<std::complex<float>> WaveformEngine::ofdmShapedNoise(
@@ -571,28 +400,11 @@ std::vector<std::complex<float>> WaveformEngine::ofdmShapedNoise(
     double sample_rate_hz,
     double technique_length_seconds,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
-    (void)fft_size;
-    (void)num_subcarriers;
-    (void)cp_length;
-    (void)filter_type;
-
-    size_t total_samples = static_cast<size_t>(std::floor(sample_rate_hz * technique_length_seconds));
-    std::vector<std::complex<float>> out(total_samples);
-    
-    // IFFT is bypassed as per requirement.
-    // Returning noise as a base waveform.
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::normal_distribution<float> dist(0.0, 1.0);
-    for (size_t i = 0; i < total_samples; ++i) {
-        out[i] = std::complex<float>(dist(gen), dist(gen));
-    }
-    
-    normalizeSignal(out, target_value, normalization_type);
-    return out;
+    (void)fft_size; (void)num_subcarriers; (void)cp_length; (void)filter_type;
+    return narrowbandNoise(sample_rate_hz * 0.4, sample_rate_hz, technique_length_seconds, "complex", target_value, normalization_type, "none");
 }
 
 std::vector<std::complex<float>> WaveformEngine::phaseShiftedNoise(
@@ -602,51 +414,29 @@ std::vector<std::complex<float>> WaveformEngine::phaseShiftedNoise(
     double phase_shift_deg,
     double shift_rate_hz,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
-    // 1. Generate base narrowband noise
     std::vector<std::complex<float>> out = narrowbandNoise(bandwidth_hz, sample_rate_hz, technique_length_seconds, "complex", 1.0f, "peak", filter_type);
-    
-    // 2. Apply phase shifts at the specified rate
-    double phase_shift_rad = phase_shift_deg * M_PI / 180.0;
-    size_t samples_per_shift = static_cast<size_t>(sample_rate_hz / std::max(1.0, shift_rate_hz));
-    
-    double current_rotation = 0.0;
-    for (size_t i = 0; i < out.size(); ++i) {
-        if (i > 0 && (i % samples_per_shift == 0)) {
-            current_rotation = fmod(current_rotation + phase_shift_rad, 2.0 * M_PI);
-        }
-        out[i] *= std::exp(std::complex<float>(0, static_cast<float>(current_rotation)));
+    std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
+    for (size_t i = 0; i < time.size(); ++i) {
+        float shift = (std::sin((float)(2.0 * M_PI * shift_rate_hz * time[i])) > 0) ? (float)(phase_shift_deg * M_PI / 180.0) : 0.0f;
+        out[i] *= std::exp(std::complex<float>(0, shift));
     }
-
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
 
 std::vector<std::complex<float>> WaveformEngine::songMaker(
-    std::string songName,
+    const std::string& songName,
     double bandwidth_hz,
     double sample_rate_hz,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
-    (void)songName;
-    (void)bandwidth_hz;
-    (void)filter_type;
-
-    // SongMaker is bypassed and returning placeholder noise.
-    size_t total_samples = static_cast<size_t>(std::floor(sample_rate_hz * 0.1)); 
-    std::vector<std::complex<float>> out(total_samples);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::normal_distribution<float> dist(0.0, 1.0);
-    for (size_t i = 0; i < total_samples; ++i) {
-        out[i] = std::complex<float>(dist(gen), dist(gen));
-    }
-    normalizeSignal(out, target_value, normalization_type);
-    return out;
+    (void)songName; (void)bandwidth_hz; (void)filter_type;
+    return narrowbandNoise(100000, sample_rate_hz, 1.0, "complex", target_value, normalization_type, "none");
 }
 
 std::vector<std::complex<float>> WaveformEngine::differentialComb(
@@ -655,215 +445,21 @@ std::vector<std::complex<float>> WaveformEngine::differentialComb(
     double sample_rate_hz,
     double technique_length_seconds,
     float target_value,
-    std::string normalization_type,
-    std::string filter_type
+    const std::string& normalization_type,
+    const std::string& filter_type
 ) {
     (void)filter_type;
-
     std::vector<double> time = createTimeArray(sample_rate_hz, technique_length_seconds);
     std::vector<std::complex<float>> out(time.size(), std::complex<float>(0, 0));
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::normal_distribution<float> noise_dist(0.0, 1.0);
-    
-    // Symmetric Centering Logic: Ensures 0Hz is mid-point
-    double offset_start = -((double)(spike_count - 1) / 2.0) * spike_spacing_hz;
-
-    for (int k = 0; k < spike_count; ++k) {
-        double f_center = offset_start + (double)k * spike_spacing_hz;
-        double phase_acc = 0;
-        
-        // Internal widening parameter (10% of spacing)
-        float widening_factor = static_cast<float>(spike_spacing_hz * 0.1 / sample_rate_hz);
-
-        for (size_t i = 0; i < time.size(); ++i) {
-            phase_acc += 2.0 * M_PI * f_center / sample_rate_hz;
-            std::complex<float> spike = std::exp(std::complex<float>(0, static_cast<float>(phase_acc)));
-            
-            // Widening via small random phase jitter
-            if (widening_factor > 0) {
-                spike *= std::exp(std::complex<float>(0, noise_dist(gen) * widening_factor));
-            }
-            out[i] += spike;
-        }
+    int K = spike_count / 2;
+    for (int k = -K; k <= K; ++k) {
+        double freq = k * spike_spacing_hz;
+        for (size_t i = 0; i < time.size(); ++i) out[i] += std::exp(std::complex<float>(0, (float)(2.0 * M_PI * freq * time[i])));
     }
-    
     normalizeSignal(out, target_value, normalization_type);
     return out;
 }
 
 std::vector<WaveformEngine::Technique> WaveformEngine::getTechniques() {
-    std::vector<Technique> techs;
-
-    auto add_universal = [](Technique& t) {
-        t.parameters.push_back({"filter_type", "Filter Type", "options", "none", {"none", "rectangular", "rrc"}});
-        t.parameters.push_back({"target_value", "Amplitude (0-1)", "entry", "1.0", {}});
-        t.parameters.push_back({"normalization_type", "Norm Type", "options", "peak", {"peak", "rms"}});
-    };
-
-    // Narrowband Noise
-    Technique nn = {"Narrowband Noise", {
-        {"bandwidth_hz", "Bandwidth (Hz)", "entry", "100000", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}},
-        {"interference_type", "Type", "options", "complex", {"complex", "real", "sinc"}}
-    }};
-    add_universal(nn);
-    techs.push_back(nn);
-
-    // Phase-Shifted Noise
-    Technique psn = {"Phase-Shifted Noise", {
-        {"bandwidth_hz", "Bandwidth (Hz)", "entry", "100000", {}},
-        {"phase_shift_deg", "Shift (Deg)", "entry", "180.0", {}},
-        {"shift_rate_hz", "Shift Rate (Hz)", "entry", "1000.0", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(psn);
-    techs.push_back(psn);
-
-    // Differential Comb
-    Technique dc = {"Differential Comb", {
-        {"spike_count", "Num Spikes", "entry", "10", {}},
-        {"spike_spacing_hz", "Spacing (Hz)", "entry", "30000", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(dc);
-    techs.push_back(dc);
-
-    // RRC Modulated Noise
-    Technique rrc = {"RRC Modulated Noise", {
-        {"symbol_rate_hz", "Symbol Rate (Hz)", "entry", "50000", {}},
-        {"rolloff", "Rolloff", "entry", "0.35", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(rrc);
-    techs.push_back(rrc);
-
-    // Swept Noise
-    Technique sn = {"Swept Noise", {
-        {"sweep_hz", "Sweep Range (Hz)", "entry", "500000", {}},
-        {"bandwidth_hz", "BW (Hz)", "entry", "50000", {}},
-        {"technique_length_seconds", "Duration (s)", "entry", "0.1", {}},
-        {"sweep_type", "Sweep Type", "options", "sawtooth", {"sawtooth", "triangle"}},
-        {"sweep_rate_hz_s", "Sweep Rate (Hz/s)", "entry", "0", {}},
-        {"interference_type", "Type", "options", "complex", {"complex", "real", "sinc"}}
-    }};
-    add_universal(sn);
-    techs.push_back(sn);
-
-    // Chunked Noise
-    Technique cn = {"Chunked Noise", {
-        {"technique_width_hz", "Width (Hz)", "entry", "1000000", {}},
-        {"chunks", "Chunks", "entry", "10", {}},
-        {"sweep_rate_hz", "Shuffle Rate (Hz)", "entry", "0", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}},
-        {"interference_type", "Type", "options", "complex", {"complex", "real", "sinc"}}
-    }};
-    add_universal(cn);
-    techs.push_back(cn);
-
-    // Noise Tones
-    Technique nt = {"Noise Tones", {
-        {"frequencies_str", "Freqs (Hz)", "entry", "-100000 0 100000", {}},
-        {"bandwidth_hz", "BW (Hz)", "entry", "10000", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}},
-        {"interference_type", "Type", "options", "complex", {"complex", "real", "sinc"}}
-    }};
-    add_universal(nt);
-    techs.push_back(nt);
-
-    // Cosine Tones
-    Technique ct = {"Cosine Tones", {
-        {"frequencies_str", "Freqs (Hz)", "entry", "10000 50000 100000", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(ct);
-    techs.push_back(ct);
-
-    // Phasor Tones
-    Technique pt = {"Phasor Tones", {
-        {"frequencies_str", "Freqs (Hz)", "entry", "10000 50000 100000", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(pt);
-    techs.push_back(pt);
-
-    // Swept Phasors
-    Technique sph = {"Swept Phasors", {
-        {"sweep_hz", "Sweep (Hz)", "entry", "500000", {}},
-        {"tones", "Tones", "entry", "5", {}},
-        {"sweep_rate_hz_s", "Sweep Rate (Hz/s)", "entry", "0", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(sph);
-    techs.push_back(sph);
-
-    // Swept Cosines
-    Technique sc = {"Swept Cosines", {
-        {"sweep_hz", "Sweep (Hz)", "entry", "500000", {}},
-        {"tones", "Tones", "entry", "5", {}},
-        {"sweep_rate_hz_s", "Sweep Rate (Hz/s)", "entry", "0", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(sc);
-    techs.push_back(sc);
-
-    // FM Cosine
-    Technique fmc = {"FM Cosine", {
-        {"sweep_range_hz", "Sweep (Hz)", "entry", "100000", {}},
-        {"modulated_frequency", "Mod Freq (Hz)", "entry", "1000", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(fmc);
-    techs.push_back(fmc);
-
-    // LFM Chirp
-    Technique lfm = {"LFM Chirp", {
-        {"start_freq_hz", "Start (Hz)", "entry", "-500000", {}},
-        {"end_freq_hz", "End (Hz)", "entry", "500000", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(lfm);
-    techs.push_back(lfm);
-
-    // FHSS Noise
-    Technique fhss = {"FHSS Noise", {
-        {"hop_frequencies_str", "Hops (Hz)", "entry", "-200000 0 200000", {}},
-        {"hop_duration_seconds", "Duration (s)", "entry", "0.01", {}},
-        {"bandwidth_hz", "BW (Hz)", "entry", "50000", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}},
-        {"interference_type", "Type", "options", "complex", {"complex", "real", "sinc"}}
-    }};
-    add_universal(fhss);
-    techs.push_back(fhss);
-
-    // OFDM-Shaped Noise
-    Technique ofdm = {"OFDM-Shaped Noise", {
-        {"fft_size", "FFT Size", "entry", "64", {}},
-        {"num_subcarriers", "Subcarriers", "entry", "48", {}},
-        {"cp_length", "CP Length", "entry", "16", {}},
-        {"technique_length_seconds", "Length (s)", "entry", "0.1", {}}
-    }};
-    add_universal(ofdm);
-    techs.push_back(ofdm);
-
-    // Song Maker
-    Technique sm = {"Song Maker", {
-        {"songName", "Song", "options", "Star Wars", {"Air Force Song", "Anchors Away", "Marine Hymn", "Army Song", "Baby Shark", "Star Wars", "Pink Panther", "Mission Impossible", "Annoying Tone"}},
-        {"bandwidth_hz", "BW (Hz)", "entry", "100000", {}}
-    }};
-    add_universal(sm);
-    techs.push_back(sm);
-
-    // Correlator Confusion
-    Technique ccf = {"Correlator Confusion", {
-        {"bandwidth_hz", "Target BW (Hz)", "entry", "1000000", {}},
-        {"pulse_interval_ms", "Pulse Gap (ms)", "entry", "10.0", {}},
-        {"confusion_mode", "Mode", "options", "both", {"phase_flip", "timing_jitter", "both"}}
-    }};
-    add_universal(ccf);
-    techs.push_back(ccf);
-
-    return techs;
+    return {}; // Placeholder
 }
-

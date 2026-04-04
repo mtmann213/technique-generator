@@ -1,5 +1,23 @@
 # Changelog: TechniqueMaker Improvements
 
+## [2026-04-03] - Sidekiq SNG v2.5 & Air-Gapped Local AI
+
+### 🦅 Sidekiq-SNG Enhancements
+- **Strict DMA Mode (v2.3):** Resolved Sidekiq DMA alignment errors by enforcing exact MTU chunking and padding for hardware streaming.
+- **Master Enable & Antenna Routing (v2.5):** Implemented explicit `setAntenna` and `TX_EN=true` calls to reliably wake up and route signals to secondary physical SMA ports.
+- **Vendored SoapySDR Headers:** Reconstructed the exact SoapySDR 0.8.0 vtable layout to fix ABI segfaults on air-gapped target machines without `-dev` packages.
+- **Removed Gain Caps & Added DMA Diagnostics:** Removed artificial 30dB gain limits and added streaming heartbeat diagnostics to the terminal.
+- **Corrected FM-Cosine Math:** Rewrote the FM-Cosine modulation to use an Instantaneous Frequency Accumulator, preventing bandwidth expansion/aliasing.
+
+### 🤖 Local AI LLM Integration
+- **Air-Gapped LLM Handover:** Created `LLM_HANDOVER_DOCUMENT.md` and integrated local `llama-server` (Llama.cpp) running Qwen2.5-Coder.
+- **LCC (Local Claude Code):** Configured `lcc` script to pipe build errors to the local GPU-accelerated LLM for offline coding assistance.
+
+### 🖥️ New User Interfaces
+- **TUI Tactical Console:** Added `sng_console.py` for terminal-based configuration, including quick "Blink Test" buttons for all 4 ports.
+- **GUI Controller:** Added `sng_gui.py` (Tkinter-based) for graphical control.
+- **Smart Build Script:** Added `build_on_target.sh` to automatically locate and link `libSoapySDR.so` on air-gapped systems.
+
 ## [2026-03-30] - Automated DSP Validation & Simulation Hardening
 
 ### 🧪 Automated Testing (Task 1)

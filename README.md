@@ -9,7 +9,7 @@ TechniqueMaker is a high-performance SDR platform designed for protocol-aware RF
 ### 1. Multi-Hardware Interdiction
 - **USRP (UHD):** Native support for B205-mini, B210, and N-series devices.
 - **Signal Hound (Soapy):** Integrated support for the **VSG60A** vector signal generator with absolute dBm level control.
-- **Sidekiq S4 (Epiq):** PCIe-based support for high-bandwidth, multi-channel operations.
+- **Sidekiq S4/X4 (Epiq):** PCIe-based support for high-bandwidth, multi-channel operations. Features strict MTU DMA alignment and explicit antenna port routing for robust 200+ MSPS stitching.
 
 ### 2. Advanced Waveform Warheads
 - **WiFi Preamble Sabotage:** Protocol-aware disruption of 802.11b/g/n preambles before payload delivery.
@@ -19,6 +19,11 @@ TechniqueMaker is a high-performance SDR platform designed for protocol-aware RF
 ### 3. Precision Safety Engine
 - **Absolute Level Control:** Real-time dBm adjustments ( -120 to +10 dBm) to protect external power amplifiers.
 - **Calibration Matrix:** Automatic Gain-to-dBm mapping via the integrated RF System Calibrator.
+
+### 4. 🤖 Air-Gapped Local AI Integration
+- **Offline Coding Assistant:** Includes the `lcc` (Local Claude Code) script to route AI requests to a local `llama-server` running Qwen2.5-Coder.
+- **Troubleshooting Pipeline:** Allows piping build and DMA stream errors directly to the local GPU-accelerated LLM for instant resolution on NVIDIA Orin/Jetson devices without internet access.
+- Refer to `LLM_HANDOVER_DOCUMENT.md` for AI context passing and synchronization.
 
 ---
 

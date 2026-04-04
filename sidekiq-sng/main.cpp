@@ -124,7 +124,6 @@ int main(int argc, char* argv[]) {
     std::string item;
     while (std::getline(ss, item, ',')) channels.push_back(std::stoul(item));
 
-    if (gain > 30.0) gain = 30.0;
     if (amp > 1.0) amp = 1.0;
     if (len < 0.001) len = 0.001;
 
@@ -157,6 +156,8 @@ int main(int argc, char* argv[]) {
         else if (tech == "fhss") wf = WaveformEngine::fhssNoise(hops, hop_dur, sub_bw, rate, len, "complex", famp);
         else if (tech == "confusion") wf = WaveformEngine::correlatorConfusion(sub_bw, rate, len, pulse_gap, mode, famp);
         else if (tech == "noise-tones") wf = WaveformEngine::noiseTones(hops, sub_bw, rate, len, "complex", famp);
+        else if (tech == "cosine-tones") wf = WaveformEngine::cosineTones(hops, rate, len, famp);
+        else if (tech == "phasor-tones") wf = WaveformEngine::phasorTones(hops, rate, len, famp);
         else if (tech == "chunked-noise") wf = WaveformEngine::chunkedNoise(sub_bw, spikes, rate, len, sweep_rate, "complex", famp);
         else if (tech == "rrc") wf = WaveformEngine::rrcModulatedNoise(sub_bw, rate, rolloff, len, famp);
         else if (tech == "fm-cosine") wf = WaveformEngine::fmCosine(sub_bw, mod_rate, rate, len, famp);
@@ -165,25 +166,81 @@ int main(int argc, char* argv[]) {
         double stitch_offset = (static_cast<double>(i) - (static_cast<double>(channels.size()) - 1.0) / 2.0) * sub_bw;
         if (stitch_offset != 0.0) WaveformEngine::applyFrequencyShift(wf, stitch_offset, rate);
         if (offset != 0.0) WaveformEngine::applyFrequencyShift(wf, offset, rate);
+        
         channel_data.push_back(wf);
     }
 
     if (do_stream) {
 #ifdef USE_SOAPY
+        std::cout << "--- SNG v2.3 [STRICT DMA MODE] ---" << std::endl;
         SoapySDR::Device *device = SoapySDR::Device::make("driver=sidekiq");
-        if (!device) return 1;
+        if (!device) { std::cerr << "Error: Sidekiq card not found." << std::endl; return 1; }
+        
         for (auto c : channels) {
+            std::cout << "[TUNE] Channel " << c << " -> " << freq/1e6 << " MHz" << std::endl;
             device->setSampleRate(SOAPY_SDR_TX, c, rate);
             device->setFrequency(SOAPY_SDR_TX, c, freq);
             device->setGain(SOAPY_SDR_TX, c, gain);
+            
+            // Critical: Force Antenna Selection for Port Switching
+            std::vector<std::string> ants = device->listAntennas(SOAPY_SDR_TX, c);
+            if (!ants.empty()) {
+                std::string target_ant = ants.back(); 
+                std::cout << "[TUNE] Channel " << c << " Antenna: " << target_ant << " (of " << ants.size() << " available)" << std::endl;
+                device->setAntenna(SOAPY_SDR_TX, c, target_ant);
+            }
+            
+            // MASTER ENABLE: Some Sidekiq cards require individual activation per channel
+            // to power up the internal amplifiers (PA).
+            std::cout << "[TUNE] Activating TX Path for Channel " << c << "..." << std::endl;
+            device->writeSetting(SOAPY_SDR_TX, c, "TX_EN", "true");
         }
+        std::cout << "[TUNE] Waiting for synthesizers to settle..." << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
         SoapySDR::Stream *txStream = device->setupStream(SOAPY_SDR_TX, SOAPY_SDR_CF32, channels);
+        size_t mtu = device->getStreamMTU(txStream);
+        std::cout << "[DMA] Hardware MTU: " << mtu << " samples." << std::endl;
+        
+        // Pad all buffers to be a multiple of MTU
+        for (auto& wf : channel_data) {
+            size_t remainder = wf.size() % mtu;
+            if (remainder != 0) {
+                wf.insert(wf.end(), mtu - remainder, std::complex<float>(0, 0));
+            }
+        }
+        
         device->activateStream(txStream);
         std::vector<const void*> buffs(channels.size());
+        size_t total_aligned = channel_data[0].size();
+        int flags = 0;
+        long timeout_us = 1000000;
+        int num_elems = (int)mtu;
+        
+        int loop_count = 0;
+        std::cout << "[DMA] Streaming started. Press Ctrl+C to stop." << std::endl;
+        
         while (true) {
-            for (size_t i = 0; i < channels.size(); ++i) buffs[i] = channel_data[i].data();
-            if (device->writeStream(txStream, buffs.data(), channel_data[0].size(), 0) < 0) break;
+            size_t sent = 0;
+            while (sent < total_aligned) {
+                for (size_t i = 0; i < channels.size(); ++i) buffs[i] = channel_data[i].data() + sent;
+                
+                int ret = device->writeStream(txStream, buffs.data(), num_elems, flags, timeout_us);
+                if (ret == num_elems) {
+                    sent += ret;
+                    if (++loop_count % 100 == 0) {
+                        std::cout << "." << std::flush;
+                    }
+                } else if (ret >= 0) {
+                    std::cout << "T" << std::flush;
+                    continue; // Timeout
+                } else {
+                    std::cerr << "\nDMA Write Error: " << ret << std::endl;
+                    goto end_stream;
+                }
+            }
         }
+        end_stream:
         device->deactivateStream(txStream); device->closeStream(txStream); SoapySDR::Device::unmake(device);
 #endif
     } else {

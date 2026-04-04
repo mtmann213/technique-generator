@@ -1,0 +1,66 @@
+Phase 1: Launch the Engine
+   1. Open a Terminal in the folder containing your AI files.
+   2. Make the binary executable:
+   1     chmod +x llama-server
+   3. Start the AI Server:
+      Run this command. It loads the model into your NVIDIA GPU for high-speed coding assistance.
+
+   1     ./llama-server -m model.gguf --host 127.0.0.1 --port 8000 -ngl 99 -c 8192 --flash-attn
+       * -m: Path to your model file.
+       * -ngl 99: Forces the model to run entirely on your GPU.
+       * --port 8000: This must be 8000 for your lcc script to find it.
+
+   4. Verify Startup:
+      Look for the line: HTTP server listening at http://127.0.0.1:8000. Leave this terminal window open.
+
+  ---
+
+  Phase 2: Interact with the AI
+  You now have three ways to use the AI on your air-gapped machine:
+
+  Method A: The Web Interface (Easiest)
+   1. Open any web browser on the machine (Firefox, Chrome, etc.).
+   2. Type http://127.0.0.1:8000 in the address bar.
+   3. Use it: You can now paste your C++ errors directly into the chat box. It will have full access to its "knowledge" of Sidekiq and SoapySDR.
+
+  Method B: The "LCC" Script (Project Integration)
+   1. Open a new terminal window in your TechniqueMaker folder.
+   2. Run the script:
+   1     ./lcc local-model
+   3. Tactical Use: You can now pipe your build errors directly to the AI:
+   1     make soapy 2>&1 | ./lcc "Fix the errors in sidekiq-sng/main.cpp"
+
+  Method C: Minimalist Python Chat (If no browser)
+  If you don't have a browser, create a file named chat.py and paste this in:
+
+    1 import json, urllib.request
+    2 def ask(p):
+    3     req = urllib.request.Request("http://127.0.0.1:8000/v1/chat/completions", 
+    4         data=json.dumps({"messages": [{"role": "user", "content": p}]}).encode(),
+    5         headers={"Content-Type": "application/json"})
+    6     with urllib.request.urlopen(req) as f:
+    7         return json.loads(f.read().decode())['choices'][0]['message']['content']
+    8 while True:
+    9     msg = input("\n[AI] > ")
+   10     if msg.lower() in ['q','exit']: break
+   11     print(ask(msg))
+  Run it with: python3 chat.py
+
+  ---
+
+  Phase 3: Troubleshooting (Common Air-Gap Issues)
+
+   * "Permission Denied": Run chmod +x llama-server.
+   * "CUDA Error / libcuda.so not found": Ensure your NVIDIA drivers are installed. Run nvidia-smi to check.
+   * "Exec format error": This means the binary is for the wrong processor (e.g., trying to run x86 on ARM). If this happens, you must compile from source on the device.
+   * "Port 8000 already in use": Another process is using the port. Either kill it or change the port in the command and the lcc script.
+
+  Your New Workflow:
+   1. Start ./llama-server in the background.
+   2. Run make soapy.
+   3. If it fails, copy the error.
+   4. Paste the error into the Browser (127.0.0.1:8000) and ask "How do I fix this in main.cpp?"
+   5. Apply the fix and repeat.
+
+  Is the server currently running, or did you hit a specific error message?
+

@@ -11,6 +11,7 @@ cd "$(dirname "$0")"
 rm -f "$ZIP_NAME"
 
 # Create zip
+chmod +x sidekiq-sng/build_on_target.sh
 zip -r "$ZIP_NAME" sidekiq-sng/
 
 echo "-----------------------------------"

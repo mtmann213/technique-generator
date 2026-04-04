@@ -30,5 +30,31 @@
         "center_freq": 915000000.0,
         "samp_rate": 2000000.0,
         "tx_sink_type": "UHD"
+    },
+    "1": {
+        "rx_gain": 44,
+        "tx_gain": 70,
+        "threshold": -50,
+        "template": "WiFi Preamble",
+        "num_targets": 3,
+        "center_freq": 2437000000.0,
+        "samp_rate": 20000000.0,
+        "adaptive_bw": false,
+        "preamble_sabotage": true,
+        "clock_pull": 0.0,
+        "stutter_enabled": false,
+        "stutter_clean": 3,
+        "stutter_burst": 1,
+        "stutter_randomize": false,
+        "frame_dur": 40.0,
+        "tx_sink_type": "SoapySDR",
+        "tx_level": -10.0,
+        "dual_tx_enabled": false,
+        "secondary_serial": "",
+        "bw_expand": false,
+        "sync_tx1": false,
+        "tx2_freq": 2457000000.0,
+        "tx2_gain": 50,
+        "tx2_template": "Narrowband Noise"
     }
 }

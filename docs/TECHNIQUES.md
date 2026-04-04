@@ -13,3 +13,10 @@ Protocol-aware interdiction targeting 802.11b/g/n preambles.
 
 ## 4. Differential Comb
 A phase-inverted multi-tone attack designed to defeat frequency-hopping and noise-canceling counter-measures by creating high-density spectral "dead zones."
+
+## 5. Noise Tones & Continuous Wave Tones
+- **Noise Tones:** Generates selective narrow "pillars" of noise to target specific frequencies while leaving intermediate bands unaffected.
+- **Cosine/Phasor Tones:** High-power continuous wave (CW) tones for pinpoint spectral saturation.
+
+## 6. FM-Cosine
+A swept-frequency technique utilizing an Instantaneous Frequency Accumulator to generate precise, wideband frequency modulation across a defined range without aliasing or bandwidth expansion.
