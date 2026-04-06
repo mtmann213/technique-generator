@@ -556,3 +556,55 @@ Device Address:
 2026-04-05 21:58:25,614 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
 2026-04-05 21:58:25,662 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
 2026-04-05 21:58:27,388 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 22:22:11,904 - TechniqueMaker.session.presets - INFO - Preset applied: WiFi Surgical (2.4G)
+2026-04-05 22:22:11,907 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-04-05 22:22:45,117 - TechniqueMaker.session.presets - INFO - Preset applied: WiFi Surgical (2.4G)
+2026-04-05 22:22:45,119 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-04-05 22:22:56,551 - TechniqueMaker.session.presets - INFO - Preset applied: ISM Master (915M)
+2026-04-05 22:22:56,554 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 22:23:00,040 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Chunked Noise] [TX2: Narrowband Noise]
+2026-04-05 22:23:06,191 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-04-05 22:23:06,747 - TechniqueMaker.hardware.usrp - INFO - Found 2 USRP device(s)
+2026-04-05 22:23:06,748 - TechniqueMaker - INFO - Found 2 device(s).
+2026-04-05 22:23:14,082 - TechniqueMaker - INFO - Connecting to USRP 34573DD...
+2026-04-05 22:23:16,853 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-04-05 22:23:17,904 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 22:23:17,978 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 22:23:28,063 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-04-05 22:23:48,855 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-04-05 22:25:23,994 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-04-05 22:25:26,092 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-04-05 22:25:28,355 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-04-05 22:25:33,528 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-04-05 22:27:30,610 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-04-05 22:41:39,848 - TechniqueMaker.session.presets - INFO - Preset applied: WiFi Surgical (2.4G)
+2026-04-05 22:41:39,849 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-04-05 22:41:43,115 - TechniqueMaker - INFO - Connecting to USRP 34573DD...
+2026-04-05 22:41:46,071 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-04-05 22:41:46,084 - TechniqueMaker - ERROR - Hardware connection failed: SoapySDR::Device::make() no match
+2026-04-05 22:41:46,085 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-04-05 22:41:51,392 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-04-05 22:41:51,972 - TechniqueMaker.hardware.usrp - INFO - Found 2 USRP device(s)
+2026-04-05 22:41:51,973 - TechniqueMaker - INFO - Found 2 device(s).
+2026-04-05 22:41:54,585 - TechniqueMaker - INFO - Connecting to USRP 34573DD...
+2026-04-05 22:41:55,562 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-04-05 22:41:55,562 - TechniqueMaker - ERROR - Hardware connection failed: SoapySDR::Device::make() no match
+2026-04-05 22:41:55,563 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-04-05 22:42:03,930 - TechniqueMaker - INFO - Connecting to USRP 3457480...
+2026-04-05 22:42:06,742 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-04-05 22:42:06,743 - TechniqueMaker - ERROR - Hardware connection failed: SoapySDR::Device::make() no match
+2026-04-05 22:42:06,743 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-04-05 22:42:11,369 - TechniqueMaker - INFO - TX Sink switched to Sidekiq
+2026-04-05 22:42:12,656 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-04-05 22:42:13,470 - TechniqueMaker - INFO - Connecting to USRP 3457480...
+2026-04-05 22:42:14,451 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-04-05 22:42:15,682 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 22:42:15,855 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 22:42:27,027 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 22:42:36,161 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 22:42:41,486 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 22:42:44,746 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 22:42:47,259 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Swept Noise] [TX2: Narrowband Noise]
+2026-04-05 22:42:54,393 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 22:43:03,744 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 22:43:08,680 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
