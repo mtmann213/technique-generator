@@ -499,7 +499,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
     def _build_waterfall(self):
         self.waterfall = qtgui.waterfall_sink_c(
             1024, window.WIN_BLACKMAN_hARRIS, self.center_freq, self.samp_rate,
-            "Active Tactical Waterfall", 2
+            "Active Tactical Waterfall", 1
         )
         self.waterfall.set_intensity_range(-120, 20)
         self.pyqt_widget = sip.wrapinstance(self.waterfall.qwidget(), Qt.QWidget)
@@ -628,17 +628,19 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
                 stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
                 output_mode="Auto-Surgical" if self.hydra_auto_surgical else "Continuous (Stream)"
             )
-            self.interdictor2 = interdictor_cpp(
-                technique=self.tx2_template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw,
-                reactive_threshold_db=self.tx2_threshold, reactive_dwell_ms=self.dwell,
-                num_targets=self.tx2_targets, manual_mode=self.manual_mode, manual_freq=0.0,
-                jamming_enabled=self.tx2_interdiction_enabled, adaptive_bw=self.adaptive_bw,
-                preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration,
-                clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled,
-                stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst,
-                stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
-                output_mode="Continuous (Stream)"
-            )
+            self.interdictor2 = None
+            if self.dual_tx_enabled:
+                self.interdictor2 = interdictor_cpp(
+                    technique=self.tx2_template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw,
+                    reactive_threshold_db=self.tx2_threshold, reactive_dwell_ms=self.dwell,
+                    num_targets=self.tx2_targets, manual_mode=self.manual_mode, manual_freq=0.0,
+                    jamming_enabled=self.tx2_interdiction_enabled, adaptive_bw=self.adaptive_bw,
+                    preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration,
+                    clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled,
+                    stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst,
+                    stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
+                    output_mode="Continuous (Stream)"
+                )
         except ImportError as e:
             self.sys_logger.warning(f"Dual-Warhead Fallback: {e}")
             self.interdictor = techniquepdu(
@@ -653,18 +655,20 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
                 stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
                 output_mode="Continuous (Stream)"
             )
-            self.interdictor2 = techniquepdu(
-                technique="Reactive Jammer", warhead_technique=self.tx2_template,
-                sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw,
-                reactive_threshold_db=self.tx2_threshold, reactive_dwell_ms=self.dwell,
-                num_targets=self.tx2_targets, manual_mode=self.manual_mode, manual_freq=0.0,
-                jamming_enabled=self.tx2_interdiction_enabled, adaptive_bw=self.adaptive_bw,
-                preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration,
-                clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled,
-                stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst,
-                stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
-                output_mode="Continuous (Stream)"
-            )
+            self.interdictor2 = None
+            if self.dual_tx_enabled:
+                self.interdictor2 = techniquepdu(
+                    technique="Reactive Jammer", warhead_technique=self.tx2_template,
+                    sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw,
+                    reactive_threshold_db=self.tx2_threshold, reactive_dwell_ms=self.dwell,
+                    num_targets=self.tx2_targets, manual_mode=self.manual_mode, manual_freq=0.0,
+                    jamming_enabled=self.tx2_interdiction_enabled, adaptive_bw=self.adaptive_bw,
+                    preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration,
+                    clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled,
+                    stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst,
+                    stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
+                    output_mode="Continuous (Stream)"
+                )
 
         if self.hardware_connected:
             if self.tx_sink_type == "UHD":
@@ -704,7 +708,8 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.sink = blocks.null_sink(gr.sizeof_gr_complex)
             self.connect(self.interdictor, self.sink)
             self.sink2 = blocks.null_sink(gr.sizeof_gr_complex)
-            self.connect(self.interdictor2, selfsink2)
+            if self.dual_tx_enabled:
+                self.connect(self.interdictor2, self.sink2)
 
         self.file_sink = blocks.file_sink(gr.sizeof_gr_complex, "session.bin", False)
         self.file_sink.set_unbuffered(True)
@@ -712,9 +717,11 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.connect(self.final_source, (self.display_mixer, 0))
         self.connect(self.interdictor, (self.display_mixer, 1))
         self.connect(self.final_source, self.interdictor)
-        self.connect(self.final_source, self.interdictor2)
+        if self.dual_tx_enabled:
+            self.connect(self.final_source, self.interdictor2)
         self.connect(self.display_mixer, (self.waterfall, 0))
-        self.connect(self.interdictor2, (self.waterfall, 1))
+        if self.dual_tx_enabled:
+            self.connect(self.interdictor2, (self.waterfall, 1))
 
         if hasattr(self.interdictor, "set_sticky_denial"):
             self.interdictor.set_sticky_denial(self.sticky_cb.isChecked())
@@ -807,13 +814,28 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def on_dual_tx_toggle(self, checked):
         self.dual_tx_enabled = checked
+        self.sys_logger.info(f"Secondary SDR {'Enabled' if checked else 'Disabled'}")
+        was_running = self.hardware_connected or self.sim_mode
+        if was_running:
+            self.stop()
+            self.wait()
+            self.disconnect_all()
+        self.middle_split.removeWidget(self.pyqt_widget)
+        self.pyqt_widget.deleteLater()
+        self._build_waterfall()
+        if was_running:
+            self.waterfall.set_frequency_range(self.center_freq, self.samp_rate)
+            self.init_blocks()
+            self.start()
+            self.update_dynamic_params()
+        if hasattr(self, 'interdictor2') and self.interdictor2:
+            self.interdictor2.set_jamming_enabled(checked)
         self.secondary_serial_combo.setEnabled(checked)
         self.sync_cb.setEnabled(checked)
         self.tx2_freq_input.setEnabled(checked and not self.sync_tx1)
         self.tx2_gain_slider.setEnabled(checked and not self.sync_tx1)
         self.tx2_template_combo.setEnabled(checked and not self.sync_tx1)
         self.bw_expand_cb.setEnabled(checked and not self.sync_tx1)
-        self.sys_logger.info(f"Secondary SDR {'Enabled' if checked else 'Disabled'}")
 
     def on_bw_expand_toggle(self, checked):
         self.bw_expand_enabled = checked
@@ -1181,32 +1203,33 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def generate_and_load_waveform(self):
         try:
-            if self.interdictor and hasattr(self.interdictor, "set_base_waveform"):
-                wf_def = BaseWaveforms.waveform_definitions.get(self.template)
-                if wf_def:
-                    func = wf_def["func"]
-                    kwargs = self.current_template_kwargs.copy()
-                    import inspect
-                    sig = inspect.signature(func)
-                    valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
-                    numpy_array = func(**valid_kwargs)
-                    complex_float_array = np.array(numpy_array, dtype=np.complex64)
-                    self.interdictor.set_base_waveform(complex_float_array)
+            if not self.interdictor or not hasattr(self.interdictor, "set_base_waveform"):
+                return
+            wf_def = BaseWaveforms.waveform_definitions.get(self.template)
+            if not wf_def:
+                return
+            func = wf_def["func"]
+            kwargs = dict(self.current_template_kwargs)
+            # Add defensive defaults for common missing params
+            kwargs.setdefault("bandwidth_hz", self.bw)
+            kwargs.setdefault("sample_rate_hz", self.samp_rate)
+            import inspect
+            sig = inspect.signature(func)
+            valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
+            # Check all required positional args are present
+            for name, param in sig.parameters.items():
+                if param.default is inspect.Parameter.empty and name not in valid_kwargs:
+                    self.sys_logger.warning(f"generate_and_load_waveform: missing required param '{name}' for {func.__name__}")
+                    if name == "bandwidth_hz":
+                        valid_kwargs[name] = self.bw
+                    elif name == "sample_rate_hz":
+                        valid_kwargs[name] = self.samp_rate
+            numpy_array = func(**valid_kwargs)
+            complex_float_array = np.array(numpy_array, dtype=np.complex64)
+            self.interdictor.set_base_waveform(complex_float_array)
 
-            if hasattr(self, "interdictor2") and self.interdictor2 and hasattr(self.interdictor2, "set_base_waveform"):
-                wf_def2 = BaseWaveforms.waveform_definitions.get(self.tx2_template)
-                if wf_def2:
-                    func2 = wf_def2["func"]
-                    import inspect
-                    sig2 = inspect.signature(func2)
-                    valid_kwargs2 = {k: v for k, v in self.current_template_kwargs.items() if k in sig2.parameters}
-                    numpy_array2 = func2(**valid_kwargs2)
-                    complex_float_array2 = np.array(numpy_array2, dtype=np.complex64)
-                    self.interdictor2.set_base_waveform(complex_float_array2)
-
-            self.sys_logger.info(f"Loaded Warheads: [TX1: {self.template}] [TX2: {self.tx2_template}]")
         except Exception as e:
-            self.sys_logger.error(f"Failed to generate waveforms: {e}")
+            self.sys_logger.error(f"Failed to generate TX1 waveform: {e}")
 
     def stop_all(self):
         self.stop()
