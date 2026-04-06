@@ -75,7 +75,37 @@ apps/
 5. **Waveform params** defined in `BaseWaveforms.waveform_definitions` as `{"name", "title", "type", "default"}`
 6. **`self.bw`** is the instance bandwidth default (usually 100e3) — used as fallback in kwargs builder
 
-## 5. Roadmap
+## 5. Air-Gap Deployment (x86_64 Ubuntu 22.04)
+
+### Transfer Flow
+```
+Online Machine                          Air-Gapped Target
+┌─────────────────────┐                 ┌──────────────────────────┐
+│ ./bundle_offline.sh │── USB ─────────>│ tar xzf *_offline*.tar.gz│
+│ docker export/image │── USB ─────────>│ gunzip -c ... |docker load│
+└─────────────────────┘                 └──────────────────────────┘
+                                               │
+                                               ├── ./check_hardware.sh
+                                               ├── ./install.sh (OOT module)
+                                               ├── sidekiq-sng/build_on_target.sh
+                                               └── ./run_standalone.sh (Docker)
+```
+
+### Scripts
+| Script | Purpose |
+|---|---|
+| `bundle_offline.sh` | Creates complete source tarball + Sidekiq zip for USB transfer |
+| `check_hardware.sh` | Pre-flight: OS, deps, SDR hardware, Docker, OOT module verification |
+| `run_standalone.sh` | Docker launcher with PCIe/USB device auto-detection (S4, X4, USRP) |
+| `sidekiq-sng/build_on_target.sh` | Compiles `sng` binary with SoapySDR on the target machine |
+
+### Sidekiq X4 Requirements
+- PCIe x4 hardware (not USB) — detected via `lspci` + SoapySDR
+- Requires Epiq PCIe driver + `SoapySidekiq` plugin (from Epiq SDK, not bundled)
+- `run_standalone.sh` auto-detects X4 and enables `--privileged` for Docker PCIe passthrough
+- Port labels vary by firmware — always run `./sng --probe` first
+
+## 6. Roadmap
 
 See `docs/FUTURE_PLANS.md` for the original roadmap. Remaining priorities:
 1. **CI/CD pipeline** (GitHub Actions)
@@ -95,3 +125,4 @@ See `docs/FUTURE_PLANS.md` for the original roadmap. Remaining priorities:
 | Advanced DSP | `tests/test_advanced_dsp.py` | GNU Radio + matplotlib |
 | Headless CLI | `python -m apps.engine.headless --all` | numpy + scipy |
 | Validation Dashboard | GUI Tab 4 | PyQt5 + BaseWaveforms |
+| Hardware Pre-Flight | `./check_hardware.sh` | None (bash only) |

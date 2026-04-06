@@ -96,9 +96,22 @@ RF IN ──► USRP RX ──► FFT Detection ──► Target Identification
 | DSP | `test_advanced_dsp.py` | GNU Radio + matplotlib |
 | Hardware | Manual / virtual mode | Physical SDR or sim source |
 
-## Deployment Targets
+## Hardware Layer
 
-1. **Development host** — Full stack, internet access, iterative development
-2. **Air-gapped target** — USB transfer, sidekiq_ai_bundle, local LLM
-3. **Docker container** — Universal Hardware Container (UHC) for consistent environments
-4. **Sidekiq S4/X4** — Native C++ SNG for high-bandwidth operations
+| Device | Interface | Driver | Detection |
+|---|---|---|---|
+| Ettus USRP (B205, B210, N-Series) | USB 3.0 | UHD (`uhd_find_devices`) | `lsusb` |
+| Signal Hound (VSG60A) | USB 2.0 | libvsg60 via SoapySDR | `lsusb` |
+| Sidekiq S4 | PCIe /dev node | SoapySidekiq, `/dev/sidekiq0` | `/dev/sidekiq0` |
+| Sidekiq X4 | PCIe x4 | SoapySidekiq | `lspci` + `SoapySDRUtil --find` |
+
+### Sidekiq X4 Architecture Notes
+- **PCIe only** -- no `/dev/node` like S4, uses kernel-space DMA
+- **4 TX/4 RX channels** -- each mapped to physical SMA ports (J1, J7, J8, J9)
+- **Spectral Stitching** -- SNG v2.5 splits bandwidth across channels, applies frequency offsets, and pads to strict MTU boundaries
+- **Antenna routing** -- `setAntenna()` with last item from `listAntennas()` required for secondary ports
+- **PA enable** -- `TX_EN=true` write required on each channel before streaming
+- **Firmware loading** -- automatic on driver module load, no manual step
+- **Driver requirement** -- Epiq PCIe driver + SoapySidekiq plugin must be installed on target (not bundled, from Epiq SDK)
+
+### Air-Gap Deployment Architecture

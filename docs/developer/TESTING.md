@@ -81,3 +81,36 @@ The Predator Console supports a "Simulated Signal Generator" mode that doesn't r
 2. Check "Enable Simulated Signal Generator" in the Hardware tab
 3. The LCG (Linear Congruential Generator) simulates a frequency-hopping target
 4. Test detection, tracking, and interdiction logic without SDR hardware
+
+## Hardware Pre-Flight Checks
+
+Before connecting any SDR hardware, run the automated system check:
+
+### Full System Check
+```bash
+./check_hardware.sh
+```
+This verifies:
+- OS architecture (x86_64 expected) and Ubuntu version
+- GNU Radio, SoapySDR, UHD installation
+- Sidekiq S4/X4 PCIe device enumeration
+- USB SDR devices (USRP, Signal Hound)
+- Python dependencies (numpy, scipy, PyQt5)
+- Docker image loaded and ready
+- GNU Radio OOT module status
+
+### Hardware-Specific Checks
+```bash
+# Sidekiq X4/S4 only
+./check_hardware.sh --sidekiq
+
+# USRP only
+./check_hardware.sh --usrp
+```
+
+### Sidekiq X4 Verification Sequence
+When deploying to an air-gapped target with a Sidekiq X4:
+1. Ensure Epiq PCIe driver + SoapySidekiq plugin are installed
+2. Run `./check_hardware.sh --sidekiq` to verify detection
+3. Run `SoapySDRUtil --probe="driver=sidekiq"` for full device details
+4. Run `cd sidekiq-sng && ./sng --probe` for software-to-physical port mapping

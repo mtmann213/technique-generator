@@ -58,7 +58,20 @@ python apps/PredatorJammer.py
 python apps/SystemCalibrator.py
 ```
 
-### 5. Docker Deployment
+### 5. Hardware Verification (Before Connecting SDR)
+
+```bash
+# Full system check (OS, deps, hardware, Docker)
+./check_hardware.sh
+
+# Sidekiq S4/X4 focused
+./check_hardware.sh --sidekiq
+
+# USRP focused
+./check_hardware.sh --usrp
+```
+
+### 6. Docker Deployment
 
 ```bash
 # Build

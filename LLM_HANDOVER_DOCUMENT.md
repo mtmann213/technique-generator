@@ -1,6 +1,6 @@
 # TechniqueMaker: Developer Handover Document
 
-> **Last updated:** 2026-04-05 — Phase 4 complete
+> **Last updated:** 2026-04-06 -- Phase 5 (Air-Gap Deployment Hardening & Sidekiq X4)
 > **All changes pushed to origin/main**
 
 ---
@@ -60,10 +60,13 @@ tests/                            # pytest suite (43 waveform tests)
 ## Hardware Lessons
 
 ### Sidekiq S4/X4
-- DMA alignment: exact multiples of 16,380 samples
+- DMA alignment: exact multiples of 16,380 samples (enforced in SNG)
 - Antenna routing: must use `setAntenna()` with last item from `listAntennas()`
 - Must write `TX_EN=true` to wake up power amps
 - Vendored headers must match exact SoapySDR 0.8.0 vtable
+- **X4 uses PCIe (not /dev nodes like S4)** — detected via `lspci` + SoapySDR `driver=sidekiq`
+- **Pre-built binaries are x86_64 only** — must compile `sng` on target ARM64 machines
+- Use `./check_hardware.sh` on target to verify all dependencies before deployment
 
 ### Ettus USRP (UHD)
 - B205-mini runs at 20MHz clock rate
@@ -93,6 +96,28 @@ python -m apps.engine.headless --all
 # Launch GUI
 python apps/PredatorJammer.py
 ```
+
+---
+
+## Air-Gap Deployment
+
+### x86_64 Ubuntu 22.04 (confirmed target architecture)
+1. Online machine: `./bundle_offline.sh` → produces `techniquemaker_offline_v1.tar.gz` + `sidekiq_sng_v1.zip`
+2. Transfer via USB: bundle + `predator_image.tar.gz`
+3. Target machine: extract → `./check_hardware.sh` → `./install.sh` → `cd sidekiq-sng && ./build_on_target.sh` → `gunzip -c predator_image.tar.gz | docker load`
+
+### Key Scripts
+- **`check_hardware.sh`** — Pre-flight check (OS, deps, SDR hardware, Docker, OOT module)
+- **`bundle_offline.sh`** — Creates complete source tarball for air-gap transfer
+- **`run_standalone.sh`** — Docker launcher with Sidekiq X4/S4/USRP auto-detection
+- **`sidekiq-sng/build_on_target.sh`** — Builds SoapySDR-linked `sng` binary on target
+
+### Sidekiq X4 Specifics
+- PCIe x4 device (not USB), detected via `lspci` and SoapySDR
+- 4 TX/RX channels with physical antenna ports (J1, J7, J8, J9)
+- Requires Epiq PCIe driver + SoapySidekiq plugin on target (not bundled, from Epiq SDK)
+- `run_standalone.sh` maps `--privileged` for PCIe passthrough when Sidekiq detected
+- Use `./sng --probe` for software-index-to-physical-port mapping
 
 ---
 

@@ -2,6 +2,15 @@
 
 This tool is designed for high-performance interdiction on the Epiq Sidekiq S4/X4. It supports **Spectral Stitching** to cover bandwidths exceeding 200 MSPS.
 
+## Hardware Support Matrix
+
+| Device | Interface | Detection | Pre-built Binary | Notes |
+|---|---|---|---|---|
+| Sidekiq S4 | PCIe /dev node | `/dev/sidekiq0` | Works | Single /dev node |
+| Sidekiq X4 | PCIe x4 | `lspci` + SoapySDR | Works | 4 TX/4 RX, requires `--probe` for port mapping |
+
+> **Architecture Note:** The pre-built `sng` binary is **x86_64 only**. On ARM64 (NVIDIA Orin), use `./build_on_target.sh` to compile natively.
+
 ## 🚀 General Usage
 ```bash
 ./sng --tech <name> --bw <hz> --rate <hz> --chan <c1,c2> [options]
@@ -53,6 +62,11 @@ cd sidekiq-sng
 make clean
 ./build_on_target.sh
 ```
+
+> **Note for Sidekiq X4:** The X4 uses PCIe (not `/dev` nodes like S4). The build script works the same for both, but before running you must:
+> 1. Install the Epiq PCIe driver on the target machine
+> 2. Verify with `SoapySDRUtil --probe="driver=sidekiq"` -- should show 4 TX / 4 RX channels
+> 3. Run `./sng --probe` for software-index-to-physical-port mapping (J1, J7, J8, J9)
 
 ### 2. TUI / GUI Tactical Consoles
 Launch the intuitive interface for rapid RF reconfiguration and hardware "Blink Testing":

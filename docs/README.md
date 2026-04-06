@@ -18,8 +18,10 @@
 - [Architecture](developer/ARCHITECTURE.md) — System design and component overview
 
 ### Hardware
-- [Docker & Deployment](DOCKER_INSTRUCTIONS.md) — Container build and air-gap transfer
-- [Sidekiq SNG Manual](../sidekiq-sng/USAGE_GUIDE.md) — Sidekiq-Native Generator tactical manual
+- [Docker & Deployment](DOCKER_INSTRUCTIONS.md) -- Container build and air-gap transfer
+- [Sidekiq SNG Manual](../sidekiq-sng/USAGE_GUIDE.md) -- Sidekiq-Native Generator tactical manual
+- [Sidekiq X4 Setup](../README.md#-sidekiq-x4-setup-air-gapped) -- X4 driver, port mapping, and streaming guide
+- [Hardware Pre-Flight Check](../check_hardware.sh) -- Run `./check_hardware.sh` on the target to verify all dependencies
 
 ### AI Integration
 - [LLM Handover](../LLM_HANDOVER_DOCUMENT.md) — Air-gapped local AI setup and context passing

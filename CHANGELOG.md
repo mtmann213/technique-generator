@@ -1,5 +1,34 @@
 # Changelog: TechniqueMaker Improvements
 
+## [2026-04-06] - Air-Gap Deployment Hardening & Sidekiq X4 Support
+
+### 📦 Air-Gap Transfer Pipeline
+- **Complete Source Bundle:** Rewrote `bundle_offline.sh` to create `techniquemaker_offline_v1.tar.gz` -- full source tree with smart exclusions (.git, build artifacts, caches)
+- **Backwards Compat:** Still produces `sidekiq_sng_v1.zip` for SNG-only deployments
+- **Pre-Flight Hardware Check:** Added `check_hardware.sh` -- automated verification of 12 system dependencies (OS, arch, GNU Radio, SoapySDR, SDR hardware, Python deps, Docker, OOT module)
+  - Supports `--sidekiq` flag for X4/S4 focused checks
+  - Supports `--usrp` flag for USRP focused checks
+
+### 🔧 Sidekiq X4 Support
+- **run_standalone.sh rewritten:** Auto-detects Sidekiq X4 via `lspci` and SoapySDR (not just `/dev/sidekiq0` S4 detection)
+  - Maps `--privileged` for Docker PCIe passthrough when X4 detected
+  - Also auto-detects USRP via `uhd_find_devices` and Signal Hound via `lsusb`
+  - Verifies Docker image exists before launching
+  - Cleans up X11 permissions on container exit
+- **X4 PCIe Passthrough:** `run_standalone.sh` no longer relies on `/dev` nodes for X4 -- uses lspci + SoapySDR discovery
+- **Documentation:** New Sidekiq X4 setup section in README.md with driver prerequisites, port mapping, and streaming examples
+
+### 📝 Documentation Overhaul
+- **README.md:** Expanded deployment instructions with full pipeline (bundle → check → install → build → load → launch)
+- **README.md:** New Sidekiq X4 setup section (prerequisites, probe, streaming, antenna mapping, Docker notes)
+- **docs/README.md:** Added links to X4 setup guide and hardware pre-flight check
+- **docs/developer/SETUP.md:** Added hardware verification section before Docker deployment
+- **docs/developer/ARCHITECTURE.md:** Added hardware layer table, Sidekiq X4 architecture notes, air-gap deployment architecture
+- **docs/developer/TESTING.md:** Added hardware pre-flight checks section with X4 verification sequence
+- **sidekiq-sng/USAGE_GUIDE.md:** Added hardware support matrix, X4 compilation notes, architecture warnings
+- **LLM_HANDOVER_DOCUMENT.md:** Updated hardware lessons, new Air-Gap Deployment section
+- **PROJECT_ARCHITECT_PROMPT.md:** Added air-gap deployment flow diagram, scripts reference table, X4 requirements
+
 ## [2026-04-03] - Sidekiq SNG v2.5 & Air-Gapped Local AI
 
 ### 🦅 Sidekiq-SNG Enhancements
