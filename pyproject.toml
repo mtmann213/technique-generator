@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "techniquemaker"
+version = "2.5.0"
+description = "Advanced Reactive Interdiction Suite for SDR — protocol-aware RF testing and electronic warfare research"
+readme = "README.md"
+license = {text = "Proprietary — Authorized RF testing and EW research only"}
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.21",
+    "scipy>=1.7",
+]
+
+[project.optional-dependencies]
+gui = [
+    "PyQt5>=5.15",
+    "PyQt5-sip",
+]
+gnuradio = [
+    "gnuradio>=3.10",
+    "gnuradio-uhd",
+    "gnuradio-soapy",
+]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov",
+    "black",
+    "flake8",
+]
+
+[project.scripts]
+techniquemaker = "TechniqueMaker:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+markers = [
+    "waveform: Waveform generation tests",
+    "parity: Python vs C++ parity tests (requires compiled OOT module)",
+    "integration: Full pipeline integration tests",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+skip-string-normalization = true
+
+[tool.setuptools.packages.find]
+include = ["techniquemaker*"]
