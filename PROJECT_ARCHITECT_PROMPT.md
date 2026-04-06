@@ -1,6 +1,6 @@
 # TechniqueMaker: Project Architecture & Development Guide
 
-> **Updated:** 2026-04-05 — Phases 1-3 completed
+> **Updated:** 2026-04-05 — Phases 1-4 complete
 > **Author:** MTT + Hermes Agent (Nous Research)
 
 ---
@@ -36,13 +36,14 @@
 
 ## 2. Key Design Decisions
 
-- **Dual-interdictor design**: `interdictor` (TX1) and `interdictor2` (TX2) for dual-SDR spectral stitching. Both are created in `init_blocks()`; `interdictor2` is silenced by default.
-- **Waterfall has 2 inputs**: Always. When single-SDR mode, interdictor2 outputs zeros to channel 1. Don't disconnect unless you change the waterfall ninputs to 1.
+- **Single-interdictor mode (default)**: Only `interdictor` is created. Waterfall has 1 input. Half the DSP load.
+- **Dual-interdictor mode**: Toggling "ENABLE SECONDARY SDR" rebuilds entire flowgraph — waterfall (ninputs=2), interdictor2, all connections.
+- **Conditional flowgraph**: interdictor2, sink2, waterfall channel 1, and source→interdictor2 are ALL gated on `self.dual_tx_enabled`.
 - **C++ interdictor `work()`** has two paths:
   - `"Auto-Surgical"` → spectral detection + multi-target waveform synthesis
   - `"Continuous (Stream)"` → plays `d_base_waveform` in a loop
-- **Waveform loading**: `update_dynamic_params()` calls `generate_and_load_waveform()` which generates waveform via BaseWaveforms and pushes to interdictor via `set_base_waveform()`
-- **Jamming output**: When `d_jamming_enabled=false`, the C++ `work()` fills output with zeros and returns early
+- **Waveform loading**: `update_dynamic_params()` → `generate_and_load_waveform()` → `set_base_waveform()`. Now defensive against missing params (Phase 3).
+- **Jamming disabled**: C++ `work()` outputs zeros when `d_jamming_enabled=false`.
 
 ## 3. Module Structure (Post-Refactoring)
 
@@ -67,18 +68,19 @@ apps/
 
 ## 4. Known Gotchas
 
-1. **`generate_and_load_waveform()`** must be called AFTER `interdictor` is created. The call chain is: `on_connect_toggled(true)` → `init_blocks()` → `update_dynamic_params()` → `generate_and_load_waveform()`
-2. **Waveform params** are defined in `BaseWaveforms.waveform_definitions` as `{"name", "title", "type", "default"}`. The `update_dynamic_params()` loop builds `current_template_kwargs` from these, skipping `sample_rate_hz` and `technique_length_seconds` (set separately).
-3. **`bandwidth_hz`** is the first positional param for `narrowband_noise_creator` — it MUST be in kwargs or the call fails.
-4. **`static double manual_phase_acc`** was fixed to use instance variable (commit: `Fix: narrowband noise always visible on waterfall when TX off`)
-5. **Waterfall topology** requires both inputs connected — don't remove interdictor2→waterfall unless you also change waterfall ninputs
+1. **`generate_and_load_waveform()`** is defensive: uses `setdefault` for `bandwidth_hz` and `sample_rate_hz`, scans `sig.parameters` for missing required args
+2. **Waterfall ninputs**: `2 if self.dual_tx_enabled else 1`. Don't change without updating toggle/flowgraph rebuild logic
+3. **`on_dual_tx_toggle` rebuilds everything**: waterfall widget, all blocks, all connections, waterfall, then restarts top_block
+4. **C++ `work()`** returns zeros when `d_jamming_enabled=false` — no output but the block still processes
+5. **Waveform params** defined in `BaseWaveforms.waveform_definitions` as `{"name", "title", "type", "default"}`
+6. **`self.bw`** is the instance bandwidth default (usually 100e3) — used as fallback in kwargs builder
 
 ## 5. Roadmap
 
-See `docs/FUTURE_PLANS.md` for the original roadmap. Current priorities:
-1. **Fix remaining underflows** (Phase 4)
-2. **Complete flowgraph extraction** (Phase 4)
-3. **CI/CD pipeline** (Phase 4)
+See `docs/FUTURE_PLANS.md` for the original roadmap. Remaining priorities:
+1. **CI/CD pipeline** (GitHub Actions)
+2. **Complete flowgraph extraction** (Phase 4 partial)
+3. **Replace QTimer polling with Qt signals/events**
 4. **4x4 MIMO support** (original roadmap)
 5. **Automated PRNG cracker** (original roadmap)
 6. **SigMF data replay** (original roadmap)
