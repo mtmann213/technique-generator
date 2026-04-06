@@ -522,3 +522,37 @@ Device Address:
 2026-04-03 14:06:36,591 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
 2026-04-03 14:08:23,681 - TechniqueMaker - INFO - Secondary SDR Enabled
 2026-04-03 14:08:29,336 - TechniqueMaker - INFO - Secondary SDR Disabled
+2026-04-05 21:56:15,302 - TechniqueMaker - INFO - Loaded Warheads: [TX1: WiFi Preamble] [TX2: Narrowband Noise]
+2026-04-05 21:56:15,303 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-04-05 21:56:18,059 - TechniqueMaker - INFO - Scanning for USRP devices...
+2026-04-05 21:56:18,593 - TechniqueMaker - INFO - Found 2 devices.
+2026-04-05 21:56:28,670 - TechniqueMaker - INFO - Connecting to USRP 34573DD...
+2026-04-05 21:56:31,360 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-04-05 21:56:31,402 - TechniqueMaker - ERROR - Hardware connection failed: SoapySDR::Device::make() no match
+2026-04-05 21:56:31,403 - TechniqueMaker - INFO - Disconnecting hardware...
+2026-04-05 21:56:35,495 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-04-05 21:56:36,035 - TechniqueMaker - INFO - Connecting to USRP 34573DD...
+2026-04-05 21:56:37,014 - TechniqueMaker - INFO - Initializing Dual-Warhead C++ Matrix.
+2026-04-05 21:56:38,244 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:56:38,402 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:56:58,456 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 21:57:11,334 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:57:32,404 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 21:57:37,503 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 21:57:40,671 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 21:57:42,534 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:57:49,550 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:57:50,215 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:57:51,928 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:57:52,858 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:57:55,162 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 21:58:00,070 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:58:07,973 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:58:07,975 - TechniqueMaker - INFO - TX Sink switched to SoapySDR
+2026-04-05 21:58:11,013 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-05 21:58:11,014 - TechniqueMaker - INFO - TX Sink switched to UHD
+2026-04-05 21:58:16,183 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:58:21,147 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:58:25,614 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:58:25,662 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'
+2026-04-05 21:58:27,388 - TechniqueMaker - ERROR - Failed to generate waveforms: narrowband_noise_creator() missing 1 required positional argument: 'bandwidth_hz'

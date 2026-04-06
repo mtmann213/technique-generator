@@ -23,7 +23,6 @@ gr-techniquemaker/python/techniquemaker/__init__.pyo
 
 # Compiled executables & scripts
 /sng
-/techniquemaker.log
 /sidekiq-sng/sng
 /sidekiq_sng_v1/
 
