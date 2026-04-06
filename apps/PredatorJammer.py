@@ -1038,6 +1038,8 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.interdiction_enabled = not checked
         if self.interdictor:
             self.interdictor.set_jamming_enabled(self.interdiction_enabled)
+        if hasattr(self, "interdictor2") and self.interdictor2:
+            self.interdictor2.set_jamming_enabled(self.interdiction_enabled)
 
     def on_frame_dur_change(self):
         try:
