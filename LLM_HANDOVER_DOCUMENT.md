@@ -1,69 +1,180 @@
-# TechniqueMaker / Sidekiq-SNG: LLM Handover Document
+# TechniqueMaker: Developer Handover Document
 
-## 1. Project Overview
-**TechniqueMaker** is a professional-grade SIGINT and reactive RF interdiction suite. It operates in a dual-environment setup: a host machine for development and an **air-gapped target machine** for deployment, specifically interacting with **Epiq Solutions Sidekiq hardware (S4/X4)** via SoapySDR.
+> **Last updated:** 2026-04-05
+> **Version in repo:** v2.5+ with Phase 1-3 refactoring applied
 
-The project features a **dual-engine DSP architecture**:
-1.  **Python/NumPy "Golden Set"**: Used for mathematical validation, rapid prototyping, and baseline technique generation (`BaseWaveforms.py`).
-2.  **High-Performance C++ Engine (`sidekiq-sng`)**: A native C++ implementation (`WaveformEngine.cpp` & `main.cpp`) designed for direct DMA memory access to the Sidekiq hardware, bypassing GNU Radio overhead for extreme bandwidths (up to 200+ MSPS via spectral stitching).
+---
 
-## 2. Core Capabilities & Techniques
-The suite supports 11 distinct RF interdiction techniques, all mathematically parity-tested between Python and C++:
-*   `noise` (Narrowband Noise)
-*   `phase-noise` (Phase-Shifted Noise)
-*   `comb` (Differential Comb)
-*   `chirp` (Linear FM Chirp)
-*   `ofdm` (OFDM-Shaped Noise)
-*   `fhss` (Frequency Hopping Spread Spectrum Noise)
-*   `confusion` (Correlator Confusion via Zadoff-Chu sequences)
-*   `noise-tones` (Multiple narrowband noise pillars)
-*   `cosine-tones` (Multiple pure sine wave pillars)
-*   `phasor-tones` (Complex phasor tones)
-*   `chunked-noise` (Swept chunked noise)
-*   `rrc` (Root-Raised-Cosine Modulated Noise)
-*   `fm-cosine` (Frequency Modulated Cosine)
+## Quick Start for Next LLM
 
-## 3. The Air-Gapped Deployment Strategy
-Because the target machine lacks internet access, development relies on a strict bundling process.
-*   **`bundle_offline.sh`**: Zips the `sidekiq-sng` directory into `sidekiq_sng_v1.zip` for USB transfer.
-*   **`build_on_target.sh`**: A smart compilation script executed on the air-gapped machine. It dynamically locates the runtime `libSoapySDR.so` using `ldconfig` and links against it directly, bypassing the need for missing `-dev` packages (`libsoapysdr-dev`).
-*   **Vendored Headers**: To satisfy the C++ compiler without `-dev` packages, we manually reconstructed and vendored `SoapySDR/Device.hpp` and `SoapySDR/Types.hpp` directly into the project's `include/` directory.
+1. Clone the repo and check `git log` for recent commits
+2. Read this file for project context and known bugs
+3. Read `docs/developer/ARCHITECTURE.md` for system design
+4. Read `docs/developer/TESTING.md` for test setup
 
-## 4. Local AI Integration (LCC & Llama.cpp)
-To reduce the "USB Sneakernet" turnaround time, we established a local AI coding assistant directly on the air-gapped machine (which features an NVIDIA Orin `nv194` or similar high-end GPU).
-*   **Engine**: `llama.cpp` (`llama-server`) running locally on port `8000`.
-*   **Model**: `Qwen2.5-Coder-7B-Instruct-GGUF` (Highly recommended for C++).
-*   **Interface**: A local script named `lcc` (Local Claude Code) or a fallback Python chat script acts as the terminal frontend, piping `make soapy` errors directly into the local LLM for instant resolution.
+The repo has been partially refactored through **Phase 3** (see Recent Changes below). The code is committed locally but may not be pushed to origin.
 
-## 5. Recent Technical Hurdles & Architectural Solutions
+---
 
-Any LLM taking over this project must understand the strict hardware constraints we recently solved:
+## What This Project Is
 
-### A. Sidekiq DMA Alignment (The "numElems" Error)
-*   **Problem**: Sidekiq DMA engines will violently reject streams (or loop endlessly causing center-frequency spikes) if `device->writeStream` requests are not exact multiples of the hardware MTU (16,380 samples).
-*   **Solution**: Implemented **v2.3 [STRICT DMA MODE]**. The C++ engine now pre-pads all generated waveforms to be a perfect multiple of the queried hardware MTU. The `writeStream` loop is locked to send exactly 1 MTU chunk per iteration, perfectly advancing the data pointer.
+**TechniqueMaker** is a professional-grade SIGINT / reactive RF interdiction suite for SDR hardware (Ettus USRP, Signal Hound, Epiq Sidekiq S4/X4). It detects signals in the spectrum and generates counter-waveforms to disrupt them with sub-millisecond latency.
 
-### B. VTable Segfaults (ABI Mismatch)
-*   **Problem**: Vendoring a "minimal" `SoapySDR/Device.hpp` caused a Segmentation Fault. The C++ virtual function table (vtable) shifted, causing calls like `getNumChannels()` to execute random memory addresses in the pre-compiled `.so` library.
-*   **Solution**: Fully reconstructed the **exact SoapySDR 0.8.0 vtable layout**, including all dummy/unused virtual functions, ensuring perfect ABI alignment with the Ubuntu 22.04 runtime libraries.
+**Dual-engine DSP architecture:**
+- **Python/NumPy "Golden Set"** — `BaseWaveforms.py` for validation and prototyping
+- **C++ Interdictor** — GNU Radio OOT block for real-time processing
+- **C++ SNG (Sidekiq Native Generator)** — Standalone C++ engine for ultra-high bandwidth (bypasses GNU Radio)
 
-### C. Antenna Routing / Silent Ports
-*   **Problem**: Channels > 0 were "silent" despite software reporting successful transmission. Sidekiq shares synthesizers and requires explicit physical port mapping.
-*   **Solution**: Implemented **v2.4 [DEEP PROBE]** and **v2.5 [MASTER ENABLE]**.
-    1.  The code now dynamically queries `listAntennas()` for every channel and explicitly calls `setAntenna()` using the *last* item in the list (which maps to the physical SMA, e.g., J1/J7).
-    2.  The code issues `device->writeSetting(SOAPY_SDR_TX, c, "TX_EN", "true")` for every channel to forcibly wake up internal power amplifiers before streaming.
+**Key directories:**
+```
+apps/                          # Python GUI applications
+  gui/         (Phase 2)       # Extracted theme engine + validation dashboard
+  engine/      (Phase 3)       # Flowgraph builder + headless runner
+  hardware/    (Phase 2)       # USRP device discovery
+  session/     (Phase 2)       # Presets + calibration managers
+  PredatorJammer.py            # Main tactical console (partially refactored)
+  SystemCalibrator.py          # RF calibration tool
+  core_utils.py                # Config management
+config/                        # System configs, presets, calibration data
+docs/                          # Organized documentation (Phase 1)
+gr-techniquemaker/             # GNU Radio C++ OOT module
+  lib/interdictor_cpp_impl.cc  # Real-time interdictor block
+  python/techniquemaker/BaseWaveforms.py  # Waveform definitions
+predator-cpp/                  # Native C++ Qt console
+sidekiq-sng/                   # Sidekiq SNG (standalone C++ engine)
+sidekiq_ai_bundle/             # Local llama.cpp (not tracked in .gitignore)
+tests/                         # pytest test suite
+```
 
-### D. FM-Cosine Bandwidth Expansion
-*   **Problem**: An `fm-cosine` technique requested at 100MHz bandwidth was appearing 250MHz wide on the spectrum analyzer.
-*   **Solution**: The math was flawed (calculating phase directly from the sine of time). It was rewritten to use an **Instantaneous Frequency Accumulator** (`phase_acc += 2.0 * M_PI * dev / sample_rate_hz`), ensuring the peak-to-peak frequency deviation strictly adheres to the requested `--bw`.
+---
 
-## 6. User Interfaces
-The `sidekiq-sng` directory includes two portable Python wrappers for the C++ binary:
-1.  **`sng_gui.py`**: A `tkinter` based graphical interface.
-2.  **`sng_console.py`**: A robust, standard-library-only Text User Interface (TUI). This is the primary control mechanism on the air-gapped machine (which lacks `tkinter`). It features dynamic parameter prompting, rapid RF reconfiguration, and dedicated "Blink Test" buttons for ports 0-3.
+## 15+ Waveform Techniques
 
-## 7. Current State
-*   The C++ engine successfully builds on the air-gapped target.
-*   The MTU DMA logic is stable.
-*   The math engines (specifically FM Cosine) are calibrated to strict spectral boundaries.
-*   The user is currently validating the multi-port transmission capabilities and spectral cleanliness on an external spectrum analyzer.
+| Technique | Description |
+|---|---|
+| Narrowband Noise | Frequency-domain noise generation |
+| Differential Comb | Phase-inverted multi-tone spectral dead zones |
+| LFM Chirp | Linear frequency-modulated sweep |
+| OFDM-Shaped Noise | Simulated OFDM signal with cyclic prefix |
+| FHSS Noise | Frequency-hopping noise |
+| RRC Modulated Noise | Root-raised cosine pulse-shaped noise |
+| Swept Noise | Frequency-swept noise (sawtooth/triangle) |
+| Swept Phasors | Swept complex exponential tones |
+| Swept Cosines | Swept real cosine tones |
+| Phasor Tones | Complex exponential pillars |
+| Cosine Tones | Real cosine pillars |
+| Noise Tones | Narrowband noise pillars at specific frequencies |
+| Chunked Noise | Shuffled frequency-chunk noise |
+| Correlator Confusion | Zadoff-Chu sequences with random phase/timing |
+| WiFi Preamble | 802.11b/g preamble patterns for preamble sabotage |
+| FM Cosine | Instantaneous frequency-accumulator FM |
+| Song Maker | Musical sequences (Star Wars, Marine Hymn, etc.) |
+
+Each is defined in `BaseWaveforms.waveform_definitions` with parameter metadata.
+
+---
+
+## Known Bugs — Already Fixed
+
+These bugs were found and fixed during the refactoring session. **Verify the fixes are in the code before continuing:**
+
+| # | Bug | Status | Fix Details |
+|---|---|---|---|
+| 1 | Dead code in `TechniqueMaker.py` (unreachable lines after `return`) | **Fixed** | Removed 12 lines after `return env` |
+| 2 | `narrowband_noise_creator() missing bandwidth_hz` error in `generate_and_load_waveform()` | **Needs verification** | The kwargs builder in `update_dynamic_params()` should include all params from `waveform_definitions`. Verify params are not being skipped. |
+| 3 | `waterfall_sink_c(1)` topology failed | **Needs verification** | Removing `interdictor2→waterfall` connection causes GNU Radio topology failure because waterfall was created with `ninputs=2`. If you disable interdictor2, also reduce waterfall ninputs to 1. |
+| 4 | Narrowband noise visible on waterfall when TX is off | **Fixed** | `on_fire_toggle()` now calls `set_jamming_enabled(False)` on both `interdictor` and `interdictor2` |
+| 5 | `static double manual_phase_acc = 0` in C++ interdictor `work()` leaked phase state across ALL instances | **Fixed** | Replaced with instance member `d_manual_phase_acc` + `d_manual_phase_initialized` |
+| 6 | `tx2_interdiction_enabled = True` default caused interdictor2 to always jam, even when dual_tx is off | **Fixed** | Changed to `False`, enabled via `on_dual_tx_toggle()` |
+| 7 | Interdictor2 always connected to waterfall causing unnecessary DSP load → underflows | **Partially fixed** | `tx2_interdiction_enabled=False` silences output, but interdictor2 is still connected to the graph (required for waterfall 2-input topology). The C++ block outputs zeros when jamming is disabled. |
+
+---
+
+## Unresolved Issues / Next Steps
+
+### High Priority
+- **Underflows** — Still occurring when connecting to hardware. Root cause: running two interdictor blocks when only one is needed. Consider making interdictor2 fully optional (conditional flowgraph wiring + adaptive waterfall ninputs)
+- **`generate_and_load_waveform()` kwargs** — Verify the kwargs builder properly handles all technique parameter types and that `self.current_template_kwargs` is always populated before waveform generation
+
+### Medium Priority (Phase 4+)
+- Extract `PredatorJammer.py` fully into modular components (still ~1200 lines)
+- Replace `QTimer` polling (100ms) with proper Qt signals/events from the C++ block
+- Implement "headless mode" in the GUI for testing without hardware (use `apps/engine/headless.py`)
+- CI/CD pipeline (GitHub Actions) for automated testing
+- Docker multi-stage build for smaller images
+- Full parity test suite running in CI
+
+### Low Priority
+- Cleaner documentation generation (MkDocs or Sphinx from source)
+- Code style enforcement (black/flake8 enforcement in CI)
+- Performance profiling and optimization of the Python interdictor fallback
+
+---
+
+## Hardware-Specific Lessons
+
+### Sidekiq S4/X4
+- DMA alignment must be exact multiples of hardware MTU (16,380 samples)
+- Must explicitly route antenna ports via `setAntenna()` using last item from `listAntennas()`
+- Must write `TX_EN=true` setting to wake up power amplifiers on each channel
+- Vendored headers must match exact SoapySDR 0.8.0 vtable layout (ABI mismatch → segfaults)
+- Shared synthesizers require explicit port mapping
+
+### Ettus USRP (UHD)
+- B205-mini detected and configured at 20MHz clock rate (see logs)
+- USB 3.0 required for high sample rates
+- Register loopback test confirms device health
+
+### Signal Hound (SoapySDR)
+- VSG60A vector signal generator supported via SoapySDR
+- Uses absolute dBm level control (TX level, not gain)
+- `--bw` limit: 40 MSPS on Signal Hound (vs 20 MSPS on UHD)
+
+---
+
+## Air-Gapped Deployment
+
+Target machine has no internet. Development cycle:
+1. Build/bundle on host machine
+2. Transfer via USB to air-gapped target
+3. Compile on target with `build_on_target.sh` (auto-links `libSoapySDR.so`)
+4. Use local llama.cpp (`llama-server` + `lcc` script) for local AI assistance
+5. Target machine: NVIDIA Orin with GPU
+
+---
+
+## Local Build Commands
+
+```bash
+# Build GNU Radio OOT module
+cd gr-techniquemaker && mkdir -p build && cd build
+cmake .. && make -j$(nproc) && sudo make install && sudo ldconfig
+
+# Or use the installer
+./install.sh
+
+# Run tests (no GNU Radio needed)
+pytest tests/test_waveform_engine.py -v
+
+# Run tests (requires OOT module)
+pytest tests/test_waveform_parity.py -v
+
+# Headless waveform generation/analysis (NEW: Phase 3)
+python -m apps.engine.headless --tech "LFM Chirp" --dur 0.1
+python -m apps.engine.headless --all
+
+# Launch GUI
+python apps/PredatorJammer.py
+```
+
+---
+
+## Git Status
+
+All changes are committed locally. Check `git log --oneline` for the full history. Recent commit subjects:
+- `Fix: narrowband noise always visible on waterfall when TX off`
+- `Phase 3: Flowgraph extraction, headless engine runner, unified config`
+- `Phase 2: GUI overhaul with dark theme, modular architecture, and Validation Dashboard`
+- `Phase 1: ...` (3 commits: dead code fix, pyproject.toml + tests, docs)
+
+Push to origin when ready: `git push origin main`
