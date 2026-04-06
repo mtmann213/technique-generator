@@ -23,18 +23,6 @@ def setup_env():
     env["PYTHONPATH"] = os.pathsep.join(new_paths + ([existing_pythonpath] if existing_pythonpath else []))
     
     return env
-    # 3. Setup subprocess environment
-    env = os.environ.copy()
-    existing_pp = env.get("PYTHONPATH", "")
-    
-    # Build new PYTHONPATH: System Paths -> Existing -> Local Path
-    sys_pp_str = os.pathsep.join(system_paths)
-    if existing_pp:
-        env["PYTHONPATH"] = f"{sys_pp_str}{os.pathsep}{existing_pp}{os.pathsep}{oot_python_path}"
-    else:
-        env["PYTHONPATH"] = f"{sys_pp_str}{os.pathsep}{oot_python_path}"
-    
-    return env
 
 def main():
     parser = argparse.ArgumentParser(

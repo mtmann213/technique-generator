@@ -2,16 +2,59 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+dist/
+build/
+*.egg
 
-# GNU Radio Build artifacts
+# C/C++ Build artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.so
+*.o
+cmake-build-*/
+
+# GNU Radio OOT Module
 gr-techniquemaker/build/
 gr-techniquemaker/python/techniquemaker/__init__.pyc
 gr-techniquemaker/python/techniquemaker/__init__.pyo
+
+# Compiled executables & scripts
+/sng
+/techniquemaker.log
+/sidekiq-sng/sng
+/sidekiq_sng_v1/
 
 # Local test outputs
 *.bin
 *.sigmf-meta
 *.sigmf-data
+*.dat
+
+# Archives
+*.zip
+*.tar.gz
+*.tar
+
+# AI bundle (vendored llama.cpp binaries -- too large, rebuild on target)
+/sidekiq_ai_bundle/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment / virtualenv
+.venv/
+venv/
 
 # Project preservation
 BaseGui_ORIG.py
