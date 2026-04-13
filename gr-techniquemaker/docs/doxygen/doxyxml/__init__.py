@@ -53,11 +53,22 @@ u'Outputs the vital aadvark statistics.'
 
 """
 
-from .doxyindex import DoxyIndex, DoxyFunction, DoxyParam, DoxyClass, DoxyFile, DoxyNamespace, DoxyGroup, DoxyFriend, DoxyOther
+from .doxyindex import (
+    DoxyIndex,
+    DoxyFunction,
+    DoxyParam,
+    DoxyClass,
+    DoxyFile,
+    DoxyNamespace,
+    DoxyGroup,
+    DoxyFriend,
+    DoxyOther,
+)
 
 
 def _test():
     import os
+
     this_dir = os.path.dirname(globals()['__file__'])
     xml_path = this_dir + "/example/xml/"
     di = DoxyIndex(xml_path)
@@ -65,6 +76,7 @@ def _test():
     aad = di.get_member('Aadvark')
     aad.brief_description
     import doctest
+
     return doctest.testmod()
 
 

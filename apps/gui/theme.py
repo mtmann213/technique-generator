@@ -40,6 +40,7 @@ def get_theme(name="Dark Tactical"):
 def apply_theme_to_app(app, theme_name="Dark Tactical"):
     """Apply global palette to QApplication."""
     from PyQt5 import Qt as q
+
     theme = get_theme(theme_name)
     c = theme["colors"]
 
@@ -63,16 +64,21 @@ def apply_theme_to_app(app, theme_name="Dark Tactical"):
 
 # -- Pre-built stylesheet helpers --
 
+
 def status_style(color, bg, border=None):
     border = border or color
-    return (f"font-size: 18px; font-weight: bold; "
-            f"background: {bg}; color: {color}; "
-            f"border: 2px solid {border}; border-radius: 5px;")
+    return (
+        f"font-size: 18px; font-weight: bold; "
+        f"background: {bg}; color: {color}; "
+        f"border: 2px solid {border}; border-radius: 5px;"
+    )
+
 
 STATUS_OFFLINE = status_style("#555", "#222", "#333")
 STATUS_ONLINE = status_style("#0F0", "#040", "#0F0")
 STATUS_ACTIVE = status_style("#F00", "#400", "#F00")
 STATUS_SILENT = status_style("yellow", "#440", "yellow")
+
 
 def group_style(t, theme=None):
     """GroupBox title styling."""
@@ -80,29 +86,41 @@ def group_style(t, theme=None):
     c = theme["colors"]
     return f"color: {c['text_primary']}; font-weight: bold; font-size: 14px;"
 
+
 def input_style(theme=None):
     theme = theme or get_theme()
     c = theme["colors"]
-    return (f"background-color: {c['input_bg']}; color: {c['text_primary']}; "
-            f"border: 1px solid {c['border']}; border-radius: 3px; padding: 2px;")
+    return (
+        f"background-color: {c['input_bg']}; color: {c['text_primary']}; "
+        f"border: 1px solid {c['border']}; border-radius: 3px; padding: 2px;"
+    )
+
 
 def highlight_input(theme=None):
     theme = theme or get_theme()
     c = theme["colors"]
-    return (f"background-color: {c['bg_tertiary']}; color: {c['accent_cyan']}; "
-            f"font-weight: bold; border: 1px solid {c['border']}; border-radius: 3px;")
+    return (
+        f"background-color: {c['bg_tertiary']}; color: {c['accent_cyan']}; "
+        f"font-weight: bold; border: 1px solid {c['border']}; border-radius: 3px;"
+    )
+
 
 def danger_button():
     return "background-color: #440000; color: white; font-weight: bold; border-radius: 3px;"
 
+
 def safe_button():
     return "background-color: #004400; color: white; font-weight: bold; border-radius: 3px;"
+
 
 def apply_button_style():
     return "background-color: #004; color: white; font-weight: bold; border-radius: 3px;"
 
+
 def log_style(theme=None):
     theme = theme or get_theme()
     c = theme["colors"]
-    return (f"background-color: {c['input_bg']}; color: {c['accent_green']}; "
-            f"font-family: 'Courier New', monospace; font-size: 12px;")
+    return (
+        f"background-color: {c['input_bg']}; color: {c['accent_green']}; "
+        f"font-family: 'Courier New', monospace; font-size: 12px;"
+    )

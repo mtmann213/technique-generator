@@ -1,0 +1,1 @@
+/home/mannai/hermes/technique-generator/gr-techniquemaker/python/techniquemaker/qa_techniquepdu.py

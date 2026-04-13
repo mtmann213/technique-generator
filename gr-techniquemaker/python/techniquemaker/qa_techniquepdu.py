@@ -7,8 +7,10 @@
 #
 
 from gnuradio import gr, gr_unittest
+
 # from gnuradio import blocks
 from gnuradio.techniquemaker import techniquepdu
+
 
 class qa_techniquepdu(gr_unittest.TestCase):
 

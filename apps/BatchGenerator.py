@@ -6,6 +6,7 @@ import random
 import numpy as np
 from techniquemaker.BaseWaveforms import waveform_definitions
 
+
 def generate_dataset(output_dir="dataset", samples_per_tech=100, fs=2e6, duration=0.1):
     """
     Generates a randomized SigMF dataset for all 14 techniques.
@@ -23,25 +24,31 @@ def generate_dataset(output_dir="dataset", samples_per_tech=100, fs=2e6, duratio
         tech_dir = os.path.join(output_dir, tech_name.replace(" ", "_"))
         if not os.path.exists(tech_dir):
             os.makedirs(tech_dir)
-        
+
         print(f"Generating: {tech_name}...")
 
         for i in range(samples_per_tech):
             params = {}
             for p in tech_info['params']:
                 name = p['name']
-                
-                if name == 'sample_rate_hz': params[name] = fs; continue
-                if name == 'technique_length_seconds': params[name] = duration; continue
-                
+
+                if name == 'sample_rate_hz':
+                    params[name] = fs
+                    continue
+                if name == 'technique_length_seconds':
+                    params[name] = duration
+                    continue
+
                 if p['type'] == 'entry':
                     # Special Case: Frequencies String
                     if 'frequencies_str' in name or 'hop_frequencies_str' in name:
                         # Create 3 random frequencies
-                        f_list = [str(random.uniform(-fs/4, fs/4)) for _ in range(3)]
+                        f_list = [str(random.uniform(-fs / 4, fs / 4)) for _ in range(3)]
                         params[name] = " ".join(f_list)
-                    elif 'bandwidth' in name or 'width' in name or 'sweep' in name or 'freq' in name:
-                        params[name] = random.uniform(10e3, fs/2)
+                    elif (
+                        'bandwidth' in name or 'width' in name or 'sweep' in name or 'freq' in name
+                    ):
+                        params[name] = random.uniform(10e3, fs / 2)
                     elif 'tones' in name or 'chunks' in name:
                         params[name] = random.randint(2, 10)
                     elif 'rolloff' in name:
@@ -66,7 +73,7 @@ def generate_dataset(output_dir="dataset", samples_per_tech=100, fs=2e6, duratio
                     samples = samples.astype(np.complex64)
                 else:
                     samples = samples.astype(np.complex64)
-                
+
                 base_name = f"{tech_name.replace(' ', '_')}_{i:04d}"
                 data_path = os.path.join(tech_dir, f"{base_name}.sigmf-data")
                 meta_path = os.path.join(tech_dir, f"{base_name}.sigmf-meta")
@@ -80,10 +87,10 @@ def generate_dataset(output_dir="dataset", samples_per_tech=100, fs=2e6, duratio
                         "core:version": "1.0.0",
                         "core:description": f"TechniqueMaker AI Training Sample: {tech_name}",
                         "technique:name": tech_name,
-                        "technique:parameters": {str(k): str(v) for k, v in params.items()}
+                        "technique:parameters": {str(k): str(v) for k, v in params.items()},
                     },
                     "captures": [{"core:sample_start": 0, "core:frequency": 0}],
-                    "annotations": []
+                    "annotations": [],
                 }
                 with open(meta_path, 'w') as f:
                     json.dump(meta, f, indent=4)
@@ -93,12 +100,16 @@ def generate_dataset(output_dir="dataset", samples_per_tech=100, fs=2e6, duratio
 
     print(f"--- Generation Complete! ---")
 
+
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser(description="TechniqueMaker AI Factory")
     parser.add_argument("--count", type=int, default=10, help="Samples per technique")
     parser.add_argument("--fs", type=float, default=1000000, help="Sample rate")
-    parser.add_argument("--duration", type=float, default=0.02, help="Duration per sample (seconds)")
+    parser.add_argument(
+        "--duration", type=float, default=0.02, help="Duration per sample (seconds)"
+    )
     args = parser.parse_args()
 
     generate_dataset(samples_per_tech=args.count, fs=args.fs, duration=args.duration)

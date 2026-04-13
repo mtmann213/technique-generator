@@ -52,7 +52,7 @@ class Base(object):
 
     @classmethod
     def from_refid(cls, refid, top=None):
-        """ Instantiate class from a refid rather than parsing object. """
+        """Instantiate class from a refid rather than parsing object."""
         # First check to see if its already been instantiated.
         if top is not None and refid in top._refs:
             return top._refs[refid]
@@ -83,8 +83,7 @@ class Base(object):
         for cls in self.mem_classes:
             if cls.can_parse(mem):
                 return cls
-        raise Exception(("Did not find a class for object '%s'."
-                         % (mem.get_name())))
+        raise Exception(("Did not find a class for object '%s'." % (mem.get_name())))
 
     def convert_mem(self, mem):
         try:
@@ -130,8 +129,7 @@ class Base(object):
         if cat is None:
             return self._members
         if cat not in self._in_category:
-            self._in_category[cat] = [mem for mem in self._members
-                                      if cat.includes(mem)]
+            self._in_category[cat] = [mem for mem in self._members if cat.includes(mem)]
         return self._in_category[cat]
 
     def get_member(self, name, cat=None):

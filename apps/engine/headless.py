@@ -35,7 +35,9 @@ except ImportError:
 AVAILABLE_TECHNIQUES = list(BaseWaveforms.waveform_definitions.keys())
 
 
-def generate_waveform(tech_name: str, sr: float = 2e6, dur: float = 0.01, **overrides) -> np.ndarray:
+def generate_waveform(
+    tech_name: str, sr: float = 2e6, dur: float = 0.01, **overrides
+) -> np.ndarray:
     """Generate a waveform by name with optional parameter overrides."""
     defn = BaseWaveforms.waveform_definitions.get(tech_name)
     if not defn:
@@ -56,6 +58,7 @@ def generate_waveform(tech_name: str, sr: float = 2e6, dur: float = 0.01, **over
     kwargs.update(overrides)
 
     import inspect
+
     sig = inspect.signature(defn["func"])
     valid = {k: v for k, v in kwargs.items() if k in sig.parameters}
     return defn["func"](**valid)
@@ -68,7 +71,7 @@ def analyze_waveform(wf: np.ndarray, sr: float = 2e6) -> dict:
     rms = float(np.sqrt(np.mean(np.abs(wf) ** 2)))
     crest = peak / rms if rms > 0 else float("inf")
     mean_pwr = float(np.mean(np.abs(wf) ** 2))
-    peak_to_avg = 10 * np.log10(peak ** 2 / mean_pwr) if mean_pwr > 0 else float("inf")
+    peak_to_avg = 10 * np.log10(peak**2 / mean_pwr) if mean_pwr > 0 else float("inf")
 
     # Spectral analysis
     spec = np.fft.fftshift(np.fft.fft(wf))
@@ -151,11 +154,14 @@ def print_report(report: dict, tech_name: str):
 
 def main():
     parser = argparse.ArgumentParser(description="TechniqueMaker Headless Engine")
-    parser.add_argument("--tech", type=str, default="Narrowband Noise",
-                        choices=AVAILABLE_TECHNIQUES,
-                        help="Technique to generate")
-    parser.add_argument("--out", type=str, default=None,
-                        help="Output binary file (.bin / .cf32)")
+    parser.add_argument(
+        "--tech",
+        type=str,
+        default="Narrowband Noise",
+        choices=AVAILABLE_TECHNIQUES,
+        help="Technique to generate",
+    )
+    parser.add_argument("--out", type=str, default=None, help="Output binary file (.bin / .cf32)")
     parser.add_argument("--sr", type=float, default=2e6, help="Sample rate Hz")
     parser.add_argument("--dur", type=float, default=0.01, help="Duration (seconds)")
     parser.add_argument("--json", action="store_true", help="Output report as JSON")

@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-2019-09/schema#",
+  "title": "TechniqueMaker System Config",
+  "type": "object",
+  "required": ["hardware", "rf_defaults", "logging"],
+  "properties": {
+    "hardware": {
+      "type": "object",
+      "required": ["tx_usrp_serial", "rx_usrp_serial"],
+      "properties": {
+        "tx_usrp_serial": {
+          "type": "string",
+          "description": "USRP TX device serial number"
+        },
+        "rx_usrp_serial": {
+          "type": "string",
+          "description": "USRP RX device serial number"
+        },
+        "signal_hound_serial": {
+          "type": "string",
+          "description": "Signal Hound serial number"
+        },
+        "default_sample_rate_hz": {
+          "type": "number",
+          "minimum": 100000,
+          "maximum": 100000000,
+          "default": 2000000
+        },
+        "default_center_freq_hz": {
+          "type": "number",
+          "minimum": 1000000,
+          "maximum": 6000000000,
+          "default": 915000000
+        },
+        "fft_detection_size": {
+          "type": "number",
+          "minimum": 256,
+          "maximum": 8192,
+          "default": 1024
+        }
+      }
+    },
+    "rf_defaults": {
+      "type": "object",
+      "required": ["tx_gain", "rx_gain"],
+      "properties": {
+        "tx_gain": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 50
+        },
+        "rx_gain": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 40
+        },
+        "external_attenuation_db": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 30
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+          "default": "INFO"
+        },
+        "file": {
+          "type": "string",
+          "default": "techniquemaker.log"
+        }
+      }
+    }
+  }
+}

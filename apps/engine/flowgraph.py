@@ -118,7 +118,7 @@ class Flowgraph:
             # Hardware + simulation tone
             self.source = uhd.usrp_source(
                 device_addr=f"serial={cfg.serial}",
-                stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=[0])
+                stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=[0]),
             )
             self.source.set_samp_rate(cfg.samp_rate)
             self.source.set_center_freq(cfg.center_freq, 0)
@@ -132,7 +132,7 @@ class Flowgraph:
             # Real hardware
             self.source = uhd.usrp_source(
                 device_addr=f"serial={cfg.serial}",
-                stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=[0])
+                stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=[0]),
             )
             self.source.set_samp_rate(cfg.samp_rate)
             self.source.set_center_freq(cfg.center_freq, 0)
@@ -148,56 +148,81 @@ class Flowgraph:
 
         try:
             from gnuradio.techniquemaker import interdictor_cpp
+
             kwargs = dict(
-                technique=cfg.template, sample_rate_hz=cfg.samp_rate,
-                bandwidth_hz=cfg.bw, reactive_threshold_db=cfg.threshold,
-                reactive_dwell_ms=cfg.dwell, num_targets=cfg.num_targets,
-                manual_mode=cfg.manual_mode, manual_freq=cfg.manual_freq,
-                jamming_enabled=cfg.interdiction_enabled, adaptive_bw=cfg.adaptive_bw,
-                preamble_sabotage=cfg.preamble_sabotage, sabotage_duration_ms=cfg.sabotage_duration,
-                clock_pull_drift_hz_s=cfg.clock_pull, stutter_enabled=cfg.stutter_enabled,
-                stutter_clean_count=cfg.stutter_clean, stutter_burst_count=cfg.stutter_burst,
-                stutter_randomize=cfg.stutter_randomize, frame_duration_ms=cfg.frame_dur,
-                output_mode=output_mode
+                technique=cfg.template,
+                sample_rate_hz=cfg.samp_rate,
+                bandwidth_hz=cfg.bw,
+                reactive_threshold_db=cfg.threshold,
+                reactive_dwell_ms=cfg.dwell,
+                num_targets=cfg.num_targets,
+                manual_mode=cfg.manual_mode,
+                manual_freq=cfg.manual_freq,
+                jamming_enabled=cfg.interdiction_enabled,
+                adaptive_bw=cfg.adaptive_bw,
+                preamble_sabotage=cfg.preamble_sabotage,
+                sabotage_duration_ms=cfg.sabotage_duration,
+                clock_pull_drift_hz_s=cfg.clock_pull,
+                stutter_enabled=cfg.stutter_enabled,
+                stutter_clean_count=cfg.stutter_clean,
+                stutter_burst_count=cfg.stutter_burst,
+                stutter_randomize=cfg.stutter_randomize,
+                frame_duration_ms=cfg.frame_dur,
+                output_mode=output_mode,
             )
             self.interdictor = interdictor_cpp(**kwargs)
 
             kwargs2 = kwargs.copy()
-            kwargs2.update(dict(
-                technique=cfg.tx2_template,
-                reactive_threshold_db=cfg.tx2_threshold,
-                num_targets=cfg.tx2_targets,
-                manual_freq=0.0,
-                jamming_enabled=cfg.tx2_interdiction_enabled,
-                output_mode="Continuous (Stream)"
-            ))
+            kwargs2.update(
+                dict(
+                    technique=cfg.tx2_template,
+                    reactive_threshold_db=cfg.tx2_threshold,
+                    num_targets=cfg.tx2_targets,
+                    manual_freq=0.0,
+                    jamming_enabled=cfg.tx2_interdiction_enabled,
+                    output_mode="Continuous (Stream)",
+                )
+            )
             self.interdictor2 = interdictor_cpp(**kwargs2)
 
         except ImportError:
             from gnuradio.techniquemaker import techniquepdu
+
             kwargs = dict(
-                technique="Reactive Jammer", warhead_technique=cfg.template,
-                sample_rate_hz=cfg.samp_rate, bandwidth_hz=cfg.bw,
-                reactive_threshold_db=cfg.threshold, reactive_dwell_ms=cfg.dwell,
-                num_targets=cfg.num_targets, manual_mode=cfg.manual_mode,
-                manual_freq=cfg.manual_freq, jamming_enabled=cfg.interdiction_enabled,
-                adaptive_bw=cfg.adaptive_bw, preamble_sabotage=cfg.preamble_sabotage,
-                sabotage_duration_ms=cfg.sabotage_duration, clock_pull_drift_hz_s=cfg.clock_pull,
-                stutter_enabled=cfg.stutter_enabled, stutter_clean_count=cfg.stutter_clean,
-                stutter_burst_count=cfg.stutter_burst, stutter_randomize=cfg.stutter_randomize,
-                frame_duration_ms=cfg.frame_dur, output_mode=output_mode
+                technique="Reactive Jammer",
+                warhead_technique=cfg.template,
+                sample_rate_hz=cfg.samp_rate,
+                bandwidth_hz=cfg.bw,
+                reactive_threshold_db=cfg.threshold,
+                reactive_dwell_ms=cfg.dwell,
+                num_targets=cfg.num_targets,
+                manual_mode=cfg.manual_mode,
+                manual_freq=cfg.manual_freq,
+                jamming_enabled=cfg.interdiction_enabled,
+                adaptive_bw=cfg.adaptive_bw,
+                preamble_sabotage=cfg.preamble_sabotage,
+                sabotage_duration_ms=cfg.sabotage_duration,
+                clock_pull_drift_hz_s=cfg.clock_pull,
+                stutter_enabled=cfg.stutter_enabled,
+                stutter_clean_count=cfg.stutter_clean,
+                stutter_burst_count=cfg.stutter_burst,
+                stutter_randomize=cfg.stutter_randomize,
+                frame_duration_ms=cfg.frame_dur,
+                output_mode=output_mode,
             )
             self.interdictor = techniquepdu(**kwargs)
 
             kwargs2 = kwargs.copy()
-            kwargs2.update(dict(
-                warhead_technique=cfg.tx2_template,
-                reactive_threshold_db=cfg.tx2_threshold,
-                num_targets=cfg.tx2_targets,
-                manual_freq=0.0,
-                jamming_enabled=cfg.tx2_interdiction_enabled,
-                output_mode="Continuous (Stream)"
-            ))
+            kwargs2.update(
+                dict(
+                    warhead_technique=cfg.tx2_template,
+                    reactive_threshold_db=cfg.tx2_threshold,
+                    num_targets=cfg.tx2_targets,
+                    manual_freq=0.0,
+                    jamming_enabled=cfg.tx2_interdiction_enabled,
+                    output_mode="Continuous (Stream)",
+                )
+            )
             self.interdictor2 = techniquepdu(**kwargs2)
 
     def _build_sinks(self, tb):
@@ -209,7 +234,7 @@ class Flowgraph:
             if cfg.tx_sink_type == "UHD" and cfg.serial:
                 self.sink = uhd.usrp_sink(
                     device_addr=f"serial={cfg.serial}",
-                    stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=[0])
+                    stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=[0]),
                 )
                 self.sink.set_samp_rate(cfg.samp_rate)
                 self.sink.set_center_freq(cfg.center_freq, 0)
@@ -241,14 +266,18 @@ class Flowgraph:
             tb.connect(self.interdictor, self.sink)
 
         # Secondary TX sink
-        if cfg.dual_tx_enabled and cfg.secondary_serial and cfg.serial and \
-           cfg.secondary_serial != cfg.serial:
+        if (
+            cfg.dual_tx_enabled
+            and cfg.secondary_serial
+            and cfg.serial
+            and cfg.secondary_serial != cfg.serial
+        ):
             logger.info(f"Staging Secondary SDR {cfg.secondary_serial}...")
             time.sleep(2.0)
             try:
                 self.sink2 = uhd.usrp_sink(
                     device_addr=f"serial={cfg.secondary_serial}",
-                    stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=[0])
+                    stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=[0]),
                 )
                 self.sink2.set_samp_rate(cfg.samp_rate)
                 self.sink2.set_center_freq(cfg.tx2_freq, 0)

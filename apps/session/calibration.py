@@ -55,8 +55,7 @@ class CalibrationManager:
                     raw = json.load(f)
                     m = raw.get("matrix", {})
                     self._matrix = {
-                        float(k): {float(gk): gv for gk, gv in v.items()}
-                        for k, v in m.items()
+                        float(k): {float(gk): gv for gk, gv in v.items()} for k, v in m.items()
                     }
             except Exception as e:
                 logger.error(f"Failed to load calibration: {e}")

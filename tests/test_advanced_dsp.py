@@ -7,13 +7,14 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.abspath("./gr-techniquemaker/python/techniquemaker"))
 from techniquemaker import BaseWaveforms as bw
 
+
 def plot_technique(samples, sample_rate, title):
     """Utility to plot time and freq domain."""
     num_samples = len(samples)
     time = np.arange(num_samples) / sample_rate
-    
+
     plt.figure(figsize=(12, 6))
-    
+
     # Time Domain (Real part)
     plt.subplot(2, 1, 1)
     plt.plot(time * 1000, np.real(samples))
@@ -21,45 +22,49 @@ def plot_technique(samples, sample_rate, title):
     plt.xlabel("Time (ms)")
     plt.ylabel("Amplitude")
     plt.grid(True)
-    
+
     # Frequency Domain (PSD)
     plt.subplot(2, 1, 2)
-    plt.psd(samples, NFFT=1024, Fs=sample_rate/1e3, color='r')
+    plt.psd(samples, NFFT=1024, Fs=sample_rate / 1e3, color='r')
     plt.title(f"{title} - Power Spectral Density")
     plt.xlabel("Frequency (kHz)")
     plt.ylabel("dB/Hz")
     plt.grid(True)
-    
+
     plt.tight_layout()
     plt.show()
 
+
 if __name__ == "__main__":
     samp_rate = 1e6
-    duration = 0.05 # 50ms for a quick look
-    
+    duration = 0.05  # 50ms for a quick look
+
     print("Generating LFM Chirp (-200kHz to 200kHz)...")
     lfm = bw.lfm_chirp(-200e3, 200e3, samp_rate, duration)
     plot_technique(lfm, samp_rate, "LFM Chirp")
-    
+
     print("Generating FHSS Noise (Hops: -300k, 0, 300k)...")
     fhss = bw.fhss_noise("-300000 0 300000", 0.01, 50e3, samp_rate, duration)
     plot_technique(fhss, samp_rate, "FHSS Noise")
-    
+
     print("Generating OFDM-Shaped Noise (1024 FFT, 600 Subcarriers)...")
     ofdm = bw.ofdm_shaped_noise(1024, 600, 256, samp_rate, duration)
     plot_technique(ofdm, samp_rate, "OFDM-Shaped Noise")
 
     print("\n--- Testing Normalization Engine ---")
-    
+
     # Test Peak Normalization
     target_peak = 0.5
-    lfm_peak = bw.lfm_chirp(-200e3, 200e3, samp_rate, duration, target_value=target_peak, normalization_type="peak")
+    lfm_peak = bw.lfm_chirp(
+        -200e3, 200e3, samp_rate, duration, target_value=target_peak, normalization_type="peak"
+    )
     actual_peak = np.max(np.abs(lfm_peak))
     print(f"LFM Chirp (Target Peak {target_peak}): Actual Peak = {actual_peak:.4f}")
-    
+
     # Test RMS Normalization
     target_rms = 0.707
-    noise_rms = bw.narrowband_noise_creator(100e3, samp_rate, duration, target_value=target_rms, normalization_type="rms")
-    actual_rms = np.sqrt(np.mean(np.abs(noise_rms)**2))
+    noise_rms = bw.narrowband_noise_creator(
+        100e3, samp_rate, duration, target_value=target_rms, normalization_type="rms"
+    )
+    actual_rms = np.sqrt(np.mean(np.abs(noise_rms) ** 2))
     print(f"Narrowband Noise (Target RMS {target_rms}): Actual RMS = {actual_rms:.4f}")
-

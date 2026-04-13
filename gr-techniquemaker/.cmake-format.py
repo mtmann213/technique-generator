@@ -29,11 +29,7 @@ with section("parse"):
     additional_commands = {
         'gr_python_install': {
             'flags': [],
-            'kwargs': {
-                "PROGRAMS": "*",
-                "FILES": "*",
-                "DESTINATION": "*"
-            }
+            'kwargs': {"PROGRAMS": "*", "FILES": "*", "DESTINATION": "*"},
         },
     }
 
@@ -47,9 +43,11 @@ with section("format"):
     tab_size = int(_clang_format["IndentWidth"])
     min_prefix_chars = tab_size
     max_prefix_chars = 3 * tab_size
-    use_tabchars = _clang_format["UseTab"] in ("ForIndentation",
-                                               "ForContinuationAndIndentation",
-                                               "Always")
+    use_tabchars = _clang_format["UseTab"] in (
+        "ForIndentation",
+        "ForContinuationAndIndentation",
+        "Always",
+    )
     separate_ctrl_name_with_space = False
     separate_fn_name_with_space = False
     dangle_parens = False

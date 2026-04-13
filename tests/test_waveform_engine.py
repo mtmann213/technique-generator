@@ -29,13 +29,14 @@ from techniquemaker import BaseWaveforms
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-SR = 2_000_000    # default sample rate
-DUR = 0.01        # 10 ms — fast tests
-BW = 100_000      # default bandwidth
+SR = 2_000_000  # default sample rate
+DUR = 0.01  # 10 ms — fast tests
+BW = 100_000  # default bandwidth
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _assert_signal_valid(signal_out: np.ndarray):
     """Shared check: non-empty, no NaN/Inf, correct dtype."""
@@ -44,9 +45,11 @@ def _assert_signal_valid(signal_out: np.ndarray):
     assert not np.any(np.isnan(signal_out)), "Output contains NaN"
     assert not np.any(np.isinf(signal_out)), "Output contains Inf"
 
+
 def _assert_nonzero_power(signal_out: np.ndarray):
     """Signal must have meaningful power (not all zeros)."""
     assert np.max(np.abs(signal_out)) > 0, "Output is all zeros — no signal generated"
+
 
 def _assert_constant_envelope(signal_out: np.ndarray, atol: float = 1e-4):
     """Chirps, tones, FM should have constant magnitude (modulus ≈ 1)."""
@@ -56,6 +59,7 @@ def _assert_constant_envelope(signal_out: np.ndarray, atol: float = 1e-4):
 # ---------------------------------------------------------------------------
 # Smoke Tests — All 15+ Waveforms
 # ---------------------------------------------------------------------------
+
 
 class TestSmokeTests:
     """Every waveform generator must produce valid output with default params."""
@@ -174,16 +178,21 @@ class TestSmokeTests:
 # Normalization Tests
 # ---------------------------------------------------------------------------
 
+
 class TestNormalization:
     """Signals should respect normalization settings."""
 
     def test_peak_normalization(self):
-        out = BaseWaveforms.narrowband_noise_creator(BW, SR, DUR, target_value=1.0, normalization_type="peak")
+        out = BaseWaveforms.narrowband_noise_creator(
+            BW, SR, DUR, target_value=1.0, normalization_type="peak"
+        )
         peak = np.max(np.abs(out))
         assert peak > 0.99, f"Peak normalization failed: peak={peak}"
 
     def test_rms_normalization(self):
-        out = BaseWaveforms.narrowband_noise_creator(BW, SR, DUR, target_value=0.5, normalization_type="rms")
+        out = BaseWaveforms.narrowband_noise_creator(
+            BW, SR, DUR, target_value=0.5, normalization_type="rms"
+        )
         rms = np.sqrt(np.mean(np.abs(out) ** 2))
         assert rms > 0.3, f"RMS normalization failed: rms={rms}"
 
@@ -197,6 +206,7 @@ class TestNormalization:
 # ---------------------------------------------------------------------------
 # Spectral/Statistical Property Tests
 # ---------------------------------------------------------------------------
+
 
 class TestSpectralProperties:
     """Verify that waveforms exhibit expected spectral/temporal behavior."""
@@ -237,6 +247,7 @@ class TestSpectralProperties:
 # Output Type Tests
 # ---------------------------------------------------------------------------
 
+
 class TestOutputTypes:
     """Verify correct numpy dtypes are returned."""
 
@@ -260,6 +271,7 @@ class TestOutputTypes:
 # ---------------------------------------------------------------------------
 # Error / Edge Case Tests
 # ---------------------------------------------------------------------------
+
 
 class TestEdgeCases:
     """Graceful handling of boundary conditions."""
@@ -311,6 +323,7 @@ class TestEdgeCases:
 # ---------------------------------------------------------------------------
 # Reproducibility Tests
 # ---------------------------------------------------------------------------
+
 
 class TestReproducibility:
     """Tests for deterministic behavior where applicable."""

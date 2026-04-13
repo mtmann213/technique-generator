@@ -608,3 +608,23 @@ Device Address:
 2026-04-05 22:42:54,393 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
 2026-04-05 22:43:03,744 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
 2026-04-05 22:43:08,680 - TechniqueMaker - INFO - Loaded Warheads: [TX1: Narrowband Noise] [TX2: Narrowband Noise]
+2026-04-12 20:30:03,799 - TechniqueMaker.session.presets - INFO - Preset saved: new_preset
+2026-04-12 20:30:03,801 - TechniqueMaker.session.presets - INFO - Preset deleted: preset1
+2026-04-12 20:30:03,803 - TechniqueMaker.session.presets - INFO - Preset applied: my_preset
+2026-04-12 20:30:03,805 - TechniqueMaker.session.presets - WARNING - Preset not found: missing
+2026-04-12 20:30:03,807 - TechniqueMaker.session.presets - INFO - Preset saved: new_preset
+2026-04-12 21:08:34,373 - TechniqueMaker.session.presets - INFO - Preset saved: new_preset
+2026-04-12 21:08:34,374 - TechniqueMaker.session.presets - INFO - Preset deleted: preset1
+2026-04-12 21:08:34,375 - TechniqueMaker.session.presets - INFO - Preset applied: my_preset
+2026-04-12 21:08:34,376 - TechniqueMaker.session.presets - WARNING - Preset not found: missing
+2026-04-12 21:08:34,376 - TechniqueMaker.session.presets - INFO - Preset saved: new_preset
+2026-04-12 21:12:16,585 - TechniqueMaker.session.presets - INFO - Preset saved: new_preset
+2026-04-12 21:12:16,587 - TechniqueMaker.session.presets - INFO - Preset deleted: preset1
+2026-04-12 21:12:16,590 - TechniqueMaker.session.presets - INFO - Preset applied: my_preset
+2026-04-12 21:12:16,591 - TechniqueMaker.session.presets - WARNING - Preset not found: missing
+2026-04-12 21:12:16,592 - TechniqueMaker.session.presets - INFO - Preset saved: new_preset
+2026-04-12 21:14:19,501 - TechniqueMaker.session.presets - INFO - Preset saved: new_preset
+2026-04-12 21:14:19,502 - TechniqueMaker.session.presets - INFO - Preset deleted: preset1
+2026-04-12 21:14:19,505 - TechniqueMaker.session.presets - INFO - Preset applied: my_preset
+2026-04-12 21:14:19,507 - TechniqueMaker.session.presets - WARNING - Preset not found: missing
+2026-04-12 21:14:19,509 - TechniqueMaker.session.presets - INFO - Preset saved: new_preset

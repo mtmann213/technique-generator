@@ -31,16 +31,19 @@ import techniquemaker
 def snipfcn_snippet_0(self):
     import threading
     import time
+
     def timeout():
         time.sleep(30)
         self.stop()
         self.wait()
         print("Test timed out after 30 seconds.")
+
     threading.Thread(target=timeout, daemon=True).start()
 
 
 def snippets_main_after_start(tb):
     snipfcn_snippet_0(tb)
+
 
 class test_techniquepdu(gr.top_block, Qt.QWidget):
 
@@ -98,29 +101,24 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
             tones=5,
             sweep_range_hz=1000000,
             modulated_frequency=1000,
-            song_name='Baby Shark'
+            song_name='Baby Shark',
         )
         self.qtgui_waterfall_sink_x_0 = qtgui.waterfall_sink_c(
-            1024, #size
-            window.WIN_BLACKMAN_hARRIS, #wintype
-            0, #fc
-            samp_rate, #bw
-            "", #name
-            1, #number of inputs
-            None # parent
+            1024,  # size
+            window.WIN_BLACKMAN_hARRIS,  # wintype
+            0,  # fc
+            samp_rate,  # bw
+            "",  # name
+            1,  # number of inputs
+            None,  # parent
         )
         self.qtgui_waterfall_sink_x_0.set_update_time(0.10)
         self.qtgui_waterfall_sink_x_0.enable_grid(False)
         self.qtgui_waterfall_sink_x_0.enable_axis_labels(True)
 
-
-
-        labels = ['', '', '', '', '',
-                  '', '', '', '', '']
-        colors = [0, 0, 0, 0, 0,
-                  0, 0, 0, 0, 0]
-        alphas = [1.0, 1.0, 1.0, 1.0, 1.0,
-                  1.0, 1.0, 1.0, 1.0, 1.0]
+        labels = ['', '', '', '', '', '', '', '', '', '']
+        colors = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        alphas = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
         for i in range(1):
             if len(labels[i]) == 0:
@@ -132,22 +130,36 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
 
         self.qtgui_waterfall_sink_x_0.set_intensity_range(-140, 10)
 
-        self._qtgui_waterfall_sink_x_0_win = sip.wrapinstance(self.qtgui_waterfall_sink_x_0.qwidget(), Qt.QWidget)
+        self._qtgui_waterfall_sink_x_0_win = sip.wrapinstance(
+            self.qtgui_waterfall_sink_x_0.qwidget(), Qt.QWidget
+        )
 
         self.top_layout.addWidget(self._qtgui_waterfall_sink_x_0_win)
         self.pdu_pdu_to_stream_x_0 = pdu.pdu_to_stream_c(pdu.EARLY_BURST_APPEND, 64)
-        self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
+        self.blocks_throttle2_0 = blocks.throttle(
+            gr.sizeof_gr_complex * 1,
+            samp_rate,
+            True,
+            (
+                0
+                if "auto" == "auto"
+                else max(int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1)
+            ),
+        )
         self.blocks_message_strobe_0 = blocks.message_strobe(pmt.intern("trigger"), 1000)
-
 
         ##################################################
         # Connections
         ##################################################
-        self.msg_connect((self.blocks_message_strobe_0, 'strobe'), (self.techniquemaker_techniquepdu_0, 'trigger'))
-        self.msg_connect((self.techniquemaker_techniquepdu_0, 'pdu'), (self.pdu_pdu_to_stream_x_0, 'pdus'))
+        self.msg_connect(
+            (self.blocks_message_strobe_0, 'strobe'),
+            (self.techniquemaker_techniquepdu_0, 'trigger'),
+        )
+        self.msg_connect(
+            (self.techniquemaker_techniquepdu_0, 'pdu'), (self.pdu_pdu_to_stream_x_0, 'pdus')
+        )
         self.connect((self.blocks_throttle2_0, 0), (self.qtgui_waterfall_sink_x_0, 0))
         self.connect((self.pdu_pdu_to_stream_x_0, 0), (self.blocks_throttle2_0, 0))
-
 
     def closeEvent(self, event):
         self.settings = Qt.QSettings("GNU Radio", "test_techniquepdu")
@@ -165,8 +177,6 @@ class test_techniquepdu(gr.top_block, Qt.QWidget):
         self.blocks_throttle2_0.set_sample_rate(self.samp_rate)
         self.qtgui_waterfall_sink_x_0.set_frequency_range(0, self.samp_rate)
         self.techniquemaker_techniquepdu_0.set_sample_rate_hz(self.samp_rate)
-
-
 
 
 def main(top_block_cls=test_techniquepdu, options=None):
@@ -193,6 +203,7 @@ def main(top_block_cls=test_techniquepdu, options=None):
     timer.timeout.connect(lambda: None)
 
     qapp.exec_()
+
 
 if __name__ == '__main__':
     main()

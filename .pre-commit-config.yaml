@@ -1,0 +1,46 @@
+# Pre-commit configuration for TechniqueMaker
+#
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 25.1.0
+    hooks:
+      - id: black
+        language_version: python3.12
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [
+          "--max-line-length=88",
+          "--extend-ignore=E203,W503",
+          "--exclude=.git,.venv,__pycache__,*.pyc,build/,docs/"
+        ]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        args: [
+          "--ignore-missing-imports",
+          "--no-error-summary",
+          "--follow-imports=skip"
+        ]
+        exclude: "^(tests/gr-techniquemaker|sidekiq|predator-cpp)/"
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=5000"]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.14.0
+    hooks:
+      - id: isort
+        args: ["--profile=black", "--filter-magic-black"]

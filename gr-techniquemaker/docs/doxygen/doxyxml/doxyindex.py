@@ -109,8 +109,7 @@ class DoxyFunction(DoxyMember):
                 self._data['params'].append(DoxyParam(prm))
 
     brief_description = property(lambda self: self.data()['brief_description'])
-    detailed_description = property(
-        lambda self: self.data()['detailed_description'])
+    detailed_description = property(lambda self: self.data()['detailed_description'])
     params = property(lambda self: self.data()['params'])
 
 
@@ -138,8 +137,7 @@ class DoxyParam(DoxyMember):
         return '\n\n'.join(descriptions)
 
     brief_description = property(lambda self: self.data()['brief_description'])
-    detailed_description = property(
-        lambda self: self.data()['detailed_description'])
+    detailed_description = property(lambda self: self.data()['detailed_description'])
     name = property(lambda self: self.data()['declname'])
 
 
@@ -184,8 +182,7 @@ class DoxyClass(DoxyCompound):
         self.process_memberdefs()
 
     brief_description = property(lambda self: self.data()['brief_description'])
-    detailed_description = property(
-        lambda self: self.data()['detailed_description'])
+    detailed_description = property(lambda self: self.data()['detailed_description'])
     params = property(lambda self: self.data()['params'])
 
 
@@ -209,8 +206,7 @@ class DoxyFile(DoxyCompound):
         self.process_memberdefs()
 
     brief_description = property(lambda self: self.data()['brief_description'])
-    detailed_description = property(
-        lambda self: self.data()['detailed_description'])
+    detailed_description = property(lambda self: self.data()['detailed_description'])
 
 
 Base.mem_classes.append(DoxyFile)
@@ -284,8 +280,21 @@ class DoxyOther(Base):
 
     __module__ = "gnuradio.utils.doxyxml"
 
-    kinds = set(['variable', 'struct', 'union', 'define', 'typedef', 'enum',
-                 'dir', 'page', 'signal', 'slot', 'property'])
+    kinds = set(
+        [
+            'variable',
+            'struct',
+            'union',
+            'define',
+            'typedef',
+            'enum',
+            'dir',
+            'page',
+            'signal',
+            'slot',
+            'property',
+        ]
+    )
 
     @classmethod
     def can_parse(cls, obj):

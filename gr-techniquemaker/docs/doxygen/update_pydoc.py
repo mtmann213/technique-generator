@@ -71,8 +71,7 @@ class Block2(object):
         # Check for a parsing error.
         if item.error():
             return False
-        is_a_block2 = item.has_member(
-            'make', DoxyFunction) and item.has_member('sptr', DoxyOther)
+        is_a_block2 = item.has_member('make', DoxyFunction) and item.has_member('sptr', DoxyOther)
         return is_a_block2
 
 
@@ -186,8 +185,7 @@ def make_block_entry(di, block):
     # the make function.
     output = {}
     output.update(make_class_entry(block, description=super_description))
-    output.update(make_entry(make_func, description=super_description,
-                             params=block.params))
+    output.update(make_entry(make_func, description=super_description, params=block.params))
     return output
 
 
@@ -200,18 +198,21 @@ def make_block2_entry(di, block):
     class_description = combine_descriptions(block)
     make_func = block.get_member('make', DoxyFunction)
     make_description = combine_descriptions(make_func)
-    description = class_description + \
-        "\n\nConstructor Specific Documentation:\n\n" + make_description
+    description = (
+        class_description + "\n\nConstructor Specific Documentation:\n\n" + make_description
+    )
     # Associate the combined description with the class and
     # the make function.
     output = {}
-    output.update(make_class_entry(
-        block, description=description,
-        ignored_methods=['make'], params=make_func.params))
+    output.update(
+        make_class_entry(
+            block, description=description, ignored_methods=['make'], params=make_func.params
+        )
+    )
     makename = block.name() + '::make'
-    output.update(make_entry(
-        make_func, name=makename, description=description,
-        params=make_func.params))
+    output.update(
+        make_entry(make_func, name=makename, description=description, params=make_func.params)
+    )
     return output
 
 
@@ -234,8 +235,7 @@ def get_docstrings_dict(di, custom_output=None):
                 make_funcs.add(make_func.name())
                 output.update(make_block_entry(di, block))
         except block.ParsingError:
-            sys.stderr.write(
-                'Parsing error for block {0}\n'.format(block.name()))
+            sys.stderr.write('Parsing error for block {0}\n'.format(block.name()))
             raise
 
     for block in blocks2:
@@ -247,26 +247,30 @@ def get_docstrings_dict(di, custom_output=None):
                 make_funcs.add(make_func_name)
                 output.update(make_block2_entry(di, block))
         except block.ParsingError:
-            sys.stderr.write(
-                'Parsing error for block {0}\n'.format(block.name()))
+            sys.stderr.write('Parsing error for block {0}\n'.format(block.name()))
             raise
 
     # Create docstrings for functions
     # Don't include the make functions since they have already been dealt with.
-    funcs = [f for f in di.in_category(DoxyFunction)
-             if f.name() not in make_funcs and not f.name().startswith('std::')]
+    funcs = [
+        f
+        for f in di.in_category(DoxyFunction)
+        if f.name() not in make_funcs and not f.name().startswith('std::')
+    ]
     for f in funcs:
         try:
             output.update(make_entry(f))
         except f.ParsingError:
-            sys.stderr.write(
-                'Parsing error for function {0}\n'.format(f.name()))
+            sys.stderr.write('Parsing error for function {0}\n'.format(f.name()))
 
     # Create docstrings for classes
     block_names = [block.name() for block in blocks]
     block_names += [block.name() for block in blocks2]
-    klasses = [k for k in di.in_category(DoxyClass)
-               if k.name() not in block_names and not k.name().startswith('std::')]
+    klasses = [
+        k
+        for k in di.in_category(DoxyClass)
+        if k.name() not in block_names and not k.name().startswith('std::')
+    ]
     for k in klasses:
         try:
             output.update(make_class_entry(k))
@@ -281,17 +285,18 @@ def get_docstrings_dict(di, custom_output=None):
 
 def sub_docstring_in_pydoc_h(pydoc_files, docstrings_dict, output_dir, filter_str=None):
     if filter_str:
-        docstrings_dict = {
-            k: v for k, v in docstrings_dict.items() if k.startswith(filter_str)}
+        docstrings_dict = {k: v for k, v in docstrings_dict.items() if k.startswith(filter_str)}
 
     with open(os.path.join(output_dir, 'docstring_status'), 'w') as status_file:
 
         for pydoc_file in pydoc_files:
             if filter_str:
-                filter_str2 = "::".join((filter_str, os.path.split(
-                    pydoc_file)[-1].split('_pydoc_template.h')[0]))
+                filter_str2 = "::".join(
+                    (filter_str, os.path.split(pydoc_file)[-1].split('_pydoc_template.h')[0])
+                )
                 docstrings_dict2 = {
-                    k: v for k, v in docstrings_dict.items() if k.startswith(filter_str2)}
+                    k: v for k, v in docstrings_dict.items() if k.startswith(filter_str2)
+                }
             else:
                 docstrings_dict2 = docstrings_dict
 
@@ -303,12 +308,10 @@ def sub_docstring_in_pydoc_h(pydoc_files, docstrings_dict, output_dir, filter_st
                     # if 'gr' in doc_key:
                     #     doc_key.remove('gr')
                     doc_key = '_'.join(doc_key)
-                    regexp = r'(__doc_{} =\sR\"doc\()[^)]*(\)doc\")'.format(
-                        doc_key)
+                    regexp = r'(__doc_{} =\sR\"doc\()[^)]*(\)doc\")'.format(doc_key)
                     regexp = re.compile(regexp, re.MULTILINE)
 
-                    (file_in, nsubs) = regexp.subn(
-                        r'\1' + value + r'\2', file_in, count=1)
+                    file_in, nsubs = regexp.subn(r'\1' + value + r'\2', file_in, count=1)
                     if nsubs == 1:
                         status_file.write("PASS: " + pydoc_file + "\n")
                 except KeyboardInterrupt:
@@ -317,8 +320,9 @@ def sub_docstring_in_pydoc_h(pydoc_files, docstrings_dict, output_dir, filter_st
                     status_file.write("FAIL: " + pydoc_file + "\n")
                     file_in = file_in_tmp
 
-            output_pathname = os.path.join(output_dir, os.path.basename(
-                pydoc_file).replace('_template.h', '.h'))
+            output_pathname = os.path.join(
+                output_dir, os.path.basename(pydoc_file).replace('_template.h', '.h')
+            )
             with open(output_pathname, 'w') as file_out:
                 file_out.write(file_in)
 
@@ -327,8 +331,9 @@ def copy_docstring_templates(pydoc_files, output_dir):
     with open(os.path.join(output_dir, 'docstring_status'), 'w') as status_file:
         for pydoc_file in pydoc_files:
             file_in = open(pydoc_file, 'r').read()
-            output_pathname = os.path.join(output_dir, os.path.basename(
-                pydoc_file).replace('_template.h', '.h'))
+            output_pathname = os.path.join(
+                output_dir, os.path.basename(pydoc_file).replace('_template.h', '.h')
+            )
             with open(output_pathname, 'w') as file_out:
                 file_out.write(file_in)
         status_file.write("DONE")
@@ -339,8 +344,9 @@ def argParse():
     desc = 'Scrape the doxygen generated xml for docstrings to insert into python bindings'
     parser = ArgumentParser(description=desc)
 
-    parser.add_argument("function", help="Operation to perform on docstrings", choices=[
-                        "scrape", "sub", "copy"])
+    parser.add_argument(
+        "function", help="Operation to perform on docstrings", choices=["scrape", "sub", "copy"]
+    )
 
     parser.add_argument("--xml_path")
     parser.add_argument("--bindings_dir")
@@ -362,11 +368,8 @@ if __name__ == "__main__":
     elif args.function.lower() == 'sub':
         with open(args.json_path, 'r') as fp:
             docstrings_dict = json.load(fp)
-        pydoc_files = glob.glob(os.path.join(
-            args.bindings_dir, '*_pydoc_template.h'))
-        sub_docstring_in_pydoc_h(
-            pydoc_files, docstrings_dict, args.output_dir, args.filter)
+        pydoc_files = glob.glob(os.path.join(args.bindings_dir, '*_pydoc_template.h'))
+        sub_docstring_in_pydoc_h(pydoc_files, docstrings_dict, args.output_dir, args.filter)
     elif args.function.lower() == 'copy':
-        pydoc_files = glob.glob(os.path.join(
-            args.bindings_dir, '*_pydoc_template.h'))
+        pydoc_files = glob.glob(os.path.join(args.bindings_dir, '*_pydoc_template.h'))
         copy_docstring_templates(pydoc_files, args.output_dir)

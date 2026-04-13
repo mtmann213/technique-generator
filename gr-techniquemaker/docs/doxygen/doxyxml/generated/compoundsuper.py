@@ -70,8 +70,7 @@ def showIndent(outfile, level):
 
 
 def quote_xml(inStr):
-    s1 = (isinstance(inStr, str) and inStr or
-          '%s' % inStr)
+    s1 = isinstance(inStr, str) and inStr or '%s' % inStr
     s1 = s1.replace('&', '&amp;')
     s1 = s1.replace('<', '&lt;')
     s1 = s1.replace('>', '&gt;')
@@ -79,8 +78,7 @@ def quote_xml(inStr):
 
 
 def quote_attrib(inStr):
-    s1 = (isinstance(inStr, str) and inStr or
-          '%s' % inStr)
+    s1 = isinstance(inStr, str) and inStr or '%s' % inStr
     s1 = s1.replace('&', '&amp;')
     s1 = s1.replace('<', '&lt;')
     s1 = s1.replace('>', '&gt;')
@@ -149,17 +147,21 @@ class MixedContainer(object):
             outfile.write(self.value)
         elif self.category == MixedContainer.CategorySimple:
             self.exportSimple(outfile, level, name)
-        else:    # category == MixedContainer.CategoryComplex
+        else:  # category == MixedContainer.CategoryComplex
             self.value.export(outfile, level, namespace, name)
 
     def exportSimple(self, outfile, level, name):
         if self.content_type == MixedContainer.TypeString:
             outfile.write('<%s>%s</%s>' % (self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeInteger or \
-                self.content_type == MixedContainer.TypeBoolean:
+        elif (
+            self.content_type == MixedContainer.TypeInteger
+            or self.content_type == MixedContainer.TypeBoolean
+        ):
             outfile.write('<%s>%d</%s>' % (self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeFloat or \
-                self.content_type == MixedContainer.TypeDecimal:
+        elif (
+            self.content_type == MixedContainer.TypeFloat
+            or self.content_type == MixedContainer.TypeDecimal
+        ):
             outfile.write('<%s>%f</%s>' % (self.name, self.value, self.name))
         elif self.content_type == MixedContainer.TypeDouble:
             outfile.write('<%s>%g</%s>' % (self.name, self.value, self.name))
@@ -167,16 +169,26 @@ class MixedContainer(object):
     def exportLiteral(self, outfile, level, name):
         if self.category == MixedContainer.CategoryText:
             showIndent(outfile, level)
-            outfile.write('MixedContainer(%d, %d, "%s", "%s"),\n' %
-                          (self.category, self.content_type, self.name, self.value))
+            outfile.write(
+                'MixedContainer(%d, %d, "%s", "%s"),\n'
+                % (self.category, self.content_type, self.name, self.value)
+            )
         elif self.category == MixedContainer.CategorySimple:
             showIndent(outfile, level)
-            outfile.write('MixedContainer(%d, %d, "%s", "%s"),\n' %
-                          (self.category, self.content_type, self.name, self.value))
-        else:    # category == MixedContainer.CategoryComplex
+            outfile.write(
+                'MixedContainer(%d, %d, "%s", "%s"),\n'
+                % (self.category, self.content_type, self.name, self.value)
+            )
+        else:  # category == MixedContainer.CategoryComplex
             showIndent(outfile, level)
-            outfile.write('MixedContainer(%d, %d, "%s",\n' %
-                          (self.category, self.content_type, self.name,))
+            outfile.write(
+                'MixedContainer(%d, %d, "%s",\n'
+                % (
+                    self.category,
+                    self.content_type,
+                    self.name,
+                )
+            )
             self.value.exportLiteral(outfile, level + 1)
             showIndent(outfile, level)
             outfile.write(')\n')
@@ -188,17 +200,29 @@ class _MemberSpec(object):
         self.data_type = data_type
         self.container = container
 
-    def set_name(self, name): self.name = name
-    def get_name(self): return self.name
-    def set_data_type(self, data_type): self.data_type = data_type
-    def get_data_type(self): return self.data_type
-    def set_container(self, container): self.container = container
-    def get_container(self): return self.container
+    def set_name(self, name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+    def set_data_type(self, data_type):
+        self.data_type = data_type
+
+    def get_data_type(self):
+        return self.data_type
+
+    def set_container(self, container):
+        self.container = container
+
+    def get_container(self):
+        return self.container
 
 
 #
 # Data representation classes.
 #
+
 
 class DoxygenType(GeneratedsSuper):
     subclass = None
@@ -213,15 +237,31 @@ class DoxygenType(GeneratedsSuper):
             return DoxygenType.subclass(*args_, **kwargs_)
         else:
             return DoxygenType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_compounddef(self): return self.compounddef
-    def set_compounddef(self, compounddef): self.compounddef = compounddef
-    def get_version(self): return self.version
-    def set_version(self, version): self.version = version
+
+    def get_compounddef(self):
+        return self.compounddef
+
+    def set_compounddef(self, compounddef):
+        self.compounddef = compounddef
+
+    def get_version(self):
+        return self.version
+
+    def set_version(self, version):
+        self.version = version
 
     def export(self, outfile, level, namespace_='', name_='DoxygenType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='DoxygenType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -232,17 +272,14 @@ class DoxygenType(GeneratedsSuper):
             outfile.write(' />\n')
 
     def exportAttributes(self, outfile, level, namespace_='', name_='DoxygenType'):
-        outfile.write(' version=%s' % (quote_attrib(self.version), ))
+        outfile.write(' version=%s' % (quote_attrib(self.version),))
 
     def exportChildren(self, outfile, level, namespace_='', name_='DoxygenType'):
         if self.compounddef:
-            self.compounddef.export(
-                outfile, level, namespace_, name_='compounddef')
+            self.compounddef.export(outfile, level, namespace_, name_='compounddef')
 
     def hasContent_(self):
-        if (
-            self.compounddef is not None
-        ):
+        if self.compounddef is not None:
             return True
         else:
             return False
@@ -278,11 +315,12 @@ class DoxygenType(GeneratedsSuper):
             self.version = attrs.get('version').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'compounddef':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'compounddef':
             obj_ = compounddefType.factory()
             obj_.build(child_)
             self.set_compounddef(obj_)
+
+
 # end class DoxygenType
 
 
@@ -290,7 +328,35 @@ class compounddefType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, kind=None, prot=None, id=None, compoundname=None, title=None, basecompoundref=None, derivedcompoundref=None, includes=None, includedby=None, incdepgraph=None, invincdepgraph=None, innerdir=None, innerfile=None, innerclass=None, innernamespace=None, innerpage=None, innergroup=None, templateparamlist=None, sectiondef=None, briefdescription=None, detaileddescription=None, inheritancegraph=None, collaborationgraph=None, programlisting=None, location=None, listofallmembers=None):
+    def __init__(
+        self,
+        kind=None,
+        prot=None,
+        id=None,
+        compoundname=None,
+        title=None,
+        basecompoundref=None,
+        derivedcompoundref=None,
+        includes=None,
+        includedby=None,
+        incdepgraph=None,
+        invincdepgraph=None,
+        innerdir=None,
+        innerfile=None,
+        innerclass=None,
+        innernamespace=None,
+        innerpage=None,
+        innergroup=None,
+        templateparamlist=None,
+        sectiondef=None,
+        briefdescription=None,
+        detaileddescription=None,
+        inheritancegraph=None,
+        collaborationgraph=None,
+        programlisting=None,
+        location=None,
+        listofallmembers=None,
+    ):
         self.kind = kind
         self.prot = prot
         self.id = id
@@ -356,117 +422,242 @@ class compounddefType(GeneratedsSuper):
             return compounddefType.subclass(*args_, **kwargs_)
         else:
             return compounddefType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_compoundname(self): return self.compoundname
-    def set_compoundname(self, compoundname): self.compoundname = compoundname
-    def get_title(self): return self.title
-    def set_title(self, title): self.title = title
-    def get_basecompoundref(self): return self.basecompoundref
-    def set_basecompoundref(
-        self, basecompoundref): self.basecompoundref = basecompoundref
 
-    def add_basecompoundref(self, value): self.basecompoundref.append(value)
-    def insert_basecompoundref(
-        self, index, value): self.basecompoundref[index] = value
+    def get_compoundname(self):
+        return self.compoundname
 
-    def get_derivedcompoundref(self): return self.derivedcompoundref
+    def set_compoundname(self, compoundname):
+        self.compoundname = compoundname
 
-    def set_derivedcompoundref(
-        self, derivedcompoundref): self.derivedcompoundref = derivedcompoundref
+    def get_title(self):
+        return self.title
 
-    def add_derivedcompoundref(
-        self, value): self.derivedcompoundref.append(value)
-    def insert_derivedcompoundref(
-        self, index, value): self.derivedcompoundref[index] = value
+    def set_title(self, title):
+        self.title = title
 
-    def get_includes(self): return self.includes
-    def set_includes(self, includes): self.includes = includes
-    def add_includes(self, value): self.includes.append(value)
-    def insert_includes(self, index, value): self.includes[index] = value
-    def get_includedby(self): return self.includedby
-    def set_includedby(self, includedby): self.includedby = includedby
-    def add_includedby(self, value): self.includedby.append(value)
-    def insert_includedby(self, index, value): self.includedby[index] = value
-    def get_incdepgraph(self): return self.incdepgraph
-    def set_incdepgraph(self, incdepgraph): self.incdepgraph = incdepgraph
-    def get_invincdepgraph(self): return self.invincdepgraph
-    def set_invincdepgraph(
-        self, invincdepgraph): self.invincdepgraph = invincdepgraph
+    def get_basecompoundref(self):
+        return self.basecompoundref
 
-    def get_innerdir(self): return self.innerdir
-    def set_innerdir(self, innerdir): self.innerdir = innerdir
-    def add_innerdir(self, value): self.innerdir.append(value)
-    def insert_innerdir(self, index, value): self.innerdir[index] = value
-    def get_innerfile(self): return self.innerfile
-    def set_innerfile(self, innerfile): self.innerfile = innerfile
-    def add_innerfile(self, value): self.innerfile.append(value)
-    def insert_innerfile(self, index, value): self.innerfile[index] = value
-    def get_innerclass(self): return self.innerclass
-    def set_innerclass(self, innerclass): self.innerclass = innerclass
-    def add_innerclass(self, value): self.innerclass.append(value)
-    def insert_innerclass(self, index, value): self.innerclass[index] = value
-    def get_innernamespace(self): return self.innernamespace
-    def set_innernamespace(
-        self, innernamespace): self.innernamespace = innernamespace
+    def set_basecompoundref(self, basecompoundref):
+        self.basecompoundref = basecompoundref
 
-    def add_innernamespace(self, value): self.innernamespace.append(value)
-    def insert_innernamespace(
-        self, index, value): self.innernamespace[index] = value
+    def add_basecompoundref(self, value):
+        self.basecompoundref.append(value)
 
-    def get_innerpage(self): return self.innerpage
-    def set_innerpage(self, innerpage): self.innerpage = innerpage
-    def add_innerpage(self, value): self.innerpage.append(value)
-    def insert_innerpage(self, index, value): self.innerpage[index] = value
-    def get_innergroup(self): return self.innergroup
-    def set_innergroup(self, innergroup): self.innergroup = innergroup
-    def add_innergroup(self, value): self.innergroup.append(value)
-    def insert_innergroup(self, index, value): self.innergroup[index] = value
-    def get_templateparamlist(self): return self.templateparamlist
-    def set_templateparamlist(
-        self, templateparamlist): self.templateparamlist = templateparamlist
+    def insert_basecompoundref(self, index, value):
+        self.basecompoundref[index] = value
 
-    def get_sectiondef(self): return self.sectiondef
-    def set_sectiondef(self, sectiondef): self.sectiondef = sectiondef
-    def add_sectiondef(self, value): self.sectiondef.append(value)
-    def insert_sectiondef(self, index, value): self.sectiondef[index] = value
-    def get_briefdescription(self): return self.briefdescription
-    def set_briefdescription(
-        self, briefdescription): self.briefdescription = briefdescription
+    def get_derivedcompoundref(self):
+        return self.derivedcompoundref
 
-    def get_detaileddescription(self): return self.detaileddescription
-    def set_detaileddescription(
-        self, detaileddescription): self.detaileddescription = detaileddescription
+    def set_derivedcompoundref(self, derivedcompoundref):
+        self.derivedcompoundref = derivedcompoundref
 
-    def get_inheritancegraph(self): return self.inheritancegraph
-    def set_inheritancegraph(
-        self, inheritancegraph): self.inheritancegraph = inheritancegraph
+    def add_derivedcompoundref(self, value):
+        self.derivedcompoundref.append(value)
 
-    def get_collaborationgraph(self): return self.collaborationgraph
-    def set_collaborationgraph(
-        self, collaborationgraph): self.collaborationgraph = collaborationgraph
+    def insert_derivedcompoundref(self, index, value):
+        self.derivedcompoundref[index] = value
 
-    def get_programlisting(self): return self.programlisting
-    def set_programlisting(
-        self, programlisting): self.programlisting = programlisting
+    def get_includes(self):
+        return self.includes
 
-    def get_location(self): return self.location
-    def set_location(self, location): self.location = location
-    def get_listofallmembers(self): return self.listofallmembers
-    def set_listofallmembers(
-        self, listofallmembers): self.listofallmembers = listofallmembers
+    def set_includes(self, includes):
+        self.includes = includes
 
-    def get_kind(self): return self.kind
-    def set_kind(self, kind): self.kind = kind
-    def get_prot(self): return self.prot
-    def set_prot(self, prot): self.prot = prot
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+    def add_includes(self, value):
+        self.includes.append(value)
+
+    def insert_includes(self, index, value):
+        self.includes[index] = value
+
+    def get_includedby(self):
+        return self.includedby
+
+    def set_includedby(self, includedby):
+        self.includedby = includedby
+
+    def add_includedby(self, value):
+        self.includedby.append(value)
+
+    def insert_includedby(self, index, value):
+        self.includedby[index] = value
+
+    def get_incdepgraph(self):
+        return self.incdepgraph
+
+    def set_incdepgraph(self, incdepgraph):
+        self.incdepgraph = incdepgraph
+
+    def get_invincdepgraph(self):
+        return self.invincdepgraph
+
+    def set_invincdepgraph(self, invincdepgraph):
+        self.invincdepgraph = invincdepgraph
+
+    def get_innerdir(self):
+        return self.innerdir
+
+    def set_innerdir(self, innerdir):
+        self.innerdir = innerdir
+
+    def add_innerdir(self, value):
+        self.innerdir.append(value)
+
+    def insert_innerdir(self, index, value):
+        self.innerdir[index] = value
+
+    def get_innerfile(self):
+        return self.innerfile
+
+    def set_innerfile(self, innerfile):
+        self.innerfile = innerfile
+
+    def add_innerfile(self, value):
+        self.innerfile.append(value)
+
+    def insert_innerfile(self, index, value):
+        self.innerfile[index] = value
+
+    def get_innerclass(self):
+        return self.innerclass
+
+    def set_innerclass(self, innerclass):
+        self.innerclass = innerclass
+
+    def add_innerclass(self, value):
+        self.innerclass.append(value)
+
+    def insert_innerclass(self, index, value):
+        self.innerclass[index] = value
+
+    def get_innernamespace(self):
+        return self.innernamespace
+
+    def set_innernamespace(self, innernamespace):
+        self.innernamespace = innernamespace
+
+    def add_innernamespace(self, value):
+        self.innernamespace.append(value)
+
+    def insert_innernamespace(self, index, value):
+        self.innernamespace[index] = value
+
+    def get_innerpage(self):
+        return self.innerpage
+
+    def set_innerpage(self, innerpage):
+        self.innerpage = innerpage
+
+    def add_innerpage(self, value):
+        self.innerpage.append(value)
+
+    def insert_innerpage(self, index, value):
+        self.innerpage[index] = value
+
+    def get_innergroup(self):
+        return self.innergroup
+
+    def set_innergroup(self, innergroup):
+        self.innergroup = innergroup
+
+    def add_innergroup(self, value):
+        self.innergroup.append(value)
+
+    def insert_innergroup(self, index, value):
+        self.innergroup[index] = value
+
+    def get_templateparamlist(self):
+        return self.templateparamlist
+
+    def set_templateparamlist(self, templateparamlist):
+        self.templateparamlist = templateparamlist
+
+    def get_sectiondef(self):
+        return self.sectiondef
+
+    def set_sectiondef(self, sectiondef):
+        self.sectiondef = sectiondef
+
+    def add_sectiondef(self, value):
+        self.sectiondef.append(value)
+
+    def insert_sectiondef(self, index, value):
+        self.sectiondef[index] = value
+
+    def get_briefdescription(self):
+        return self.briefdescription
+
+    def set_briefdescription(self, briefdescription):
+        self.briefdescription = briefdescription
+
+    def get_detaileddescription(self):
+        return self.detaileddescription
+
+    def set_detaileddescription(self, detaileddescription):
+        self.detaileddescription = detaileddescription
+
+    def get_inheritancegraph(self):
+        return self.inheritancegraph
+
+    def set_inheritancegraph(self, inheritancegraph):
+        self.inheritancegraph = inheritancegraph
+
+    def get_collaborationgraph(self):
+        return self.collaborationgraph
+
+    def set_collaborationgraph(self, collaborationgraph):
+        self.collaborationgraph = collaborationgraph
+
+    def get_programlisting(self):
+        return self.programlisting
+
+    def set_programlisting(self, programlisting):
+        self.programlisting = programlisting
+
+    def get_location(self):
+        return self.location
+
+    def set_location(self, location):
+        self.location = location
+
+    def get_listofallmembers(self):
+        return self.listofallmembers
+
+    def set_listofallmembers(self, listofallmembers):
+        self.listofallmembers = listofallmembers
+
+    def get_kind(self):
+        return self.kind
+
+    def set_kind(self, kind):
+        self.kind = kind
+
+    def get_prot(self):
+        return self.prot
+
+    def set_prot(self, prot):
+        self.prot = prot
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='compounddefType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='compounddefType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='compounddefType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -477,38 +668,57 @@ class compounddefType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='compounddefType'):
         if self.kind is not None:
-            outfile.write(' kind=%s' % (quote_attrib(self.kind), ))
+            outfile.write(' kind=%s' % (quote_attrib(self.kind),))
         if self.prot is not None:
-            outfile.write(' prot=%s' % (quote_attrib(self.prot), ))
+            outfile.write(' prot=%s' % (quote_attrib(self.prot),))
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='compounddefType'):
         if self.compoundname is not None:
             showIndent(outfile, level)
-            outfile.write('<%scompoundname>%s</%scompoundname>\n' % (namespace_, self.format_string(
-                quote_xml(self.compoundname).encode(ExternalEncoding), input_name='compoundname'), namespace_))
+            outfile.write(
+                '<%scompoundname>%s</%scompoundname>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.compoundname).encode(ExternalEncoding),
+                        input_name='compoundname',
+                    ),
+                    namespace_,
+                )
+            )
         if self.title is not None:
             showIndent(outfile, level)
-            outfile.write('<%stitle>%s</%stitle>\n' % (namespace_, self.format_string(
-                quote_xml(self.title).encode(ExternalEncoding), input_name='title'), namespace_))
+            outfile.write(
+                '<%stitle>%s</%stitle>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.title).encode(ExternalEncoding), input_name='title'
+                    ),
+                    namespace_,
+                )
+            )
         for basecompoundref_ in self.basecompoundref:
-            basecompoundref_.export(
-                outfile, level, namespace_, name_='basecompoundref')
+            basecompoundref_.export(outfile, level, namespace_, name_='basecompoundref')
         for derivedcompoundref_ in self.derivedcompoundref:
-            derivedcompoundref_.export(
-                outfile, level, namespace_, name_='derivedcompoundref')
+            derivedcompoundref_.export(outfile, level, namespace_, name_='derivedcompoundref')
         for includes_ in self.includes:
             includes_.export(outfile, level, namespace_, name_='includes')
         for includedby_ in self.includedby:
             includedby_.export(outfile, level, namespace_, name_='includedby')
         if self.incdepgraph:
-            self.incdepgraph.export(
-                outfile, level, namespace_, name_='incdepgraph')
+            self.incdepgraph.export(outfile, level, namespace_, name_='incdepgraph')
         if self.invincdepgraph:
-            self.invincdepgraph.export(
-                outfile, level, namespace_, name_='invincdepgraph')
+            self.invincdepgraph.export(outfile, level, namespace_, name_='invincdepgraph')
         for innerdir_ in self.innerdir:
             innerdir_.export(outfile, level, namespace_, name_='innerdir')
         for innerfile_ in self.innerfile:
@@ -516,63 +726,55 @@ class compounddefType(GeneratedsSuper):
         for innerclass_ in self.innerclass:
             innerclass_.export(outfile, level, namespace_, name_='innerclass')
         for innernamespace_ in self.innernamespace:
-            innernamespace_.export(
-                outfile, level, namespace_, name_='innernamespace')
+            innernamespace_.export(outfile, level, namespace_, name_='innernamespace')
         for innerpage_ in self.innerpage:
             innerpage_.export(outfile, level, namespace_, name_='innerpage')
         for innergroup_ in self.innergroup:
             innergroup_.export(outfile, level, namespace_, name_='innergroup')
         if self.templateparamlist:
-            self.templateparamlist.export(
-                outfile, level, namespace_, name_='templateparamlist')
+            self.templateparamlist.export(outfile, level, namespace_, name_='templateparamlist')
         for sectiondef_ in self.sectiondef:
             sectiondef_.export(outfile, level, namespace_, name_='sectiondef')
         if self.briefdescription:
-            self.briefdescription.export(
-                outfile, level, namespace_, name_='briefdescription')
+            self.briefdescription.export(outfile, level, namespace_, name_='briefdescription')
         if self.detaileddescription:
-            self.detaileddescription.export(
-                outfile, level, namespace_, name_='detaileddescription')
+            self.detaileddescription.export(outfile, level, namespace_, name_='detaileddescription')
         if self.inheritancegraph:
-            self.inheritancegraph.export(
-                outfile, level, namespace_, name_='inheritancegraph')
+            self.inheritancegraph.export(outfile, level, namespace_, name_='inheritancegraph')
         if self.collaborationgraph:
-            self.collaborationgraph.export(
-                outfile, level, namespace_, name_='collaborationgraph')
+            self.collaborationgraph.export(outfile, level, namespace_, name_='collaborationgraph')
         if self.programlisting:
-            self.programlisting.export(
-                outfile, level, namespace_, name_='programlisting')
+            self.programlisting.export(outfile, level, namespace_, name_='programlisting')
         if self.location:
             self.location.export(outfile, level, namespace_, name_='location')
         if self.listofallmembers:
-            self.listofallmembers.export(
-                outfile, level, namespace_, name_='listofallmembers')
+            self.listofallmembers.export(outfile, level, namespace_, name_='listofallmembers')
 
     def hasContent_(self):
         if (
-            self.compoundname is not None or
-            self.title is not None or
-            self.basecompoundref is not None or
-            self.derivedcompoundref is not None or
-            self.includes is not None or
-            self.includedby is not None or
-            self.incdepgraph is not None or
-            self.invincdepgraph is not None or
-            self.innerdir is not None or
-            self.innerfile is not None or
-            self.innerclass is not None or
-            self.innernamespace is not None or
-            self.innerpage is not None or
-            self.innergroup is not None or
-            self.templateparamlist is not None or
-            self.sectiondef is not None or
-            self.briefdescription is not None or
-            self.detaileddescription is not None or
-            self.inheritancegraph is not None or
-            self.collaborationgraph is not None or
-            self.programlisting is not None or
-            self.location is not None or
-            self.listofallmembers is not None
+            self.compoundname is not None
+            or self.title is not None
+            or self.basecompoundref is not None
+            or self.derivedcompoundref is not None
+            or self.includes is not None
+            or self.includedby is not None
+            or self.incdepgraph is not None
+            or self.invincdepgraph is not None
+            or self.innerdir is not None
+            or self.innerfile is not None
+            or self.innerclass is not None
+            or self.innernamespace is not None
+            or self.innerpage is not None
+            or self.innergroup is not None
+            or self.templateparamlist is not None
+            or self.sectiondef is not None
+            or self.briefdescription is not None
+            or self.detaileddescription is not None
+            or self.inheritancegraph is not None
+            or self.collaborationgraph is not None
+            or self.programlisting is not None
+            or self.location is not None
+            or self.listofallmembers is not None
         ):
             return True
         else:
@@ -597,8 +799,9 @@ class compounddefType(GeneratedsSuper):
 
     def exportLiteralChildren(self, outfile, level, name_):
         showIndent(outfile, level)
-        outfile.write('compoundname=%s,\n' % quote_python(
-            self.compoundname).encode(ExternalEncoding))
+        outfile.write(
+            'compoundname=%s,\n' % quote_python(self.compoundname).encode(ExternalEncoding)
+        )
         if self.title:
             showIndent(outfile, level)
             outfile.write('title=model_.xsd_string(\n')
@@ -611,8 +814,7 @@ class compounddefType(GeneratedsSuper):
         for basecompoundref in self.basecompoundref:
             showIndent(outfile, level)
             outfile.write('model_.basecompoundref(\n')
-            basecompoundref.exportLiteral(
-                outfile, level, name_='basecompoundref')
+            basecompoundref.exportLiteral(outfile, level, name_='basecompoundref')
             showIndent(outfile, level)
             outfile.write('),\n')
         level -= 1
@@ -624,8 +826,7 @@ class compounddefType(GeneratedsSuper):
         for derivedcompoundref in self.derivedcompoundref:
             showIndent(outfile, level)
             outfile.write('model_.derivedcompoundref(\n')
-            derivedcompoundref.exportLiteral(
-                outfile, level, name_='derivedcompoundref')
+            derivedcompoundref.exportLiteral(outfile, level, name_='derivedcompoundref')
             showIndent(outfile, level)
             outfile.write('),\n')
         level -= 1
@@ -664,8 +865,7 @@ class compounddefType(GeneratedsSuper):
         if self.invincdepgraph:
             showIndent(outfile, level)
             outfile.write('invincdepgraph=model_.graphType(\n')
-            self.invincdepgraph.exportLiteral(
-                outfile, level, name_='invincdepgraph')
+            self.invincdepgraph.exportLiteral(outfile, level, name_='invincdepgraph')
             showIndent(outfile, level)
             outfile.write('),\n')
         showIndent(outfile, level)
@@ -710,8 +910,7 @@ class compounddefType(GeneratedsSuper):
         for innernamespace in self.innernamespace:
             showIndent(outfile, level)
             outfile.write('model_.innernamespace(\n')
-            innernamespace.exportLiteral(
-                outfile, level, name_='innernamespace')
+            innernamespace.exportLiteral(outfile, level, name_='innernamespace')
             showIndent(outfile, level)
             outfile.write('),\n')
         level -= 1
@@ -744,8 +943,7 @@ class compounddefType(GeneratedsSuper):
         if self.templateparamlist:
             showIndent(outfile, level)
             outfile.write('templateparamlist=model_.templateparamlistType(\n')
-            self.templateparamlist.exportLiteral(
-                outfile, level, name_='templateparamlist')
+            self.templateparamlist.exportLiteral(outfile, level, name_='templateparamlist')
             showIndent(outfile, level)
             outfile.write('),\n')
         showIndent(outfile, level)
@@ -763,36 +961,31 @@ class compounddefType(GeneratedsSuper):
         if self.briefdescription:
             showIndent(outfile, level)
             outfile.write('briefdescription=model_.descriptionType(\n')
-            self.briefdescription.exportLiteral(
-                outfile, level, name_='briefdescription')
+            self.briefdescription.exportLiteral(outfile, level, name_='briefdescription')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.detaileddescription:
             showIndent(outfile, level)
             outfile.write('detaileddescription=model_.descriptionType(\n')
-            self.detaileddescription.exportLiteral(
-                outfile, level, name_='detaileddescription')
+            self.detaileddescription.exportLiteral(outfile, level, name_='detaileddescription')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.inheritancegraph:
             showIndent(outfile, level)
             outfile.write('inheritancegraph=model_.graphType(\n')
-            self.inheritancegraph.exportLiteral(
-                outfile, level, name_='inheritancegraph')
+            self.inheritancegraph.exportLiteral(outfile, level, name_='inheritancegraph')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.collaborationgraph:
             showIndent(outfile, level)
             outfile.write('collaborationgraph=model_.graphType(\n')
-            self.collaborationgraph.exportLiteral(
-                outfile, level, name_='collaborationgraph')
+            self.collaborationgraph.exportLiteral(outfile, level, name_='collaborationgraph')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.programlisting:
             showIndent(outfile, level)
             outfile.write('programlisting=model_.listingType(\n')
-            self.programlisting.exportLiteral(
-                outfile, level, name_='programlisting')
+            self.programlisting.exportLiteral(outfile, level, name_='programlisting')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.location:
@@ -804,8 +997,7 @@ class compounddefType(GeneratedsSuper):
         if self.listofallmembers:
             showIndent(outfile, level)
             outfile.write('listofallmembers=model_.listofallmembersType(\n')
-            self.listofallmembers.exportLiteral(
-                outfile, level, name_='listofallmembers')
+            self.listofallmembers.exportLiteral(outfile, level, name_='listofallmembers')
             showIndent(outfile, level)
             outfile.write('),\n')
 
@@ -825,122 +1017,101 @@ class compounddefType(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'compoundname':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'compoundname':
             compoundname_ = ''
             for text__content_ in child_.childNodes:
                 compoundname_ += text__content_.nodeValue
             self.compoundname = compoundname_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'title':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'title':
             obj_ = docTitleType.factory()
             obj_.build(child_)
             self.set_title(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'basecompoundref':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'basecompoundref':
             obj_ = compoundRefType.factory()
             obj_.build(child_)
             self.basecompoundref.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'derivedcompoundref':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'derivedcompoundref':
             obj_ = compoundRefType.factory()
             obj_.build(child_)
             self.derivedcompoundref.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'includes':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'includes':
             obj_ = incType.factory()
             obj_.build(child_)
             self.includes.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'includedby':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'includedby':
             obj_ = incType.factory()
             obj_.build(child_)
             self.includedby.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'incdepgraph':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'incdepgraph':
             obj_ = graphType.factory()
             obj_.build(child_)
             self.set_incdepgraph(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'invincdepgraph':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'invincdepgraph':
             obj_ = graphType.factory()
             obj_.build(child_)
             self.set_invincdepgraph(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'innerdir':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'innerdir':
             obj_ = refType.factory()
             obj_.build(child_)
             self.innerdir.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'innerfile':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'innerfile':
             obj_ = refType.factory()
             obj_.build(child_)
             self.innerfile.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'innerclass':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'innerclass':
             obj_ = refType.factory()
             obj_.build(child_)
             self.innerclass.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'innernamespace':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'innernamespace':
             obj_ = refType.factory()
             obj_.build(child_)
             self.innernamespace.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'innerpage':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'innerpage':
             obj_ = refType.factory()
             obj_.build(child_)
             self.innerpage.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'innergroup':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'innergroup':
             obj_ = refType.factory()
             obj_.build(child_)
             self.innergroup.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'templateparamlist':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'templateparamlist':
             obj_ = templateparamlistType.factory()
             obj_.build(child_)
             self.set_templateparamlist(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sectiondef':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sectiondef':
             obj_ = sectiondefType.factory()
             obj_.build(child_)
             self.sectiondef.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'briefdescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'briefdescription':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_briefdescription(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'detaileddescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'detaileddescription':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_detaileddescription(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'inheritancegraph':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'inheritancegraph':
             obj_ = graphType.factory()
             obj_.build(child_)
             self.set_inheritancegraph(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'collaborationgraph':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'collaborationgraph':
             obj_ = graphType.factory()
             obj_.build(child_)
             self.set_collaborationgraph(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'programlisting':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'programlisting':
             obj_ = listingType.factory()
             obj_.build(child_)
             self.set_programlisting(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'location':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'location':
             obj_ = locationType.factory()
             obj_.build(child_)
             self.set_location(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'listofallmembers':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'listofallmembers':
             obj_ = listofallmembersType.factory()
             obj_.build(child_)
             self.set_listofallmembers(obj_)
+
+
 # end class compounddefType
 
 
@@ -959,17 +1130,32 @@ class listofallmembersType(GeneratedsSuper):
             return listofallmembersType.subclass(*args_, **kwargs_)
         else:
             return listofallmembersType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_member(self): return self.member
-    def set_member(self, member): self.member = member
-    def add_member(self, value): self.member.append(value)
-    def insert_member(self, index, value): self.member[index] = value
+
+    def get_member(self):
+        return self.member
+
+    def set_member(self, member):
+        self.member = member
+
+    def add_member(self, value):
+        self.member.append(value)
+
+    def insert_member(self, index, value):
+        self.member[index] = value
 
     def export(self, outfile, level, namespace_='', name_='listofallmembersType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='listofallmembersType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='listofallmembersType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -986,9 +1172,7 @@ class listofallmembersType(GeneratedsSuper):
             member_.export(outfile, level, namespace_, name_='member')
 
     def hasContent_(self):
-        if (
-            self.member is not None
-        ):
+        if self.member is not None:
             return True
         else:
             return False
@@ -1027,11 +1211,12 @@ class listofallmembersType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'member':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'member':
             obj_ = memberRefType.factory()
             obj_.build(child_)
             self.member.append(obj_)
+
+
 # end class listofallmembersType
 
 
@@ -1039,7 +1224,9 @@ class memberRefType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, virt=None, prot=None, refid=None, ambiguityscope=None, scope=None, name=None):
+    def __init__(
+        self, virt=None, prot=None, refid=None, ambiguityscope=None, scope=None, name=None
+    ):
         self.virt = virt
         self.prot = prot
         self.refid = refid
@@ -1052,27 +1239,56 @@ class memberRefType(GeneratedsSuper):
             return memberRefType.subclass(*args_, **kwargs_)
         else:
             return memberRefType(*args_, **kwargs_)
-    factory = staticmethod(factory)
-    def get_scope(self): return self.scope
-    def set_scope(self, scope): self.scope = scope
-    def get_name(self): return self.name
-    def set_name(self, name): self.name = name
-    def get_virt(self): return self.virt
-    def set_virt(self, virt): self.virt = virt
-    def get_prot(self): return self.prot
-    def set_prot(self, prot): self.prot = prot
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def get_ambiguityscope(self): return self.ambiguityscope
 
-    def set_ambiguityscope(
-        self, ambiguityscope): self.ambiguityscope = ambiguityscope
+    factory = staticmethod(factory)
+
+    def get_scope(self):
+        return self.scope
+
+    def set_scope(self, scope):
+        self.scope = scope
+
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
+    def get_virt(self):
+        return self.virt
+
+    def set_virt(self, virt):
+        self.virt = virt
+
+    def get_prot(self):
+        return self.prot
+
+    def set_prot(self, prot):
+        self.prot = prot
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def get_ambiguityscope(self):
+        return self.ambiguityscope
+
+    def set_ambiguityscope(self, ambiguityscope):
+        self.ambiguityscope = ambiguityscope
 
     def export(self, outfile, level, namespace_='', name_='memberRefType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='memberRefType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='memberRefType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -1083,31 +1299,57 @@ class memberRefType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='memberRefType'):
         if self.virt is not None:
-            outfile.write(' virt=%s' % (quote_attrib(self.virt), ))
+            outfile.write(' virt=%s' % (quote_attrib(self.virt),))
         if self.prot is not None:
-            outfile.write(' prot=%s' % (quote_attrib(self.prot), ))
+            outfile.write(' prot=%s' % (quote_attrib(self.prot),))
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
         if self.ambiguityscope is not None:
-            outfile.write(' ambiguityscope=%s' % (self.format_string(quote_attrib(
-                self.ambiguityscope).encode(ExternalEncoding), input_name='ambiguityscope'), ))
+            outfile.write(
+                ' ambiguityscope=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.ambiguityscope).encode(ExternalEncoding),
+                        input_name='ambiguityscope',
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='memberRefType'):
         if self.scope is not None:
             showIndent(outfile, level)
-            outfile.write('<%sscope>%s</%sscope>\n' % (namespace_, self.format_string(
-                quote_xml(self.scope).encode(ExternalEncoding), input_name='scope'), namespace_))
+            outfile.write(
+                '<%sscope>%s</%sscope>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.scope).encode(ExternalEncoding), input_name='scope'
+                    ),
+                    namespace_,
+                )
+            )
         if self.name is not None:
             showIndent(outfile, level)
-            outfile.write('<%sname>%s</%sname>\n' % (namespace_, self.format_string(
-                quote_xml(self.name).encode(ExternalEncoding), input_name='name'), namespace_))
+            outfile.write(
+                '<%sname>%s</%sname>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.name).encode(ExternalEncoding), input_name='name'
+                    ),
+                    namespace_,
+                )
+            )
 
     def hasContent_(self):
-        if (
-            self.scope is not None or
-            self.name is not None
-        ):
+        if self.scope is not None or self.name is not None:
             return True
         else:
             return False
@@ -1134,11 +1376,9 @@ class memberRefType(GeneratedsSuper):
 
     def exportLiteralChildren(self, outfile, level, name_):
         showIndent(outfile, level)
-        outfile.write('scope=%s,\n' % quote_python(
-            self.scope).encode(ExternalEncoding))
+        outfile.write('scope=%s,\n' % quote_python(self.scope).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('name=%s,\n' % quote_python(
-            self.name).encode(ExternalEncoding))
+        outfile.write('name=%s,\n' % quote_python(self.name).encode(ExternalEncoding))
 
     def build(self, node_):
         attrs = node_.attributes
@@ -1158,18 +1398,18 @@ class memberRefType(GeneratedsSuper):
             self.ambiguityscope = attrs.get('ambiguityscope').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'scope':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'scope':
             scope_ = ''
             for text__content_ in child_.childNodes:
                 scope_ += text__content_.nodeValue
             self.scope = scope_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'name':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'name':
             name_ = ''
             for text__content_ in child_.childNodes:
                 name_ += text__content_.nodeValue
             self.name = name_
+
+
 # end class memberRefType
 
 
@@ -1185,13 +1425,25 @@ class scope(GeneratedsSuper):
             return scope.subclass(*args_, **kwargs_)
         else:
             return scope(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='scope', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='scope')
         if self.hasContent_():
             outfile.write('>\n')
@@ -1214,9 +1466,7 @@ class scope(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -1250,6 +1500,8 @@ class scope(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class scope
 
 
@@ -1265,13 +1517,25 @@ class name(GeneratedsSuper):
             return name.subclass(*args_, **kwargs_)
         else:
             return name(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='name', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='name')
         if self.hasContent_():
             outfile.write('>\n')
@@ -1294,9 +1558,7 @@ class name(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -1330,6 +1592,8 @@ class name(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class name
 
 
@@ -1337,7 +1601,9 @@ class compoundRefType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, virt=None, prot=None, refid=None, valueOf_='', mixedclass_=None, content_=None):
+    def __init__(
+        self, virt=None, prot=None, refid=None, valueOf_='', mixedclass_=None, content_=None
+    ):
         self.virt = virt
         self.prot = prot
         self.refid = refid
@@ -1355,33 +1621,62 @@ class compoundRefType(GeneratedsSuper):
             return compoundRefType.subclass(*args_, **kwargs_)
         else:
             return compoundRefType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_virt(self): return self.virt
-    def set_virt(self, virt): self.virt = virt
-    def get_prot(self): return self.prot
-    def set_prot(self, prot): self.prot = prot
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_virt(self):
+        return self.virt
+
+    def set_virt(self, virt):
+        self.virt = virt
+
+    def get_prot(self):
+        return self.prot
+
+    def set_prot(self, prot):
+        self.prot = prot
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='compoundRefType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='compoundRefType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='compoundRefType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='compoundRefType'):
         if self.virt is not None:
-            outfile.write(' virt=%s' % (quote_attrib(self.virt), ))
+            outfile.write(' virt=%s' % (quote_attrib(self.virt),))
         if self.prot is not None:
-            outfile.write(' prot=%s' % (quote_attrib(self.prot), ))
+            outfile.write(' prot=%s' % (quote_attrib(self.prot),))
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='compoundRefType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -1393,9 +1688,7 @@ class compoundRefType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -1439,13 +1732,16 @@ class compoundRefType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class compoundRefType
 
 
@@ -1469,25 +1765,46 @@ class reimplementType(GeneratedsSuper):
             return reimplementType.subclass(*args_, **kwargs_)
         else:
             return reimplementType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='reimplementType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='reimplementType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='reimplementType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='reimplementType'):
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='reimplementType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -1499,9 +1816,7 @@ class reimplementType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -1535,13 +1850,16 @@ class reimplementType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class reimplementType
 
 
@@ -1566,17 +1884,37 @@ class incType(GeneratedsSuper):
             return incType.subclass(*args_, **kwargs_)
         else:
             return incType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_local(self): return self.local
-    def set_local(self, local): self.local = local
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_local(self):
+        return self.local
+
+    def set_local(self, local):
+        self.local = local
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='incType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='incType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -1584,10 +1922,16 @@ class incType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='incType'):
         if self.local is not None:
-            outfile.write(' local=%s' % (quote_attrib(self.local), ))
+            outfile.write(' local=%s' % (quote_attrib(self.local),))
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='incType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -1599,9 +1943,7 @@ class incType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -1640,13 +1982,16 @@ class incType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class incType
 
 
@@ -1671,17 +2016,37 @@ class refType(GeneratedsSuper):
             return refType.subclass(*args_, **kwargs_)
         else:
             return refType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_prot(self): return self.prot
-    def set_prot(self, prot): self.prot = prot
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_prot(self):
+        return self.prot
+
+    def set_prot(self, prot):
+        self.prot = prot
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='refType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='refType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -1689,10 +2054,16 @@ class refType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='refType'):
         if self.prot is not None:
-            outfile.write(' prot=%s' % (quote_attrib(self.prot), ))
+            outfile.write(' prot=%s' % (quote_attrib(self.prot),))
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='refType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -1704,9 +2075,7 @@ class refType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -1745,13 +2114,16 @@ class refType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class refType
 
 
@@ -1759,7 +2131,9 @@ class refTextType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, refid=None, kindref=None, external=None, valueOf_='', mixedclass_=None, content_=None):
+    def __init__(
+        self, refid=None, kindref=None, external=None, valueOf_='', mixedclass_=None, content_=None
+    ):
         self.refid = refid
         self.kindref = kindref
         self.external = external
@@ -1777,19 +2151,43 @@ class refTextType(GeneratedsSuper):
             return refTextType.subclass(*args_, **kwargs_)
         else:
             return refTextType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def get_kindref(self): return self.kindref
-    def set_kindref(self, kindref): self.kindref = kindref
-    def get_external(self): return self.external
-    def set_external(self, external): self.external = external
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def get_kindref(self):
+        return self.kindref
+
+    def set_kindref(self, kindref):
+        self.kindref = kindref
+
+    def get_external(self):
+        return self.external
+
+    def set_external(self, external):
+        self.external = external
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='refTextType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='refTextType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -1797,13 +2195,25 @@ class refTextType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='refTextType'):
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
         if self.kindref is not None:
-            outfile.write(' kindref=%s' % (quote_attrib(self.kindref), ))
+            outfile.write(' kindref=%s' % (quote_attrib(self.kindref),))
         if self.external is not None:
-            outfile.write(' external=%s' % (self.format_string(quote_attrib(
-                self.external).encode(ExternalEncoding), input_name='external'), ))
+            outfile.write(
+                ' external=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.external).encode(ExternalEncoding), input_name='external'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='refTextType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -1815,9 +2225,7 @@ class refTextType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -1861,13 +2269,16 @@ class refTextType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class refTextType
 
 
@@ -1889,23 +2300,50 @@ class sectiondefType(GeneratedsSuper):
             return sectiondefType.subclass(*args_, **kwargs_)
         else:
             return sectiondefType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_header(self): return self.header
-    def set_header(self, header): self.header = header
-    def get_description(self): return self.description
-    def set_description(self, description): self.description = description
-    def get_memberdef(self): return self.memberdef
-    def set_memberdef(self, memberdef): self.memberdef = memberdef
-    def add_memberdef(self, value): self.memberdef.append(value)
-    def insert_memberdef(self, index, value): self.memberdef[index] = value
-    def get_kind(self): return self.kind
-    def set_kind(self, kind): self.kind = kind
+
+    def get_header(self):
+        return self.header
+
+    def set_header(self, header):
+        self.header = header
+
+    def get_description(self):
+        return self.description
+
+    def set_description(self, description):
+        self.description = description
+
+    def get_memberdef(self):
+        return self.memberdef
+
+    def set_memberdef(self, memberdef):
+        self.memberdef = memberdef
+
+    def add_memberdef(self, value):
+        self.memberdef.append(value)
+
+    def insert_memberdef(self, index, value):
+        self.memberdef[index] = value
+
+    def get_kind(self):
+        return self.kind
+
+    def set_kind(self, kind):
+        self.kind = kind
 
     def export(self, outfile, level, namespace_='', name_='sectiondefType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='sectiondefType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='sectiondefType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -1916,25 +2354,28 @@ class sectiondefType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='sectiondefType'):
         if self.kind is not None:
-            outfile.write(' kind=%s' % (quote_attrib(self.kind), ))
+            outfile.write(' kind=%s' % (quote_attrib(self.kind),))
 
     def exportChildren(self, outfile, level, namespace_='', name_='sectiondefType'):
         if self.header is not None:
             showIndent(outfile, level)
-            outfile.write('<%sheader>%s</%sheader>\n' % (namespace_, self.format_string(
-                quote_xml(self.header).encode(ExternalEncoding), input_name='header'), namespace_))
+            outfile.write(
+                '<%sheader>%s</%sheader>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.header).encode(ExternalEncoding), input_name='header'
+                    ),
+                    namespace_,
+                )
+            )
         if self.description:
-            self.description.export(
-                outfile, level, namespace_, name_='description')
+            self.description.export(outfile, level, namespace_, name_='description')
         for memberdef_ in self.memberdef:
             memberdef_.export(outfile, level, namespace_, name_='memberdef')
 
     def hasContent_(self):
-        if (
-            self.header is not None or
-            self.description is not None or
-            self.memberdef is not None
-        ):
+        if self.header is not None or self.description is not None or self.memberdef is not None:
             return True
         else:
             return False
@@ -1952,8 +2393,7 @@ class sectiondefType(GeneratedsSuper):
 
     def exportLiteralChildren(self, outfile, level, name_):
         showIndent(outfile, level)
-        outfile.write('header=%s,\n' % quote_python(
-            self.header).encode(ExternalEncoding))
+        outfile.write('header=%s,\n' % quote_python(self.header).encode(ExternalEncoding))
         if self.description:
             showIndent(outfile, level)
             outfile.write('description=model_.descriptionType(\n')
@@ -1985,22 +2425,21 @@ class sectiondefType(GeneratedsSuper):
             self.kind = attrs.get('kind').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'header':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'header':
             header_ = ''
             for text__content_ in child_.childNodes:
                 header_ += text__content_.nodeValue
             self.header = header_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'description':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'description':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_description(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'memberdef':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'memberdef':
             obj_ = memberdefType.factory()
             obj_.build(child_)
             self.memberdef.append(obj_)
+
+
 # end class sectiondefType
 
 
@@ -2008,7 +2447,50 @@ class memberdefType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, initonly=None, kind=None, volatile=None, const=None, raisexx=None, virt=None, readable=None, prot=None, explicit=None, new=None, final=None, writable=None, add=None, static=None, remove=None, sealed=None, mutable=None, gettable=None, inline=None, settable=None, id=None, templateparamlist=None, type_=None, definition=None, argsstring=None, name=None, read=None, write=None, bitfield=None, reimplements=None, reimplementedby=None, param=None, enumvalue=None, initializer=None, exceptions=None, briefdescription=None, detaileddescription=None, inbodydescription=None, location=None, references=None, referencedby=None):
+    def __init__(
+        self,
+        initonly=None,
+        kind=None,
+        volatile=None,
+        const=None,
+        raisexx=None,
+        virt=None,
+        readable=None,
+        prot=None,
+        explicit=None,
+        new=None,
+        final=None,
+        writable=None,
+        add=None,
+        static=None,
+        remove=None,
+        sealed=None,
+        mutable=None,
+        gettable=None,
+        inline=None,
+        settable=None,
+        id=None,
+        templateparamlist=None,
+        type_=None,
+        definition=None,
+        argsstring=None,
+        name=None,
+        read=None,
+        write=None,
+        bitfield=None,
+        reimplements=None,
+        reimplementedby=None,
+        param=None,
+        enumvalue=None,
+        initializer=None,
+        exceptions=None,
+        briefdescription=None,
+        detaileddescription=None,
+        inbodydescription=None,
+        location=None,
+        references=None,
+        referencedby=None,
+    ):
         self.initonly = initonly
         self.kind = kind
         self.volatile = volatile
@@ -2074,123 +2556,302 @@ class memberdefType(GeneratedsSuper):
             return memberdefType.subclass(*args_, **kwargs_)
         else:
             return memberdefType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_templateparamlist(self): return self.templateparamlist
-    def set_templateparamlist(
-        self, templateparamlist): self.templateparamlist = templateparamlist
 
-    def get_type(self): return self.type_
-    def set_type(self, type_): self.type_ = type_
-    def get_definition(self): return self.definition
-    def set_definition(self, definition): self.definition = definition
-    def get_argsstring(self): return self.argsstring
-    def set_argsstring(self, argsstring): self.argsstring = argsstring
-    def get_name(self): return self.name
-    def set_name(self, name): self.name = name
-    def get_read(self): return self.read
-    def set_read(self, read): self.read = read
-    def get_write(self): return self.write
-    def set_write(self, write): self.write = write
-    def get_bitfield(self): return self.bitfield
-    def set_bitfield(self, bitfield): self.bitfield = bitfield
-    def get_reimplements(self): return self.reimplements
-    def set_reimplements(self, reimplements): self.reimplements = reimplements
-    def add_reimplements(self, value): self.reimplements.append(value)
-    def insert_reimplements(
-        self, index, value): self.reimplements[index] = value
+    def get_templateparamlist(self):
+        return self.templateparamlist
 
-    def get_reimplementedby(self): return self.reimplementedby
-    def set_reimplementedby(
-        self, reimplementedby): self.reimplementedby = reimplementedby
+    def set_templateparamlist(self, templateparamlist):
+        self.templateparamlist = templateparamlist
 
-    def add_reimplementedby(self, value): self.reimplementedby.append(value)
-    def insert_reimplementedby(
-        self, index, value): self.reimplementedby[index] = value
+    def get_type(self):
+        return self.type_
 
-    def get_param(self): return self.param
-    def set_param(self, param): self.param = param
-    def add_param(self, value): self.param.append(value)
-    def insert_param(self, index, value): self.param[index] = value
-    def get_enumvalue(self): return self.enumvalue
-    def set_enumvalue(self, enumvalue): self.enumvalue = enumvalue
-    def add_enumvalue(self, value): self.enumvalue.append(value)
-    def insert_enumvalue(self, index, value): self.enumvalue[index] = value
-    def get_initializer(self): return self.initializer
-    def set_initializer(self, initializer): self.initializer = initializer
-    def get_exceptions(self): return self.exceptions
-    def set_exceptions(self, exceptions): self.exceptions = exceptions
-    def get_briefdescription(self): return self.briefdescription
-    def set_briefdescription(
-        self, briefdescription): self.briefdescription = briefdescription
+    def set_type(self, type_):
+        self.type_ = type_
 
-    def get_detaileddescription(self): return self.detaileddescription
-    def set_detaileddescription(
-        self, detaileddescription): self.detaileddescription = detaileddescription
+    def get_definition(self):
+        return self.definition
 
-    def get_inbodydescription(self): return self.inbodydescription
-    def set_inbodydescription(
-        self, inbodydescription): self.inbodydescription = inbodydescription
+    def set_definition(self, definition):
+        self.definition = definition
 
-    def get_location(self): return self.location
-    def set_location(self, location): self.location = location
-    def get_references(self): return self.references
-    def set_references(self, references): self.references = references
-    def add_references(self, value): self.references.append(value)
-    def insert_references(self, index, value): self.references[index] = value
-    def get_referencedby(self): return self.referencedby
-    def set_referencedby(self, referencedby): self.referencedby = referencedby
-    def add_referencedby(self, value): self.referencedby.append(value)
-    def insert_referencedby(
-        self, index, value): self.referencedby[index] = value
+    def get_argsstring(self):
+        return self.argsstring
 
-    def get_initonly(self): return self.initonly
-    def set_initonly(self, initonly): self.initonly = initonly
-    def get_kind(self): return self.kind
-    def set_kind(self, kind): self.kind = kind
-    def get_volatile(self): return self.volatile
-    def set_volatile(self, volatile): self.volatile = volatile
-    def get_const(self): return self.const
-    def set_const(self, const): self.const = const
-    def get_raise(self): return self.raisexx
-    def set_raise(self, raisexx): self.raisexx = raisexx
-    def get_virt(self): return self.virt
-    def set_virt(self, virt): self.virt = virt
-    def get_readable(self): return self.readable
-    def set_readable(self, readable): self.readable = readable
-    def get_prot(self): return self.prot
-    def set_prot(self, prot): self.prot = prot
-    def get_explicit(self): return self.explicit
-    def set_explicit(self, explicit): self.explicit = explicit
-    def get_new(self): return self.new
-    def set_new(self, new): self.new = new
-    def get_final(self): return self.final
-    def set_final(self, final): self.final = final
-    def get_writable(self): return self.writable
-    def set_writable(self, writable): self.writable = writable
-    def get_add(self): return self.add
-    def set_add(self, add): self.add = add
-    def get_static(self): return self.static
-    def set_static(self, static): self.static = static
-    def get_remove(self): return self.remove
-    def set_remove(self, remove): self.remove = remove
-    def get_sealed(self): return self.sealed
-    def set_sealed(self, sealed): self.sealed = sealed
-    def get_mutable(self): return self.mutable
-    def set_mutable(self, mutable): self.mutable = mutable
-    def get_gettable(self): return self.gettable
-    def set_gettable(self, gettable): self.gettable = gettable
-    def get_inline(self): return self.inline
-    def set_inline(self, inline): self.inline = inline
-    def get_settable(self): return self.settable
-    def set_settable(self, settable): self.settable = settable
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+    def set_argsstring(self, argsstring):
+        self.argsstring = argsstring
+
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
+    def get_read(self):
+        return self.read
+
+    def set_read(self, read):
+        self.read = read
+
+    def get_write(self):
+        return self.write
+
+    def set_write(self, write):
+        self.write = write
+
+    def get_bitfield(self):
+        return self.bitfield
+
+    def set_bitfield(self, bitfield):
+        self.bitfield = bitfield
+
+    def get_reimplements(self):
+        return self.reimplements
+
+    def set_reimplements(self, reimplements):
+        self.reimplements = reimplements
+
+    def add_reimplements(self, value):
+        self.reimplements.append(value)
+
+    def insert_reimplements(self, index, value):
+        self.reimplements[index] = value
+
+    def get_reimplementedby(self):
+        return self.reimplementedby
+
+    def set_reimplementedby(self, reimplementedby):
+        self.reimplementedby = reimplementedby
+
+    def add_reimplementedby(self, value):
+        self.reimplementedby.append(value)
+
+    def insert_reimplementedby(self, index, value):
+        self.reimplementedby[index] = value
+
+    def get_param(self):
+        return self.param
+
+    def set_param(self, param):
+        self.param = param
+
+    def add_param(self, value):
+        self.param.append(value)
+
+    def insert_param(self, index, value):
+        self.param[index] = value
+
+    def get_enumvalue(self):
+        return self.enumvalue
+
+    def set_enumvalue(self, enumvalue):
+        self.enumvalue = enumvalue
+
+    def add_enumvalue(self, value):
+        self.enumvalue.append(value)
+
+    def insert_enumvalue(self, index, value):
+        self.enumvalue[index] = value
+
+    def get_initializer(self):
+        return self.initializer
+
+    def set_initializer(self, initializer):
+        self.initializer = initializer
+
+    def get_exceptions(self):
+        return self.exceptions
+
+    def set_exceptions(self, exceptions):
+        self.exceptions = exceptions
+
+    def get_briefdescription(self):
+        return self.briefdescription
+
+    def set_briefdescription(self, briefdescription):
+        self.briefdescription = briefdescription
+
+    def get_detaileddescription(self):
+        return self.detaileddescription
+
+    def set_detaileddescription(self, detaileddescription):
+        self.detaileddescription = detaileddescription
+
+    def get_inbodydescription(self):
+        return self.inbodydescription
+
+    def set_inbodydescription(self, inbodydescription):
+        self.inbodydescription = inbodydescription
+
+    def get_location(self):
+        return self.location
+
+    def set_location(self, location):
+        self.location = location
+
+    def get_references(self):
+        return self.references
+
+    def set_references(self, references):
+        self.references = references
+
+    def add_references(self, value):
+        self.references.append(value)
+
+    def insert_references(self, index, value):
+        self.references[index] = value
+
+    def get_referencedby(self):
+        return self.referencedby
+
+    def set_referencedby(self, referencedby):
+        self.referencedby = referencedby
+
+    def add_referencedby(self, value):
+        self.referencedby.append(value)
+
+    def insert_referencedby(self, index, value):
+        self.referencedby[index] = value
+
+    def get_initonly(self):
+        return self.initonly
+
+    def set_initonly(self, initonly):
+        self.initonly = initonly
+
+    def get_kind(self):
+        return self.kind
+
+    def set_kind(self, kind):
+        self.kind = kind
+
+    def get_volatile(self):
+        return self.volatile
+
+    def set_volatile(self, volatile):
+        self.volatile = volatile
+
+    def get_const(self):
+        return self.const
+
+    def set_const(self, const):
+        self.const = const
+
+    def get_raise(self):
+        return self.raisexx
+
+    def set_raise(self, raisexx):
+        self.raisexx = raisexx
+
+    def get_virt(self):
+        return self.virt
+
+    def set_virt(self, virt):
+        self.virt = virt
+
+    def get_readable(self):
+        return self.readable
+
+    def set_readable(self, readable):
+        self.readable = readable
+
+    def get_prot(self):
+        return self.prot
+
+    def set_prot(self, prot):
+        self.prot = prot
+
+    def get_explicit(self):
+        return self.explicit
+
+    def set_explicit(self, explicit):
+        self.explicit = explicit
+
+    def get_new(self):
+        return self.new
+
+    def set_new(self, new):
+        self.new = new
+
+    def get_final(self):
+        return self.final
+
+    def set_final(self, final):
+        self.final = final
+
+    def get_writable(self):
+        return self.writable
+
+    def set_writable(self, writable):
+        self.writable = writable
+
+    def get_add(self):
+        return self.add
+
+    def set_add(self, add):
+        self.add = add
+
+    def get_static(self):
+        return self.static
+
+    def set_static(self, static):
+        self.static = static
+
+    def get_remove(self):
+        return self.remove
+
+    def set_remove(self, remove):
+        self.remove = remove
+
+    def get_sealed(self):
+        return self.sealed
+
+    def set_sealed(self, sealed):
+        self.sealed = sealed
+
+    def get_mutable(self):
+        return self.mutable
+
+    def set_mutable(self, mutable):
+        self.mutable = mutable
+
+    def get_gettable(self):
+        return self.gettable
+
+    def set_gettable(self, gettable):
+        self.gettable = gettable
+
+    def get_inline(self):
+        return self.inline
+
+    def set_inline(self, inline):
+        self.inline = inline
+
+    def get_settable(self):
+        return self.settable
+
+    def set_settable(self, settable):
+        self.settable = settable
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='memberdefType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='memberdefType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='memberdefType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -2201,135 +2862,184 @@ class memberdefType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='memberdefType'):
         if self.initonly is not None:
-            outfile.write(' initonly=%s' % (quote_attrib(self.initonly), ))
+            outfile.write(' initonly=%s' % (quote_attrib(self.initonly),))
         if self.kind is not None:
-            outfile.write(' kind=%s' % (quote_attrib(self.kind), ))
+            outfile.write(' kind=%s' % (quote_attrib(self.kind),))
         if self.volatile is not None:
-            outfile.write(' volatile=%s' % (quote_attrib(self.volatile), ))
+            outfile.write(' volatile=%s' % (quote_attrib(self.volatile),))
         if self.const is not None:
-            outfile.write(' const=%s' % (quote_attrib(self.const), ))
+            outfile.write(' const=%s' % (quote_attrib(self.const),))
         if self.raisexx is not None:
-            outfile.write(' raise=%s' % (quote_attrib(self.raisexx), ))
+            outfile.write(' raise=%s' % (quote_attrib(self.raisexx),))
         if self.virt is not None:
-            outfile.write(' virt=%s' % (quote_attrib(self.virt), ))
+            outfile.write(' virt=%s' % (quote_attrib(self.virt),))
         if self.readable is not None:
-            outfile.write(' readable=%s' % (quote_attrib(self.readable), ))
+            outfile.write(' readable=%s' % (quote_attrib(self.readable),))
         if self.prot is not None:
-            outfile.write(' prot=%s' % (quote_attrib(self.prot), ))
+            outfile.write(' prot=%s' % (quote_attrib(self.prot),))
         if self.explicit is not None:
-            outfile.write(' explicit=%s' % (quote_attrib(self.explicit), ))
+            outfile.write(' explicit=%s' % (quote_attrib(self.explicit),))
         if self.new is not None:
-            outfile.write(' new=%s' % (quote_attrib(self.new), ))
+            outfile.write(' new=%s' % (quote_attrib(self.new),))
         if self.final is not None:
-            outfile.write(' final=%s' % (quote_attrib(self.final), ))
+            outfile.write(' final=%s' % (quote_attrib(self.final),))
         if self.writable is not None:
-            outfile.write(' writable=%s' % (quote_attrib(self.writable), ))
+            outfile.write(' writable=%s' % (quote_attrib(self.writable),))
         if self.add is not None:
-            outfile.write(' add=%s' % (quote_attrib(self.add), ))
+            outfile.write(' add=%s' % (quote_attrib(self.add),))
         if self.static is not None:
-            outfile.write(' static=%s' % (quote_attrib(self.static), ))
+            outfile.write(' static=%s' % (quote_attrib(self.static),))
         if self.remove is not None:
-            outfile.write(' remove=%s' % (quote_attrib(self.remove), ))
+            outfile.write(' remove=%s' % (quote_attrib(self.remove),))
         if self.sealed is not None:
-            outfile.write(' sealed=%s' % (quote_attrib(self.sealed), ))
+            outfile.write(' sealed=%s' % (quote_attrib(self.sealed),))
         if self.mutable is not None:
-            outfile.write(' mutable=%s' % (quote_attrib(self.mutable), ))
+            outfile.write(' mutable=%s' % (quote_attrib(self.mutable),))
         if self.gettable is not None:
-            outfile.write(' gettable=%s' % (quote_attrib(self.gettable), ))
+            outfile.write(' gettable=%s' % (quote_attrib(self.gettable),))
         if self.inline is not None:
-            outfile.write(' inline=%s' % (quote_attrib(self.inline), ))
+            outfile.write(' inline=%s' % (quote_attrib(self.inline),))
         if self.settable is not None:
-            outfile.write(' settable=%s' % (quote_attrib(self.settable), ))
+            outfile.write(' settable=%s' % (quote_attrib(self.settable),))
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='memberdefType'):
         if self.templateparamlist:
-            self.templateparamlist.export(
-                outfile, level, namespace_, name_='templateparamlist')
+            self.templateparamlist.export(outfile, level, namespace_, name_='templateparamlist')
         if self.type_:
             self.type_.export(outfile, level, namespace_, name_='type')
         if self.definition is not None:
             showIndent(outfile, level)
-            outfile.write('<%sdefinition>%s</%sdefinition>\n' % (namespace_, self.format_string(
-                quote_xml(self.definition).encode(ExternalEncoding), input_name='definition'), namespace_))
+            outfile.write(
+                '<%sdefinition>%s</%sdefinition>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.definition).encode(ExternalEncoding), input_name='definition'
+                    ),
+                    namespace_,
+                )
+            )
         if self.argsstring is not None:
             showIndent(outfile, level)
-            outfile.write('<%sargsstring>%s</%sargsstring>\n' % (namespace_, self.format_string(
-                quote_xml(self.argsstring).encode(ExternalEncoding), input_name='argsstring'), namespace_))
+            outfile.write(
+                '<%sargsstring>%s</%sargsstring>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.argsstring).encode(ExternalEncoding), input_name='argsstring'
+                    ),
+                    namespace_,
+                )
+            )
         if self.name is not None:
             showIndent(outfile, level)
-            outfile.write('<%sname>%s</%sname>\n' % (namespace_, self.format_string(
-                quote_xml(self.name).encode(ExternalEncoding), input_name='name'), namespace_))
+            outfile.write(
+                '<%sname>%s</%sname>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.name).encode(ExternalEncoding), input_name='name'
+                    ),
+                    namespace_,
+                )
+            )
         if self.read is not None:
             showIndent(outfile, level)
-            outfile.write('<%sread>%s</%sread>\n' % (namespace_, self.format_string(
-                quote_xml(self.read).encode(ExternalEncoding), input_name='read'), namespace_))
+            outfile.write(
+                '<%sread>%s</%sread>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.read).encode(ExternalEncoding), input_name='read'
+                    ),
+                    namespace_,
+                )
+            )
         if self.write is not None:
             showIndent(outfile, level)
-            outfile.write('<%swrite>%s</%swrite>\n' % (namespace_, self.format_string(
-                quote_xml(self.write).encode(ExternalEncoding), input_name='write'), namespace_))
+            outfile.write(
+                '<%swrite>%s</%swrite>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.write).encode(ExternalEncoding), input_name='write'
+                    ),
+                    namespace_,
+                )
+            )
         if self.bitfield is not None:
             showIndent(outfile, level)
-            outfile.write('<%sbitfield>%s</%sbitfield>\n' % (namespace_, self.format_string(
-                quote_xml(self.bitfield).encode(ExternalEncoding), input_name='bitfield'), namespace_))
+            outfile.write(
+                '<%sbitfield>%s</%sbitfield>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.bitfield).encode(ExternalEncoding), input_name='bitfield'
+                    ),
+                    namespace_,
+                )
+            )
         for reimplements_ in self.reimplements:
-            reimplements_.export(
-                outfile, level, namespace_, name_='reimplements')
+            reimplements_.export(outfile, level, namespace_, name_='reimplements')
         for reimplementedby_ in self.reimplementedby:
-            reimplementedby_.export(
-                outfile, level, namespace_, name_='reimplementedby')
+            reimplementedby_.export(outfile, level, namespace_, name_='reimplementedby')
         for param_ in self.param:
             param_.export(outfile, level, namespace_, name_='param')
         for enumvalue_ in self.enumvalue:
             enumvalue_.export(outfile, level, namespace_, name_='enumvalue')
         if self.initializer:
-            self.initializer.export(
-                outfile, level, namespace_, name_='initializer')
+            self.initializer.export(outfile, level, namespace_, name_='initializer')
         if self.exceptions:
-            self.exceptions.export(
-                outfile, level, namespace_, name_='exceptions')
+            self.exceptions.export(outfile, level, namespace_, name_='exceptions')
         if self.briefdescription:
-            self.briefdescription.export(
-                outfile, level, namespace_, name_='briefdescription')
+            self.briefdescription.export(outfile, level, namespace_, name_='briefdescription')
         if self.detaileddescription:
-            self.detaileddescription.export(
-                outfile, level, namespace_, name_='detaileddescription')
+            self.detaileddescription.export(outfile, level, namespace_, name_='detaileddescription')
         if self.inbodydescription:
-            self.inbodydescription.export(
-                outfile, level, namespace_, name_='inbodydescription')
+            self.inbodydescription.export(outfile, level, namespace_, name_='inbodydescription')
         if self.location:
             self.location.export(
-                outfile, level, namespace_, name_='location', )
+                outfile,
+                level,
+                namespace_,
+                name_='location',
+            )
         for references_ in self.references:
             references_.export(outfile, level, namespace_, name_='references')
         for referencedby_ in self.referencedby:
-            referencedby_.export(
-                outfile, level, namespace_, name_='referencedby')
+            referencedby_.export(outfile, level, namespace_, name_='referencedby')
 
     def hasContent_(self):
         if (
-            self.templateparamlist is not None or
-            self.type_ is not None or
-            self.definition is not None or
-            self.argsstring is not None or
-            self.name is not None or
-            self.read is not None or
-            self.write is not None or
-            self.bitfield is not None or
-            self.reimplements is not None or
-            self.reimplementedby is not None or
-            self.param is not None or
-            self.enumvalue is not None or
-            self.initializer is not None or
-            self.exceptions is not None or
-            self.briefdescription is not None or
-            self.detaileddescription is not None or
-            self.inbodydescription is not None or
-            self.location is not None or
-            self.references is not None or
-            self.referencedby is not None
+            self.templateparamlist is not None
+            or self.type_ is not None
+            or self.definition is not None
+            or self.argsstring is not None
+            or self.name is not None
+            or self.read is not None
+            or self.write is not None
+            or self.bitfield is not None
+            or self.reimplements is not None
+            or self.reimplementedby is not None
+            or self.param is not None
+            or self.enumvalue is not None
+            or self.initializer is not None
+            or self.exceptions is not None
+            or self.briefdescription is not None
+            or self.detaileddescription is not None
+            or self.inbodydescription is not None
+            or self.location is not None
+            or self.references is not None
+            or self.referencedby is not None
         ):
             return True
         else:
@@ -2410,8 +3120,7 @@ class memberdefType(GeneratedsSuper):
         if self.templateparamlist:
             showIndent(outfile, level)
             outfile.write('templateparamlist=model_.templateparamlistType(\n')
-            self.templateparamlist.exportLiteral(
-                outfile, level, name_='templateparamlist')
+            self.templateparamlist.exportLiteral(outfile, level, name_='templateparamlist')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.type_:
@@ -2421,23 +3130,17 @@ class memberdefType(GeneratedsSuper):
             showIndent(outfile, level)
             outfile.write('),\n')
         showIndent(outfile, level)
-        outfile.write('definition=%s,\n' % quote_python(
-            self.definition).encode(ExternalEncoding))
+        outfile.write('definition=%s,\n' % quote_python(self.definition).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('argsstring=%s,\n' % quote_python(
-            self.argsstring).encode(ExternalEncoding))
+        outfile.write('argsstring=%s,\n' % quote_python(self.argsstring).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('name=%s,\n' % quote_python(
-            self.name).encode(ExternalEncoding))
+        outfile.write('name=%s,\n' % quote_python(self.name).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('read=%s,\n' % quote_python(
-            self.read).encode(ExternalEncoding))
+        outfile.write('read=%s,\n' % quote_python(self.read).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('write=%s,\n' % quote_python(
-            self.write).encode(ExternalEncoding))
+        outfile.write('write=%s,\n' % quote_python(self.write).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('bitfield=%s,\n' % quote_python(
-            self.bitfield).encode(ExternalEncoding))
+        outfile.write('bitfield=%s,\n' % quote_python(self.bitfield).encode(ExternalEncoding))
         showIndent(outfile, level)
         outfile.write('reimplements=[\n')
         level += 1
@@ -2456,8 +3159,7 @@ class memberdefType(GeneratedsSuper):
         for reimplementedby in self.reimplementedby:
             showIndent(outfile, level)
             outfile.write('model_.reimplementedby(\n')
-            reimplementedby.exportLiteral(
-                outfile, level, name_='reimplementedby')
+            reimplementedby.exportLiteral(outfile, level, name_='reimplementedby')
             showIndent(outfile, level)
             outfile.write('),\n')
         level -= 1
@@ -2502,22 +3204,19 @@ class memberdefType(GeneratedsSuper):
         if self.briefdescription:
             showIndent(outfile, level)
             outfile.write('briefdescription=model_.descriptionType(\n')
-            self.briefdescription.exportLiteral(
-                outfile, level, name_='briefdescription')
+            self.briefdescription.exportLiteral(outfile, level, name_='briefdescription')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.detaileddescription:
             showIndent(outfile, level)
             outfile.write('detaileddescription=model_.descriptionType(\n')
-            self.detaileddescription.exportLiteral(
-                outfile, level, name_='detaileddescription')
+            self.detaileddescription.exportLiteral(outfile, level, name_='detaileddescription')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.inbodydescription:
             showIndent(outfile, level)
             outfile.write('inbodydescription=model_.descriptionType(\n')
-            self.inbodydescription.exportLiteral(
-                outfile, level, name_='inbodydescription')
+            self.inbodydescription.exportLiteral(outfile, level, name_='inbodydescription')
             showIndent(outfile, level)
             outfile.write('),\n')
         if self.location:
@@ -2603,112 +3302,94 @@ class memberdefType(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'templateparamlist':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'templateparamlist':
             obj_ = templateparamlistType.factory()
             obj_.build(child_)
             self.set_templateparamlist(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'type':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'type':
             obj_ = linkedTextType.factory()
             obj_.build(child_)
             self.set_type(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'definition':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'definition':
             definition_ = ''
             for text__content_ in child_.childNodes:
                 definition_ += text__content_.nodeValue
             self.definition = definition_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'argsstring':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'argsstring':
             argsstring_ = ''
             for text__content_ in child_.childNodes:
                 argsstring_ += text__content_.nodeValue
             self.argsstring = argsstring_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'name':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'name':
             name_ = ''
             for text__content_ in child_.childNodes:
                 name_ += text__content_.nodeValue
             self.name = name_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'read':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'read':
             read_ = ''
             for text__content_ in child_.childNodes:
                 read_ += text__content_.nodeValue
             self.read = read_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'write':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'write':
             write_ = ''
             for text__content_ in child_.childNodes:
                 write_ += text__content_.nodeValue
             self.write = write_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'bitfield':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'bitfield':
             bitfield_ = ''
             for text__content_ in child_.childNodes:
                 bitfield_ += text__content_.nodeValue
             self.bitfield = bitfield_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'reimplements':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'reimplements':
             obj_ = reimplementType.factory()
             obj_.build(child_)
             self.reimplements.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'reimplementedby':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'reimplementedby':
             obj_ = reimplementType.factory()
             obj_.build(child_)
             self.reimplementedby.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'param':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'param':
             obj_ = paramType.factory()
             obj_.build(child_)
             self.param.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'enumvalue':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'enumvalue':
             obj_ = enumvalueType.factory()
             obj_.build(child_)
             self.enumvalue.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'initializer':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'initializer':
             obj_ = linkedTextType.factory()
             obj_.build(child_)
             self.set_initializer(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'exceptions':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'exceptions':
             obj_ = linkedTextType.factory()
             obj_.build(child_)
             self.set_exceptions(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'briefdescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'briefdescription':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_briefdescription(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'detaileddescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'detaileddescription':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_detaileddescription(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'inbodydescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'inbodydescription':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_inbodydescription(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'location':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'location':
             obj_ = locationType.factory()
             obj_.build(child_)
             self.set_location(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'references':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'references':
             obj_ = referenceType.factory()
             obj_.build(child_)
             self.references.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'referencedby':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'referencedby':
             obj_ = referenceType.factory()
             obj_.build(child_)
             self.referencedby.append(obj_)
+
+
 # end class memberdefType
 
 
@@ -2724,13 +3405,25 @@ class definition(GeneratedsSuper):
             return definition.subclass(*args_, **kwargs_)
         else:
             return definition(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='definition', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='definition')
         if self.hasContent_():
             outfile.write('>\n')
@@ -2753,9 +3446,7 @@ class definition(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -2789,6 +3480,8 @@ class definition(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class definition
 
 
@@ -2804,13 +3497,25 @@ class argsstring(GeneratedsSuper):
             return argsstring.subclass(*args_, **kwargs_)
         else:
             return argsstring(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='argsstring', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='argsstring')
         if self.hasContent_():
             outfile.write('>\n')
@@ -2833,9 +3538,7 @@ class argsstring(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -2869,6 +3572,8 @@ class argsstring(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class argsstring
 
 
@@ -2884,13 +3589,25 @@ class read(GeneratedsSuper):
             return read.subclass(*args_, **kwargs_)
         else:
             return read(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='read', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='read')
         if self.hasContent_():
             outfile.write('>\n')
@@ -2913,9 +3630,7 @@ class read(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -2949,6 +3664,8 @@ class read(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class read
 
 
@@ -2964,13 +3681,25 @@ class write(GeneratedsSuper):
             return write.subclass(*args_, **kwargs_)
         else:
             return write(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='write', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='write')
         if self.hasContent_():
             outfile.write('>\n')
@@ -2993,9 +3722,7 @@ class write(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -3029,6 +3756,8 @@ class write(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class write
 
 
@@ -3044,13 +3773,25 @@ class bitfield(GeneratedsSuper):
             return bitfield.subclass(*args_, **kwargs_)
         else:
             return bitfield(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='bitfield', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='bitfield')
         if self.hasContent_():
             outfile.write('>\n')
@@ -3073,9 +3814,7 @@ class bitfield(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -3109,6 +3848,8 @@ class bitfield(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class bitfield
 
 
@@ -3116,7 +3857,9 @@ class descriptionType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, title=None, para=None, sect1=None, internal=None, mixedclass_=None, content_=None):
+    def __init__(
+        self, title=None, para=None, sect1=None, internal=None, mixedclass_=None, content_=None
+    ):
         if mixedclass_ is None:
             self.mixedclass_ = MixedContainer
         else:
@@ -3131,25 +3874,56 @@ class descriptionType(GeneratedsSuper):
             return descriptionType.subclass(*args_, **kwargs_)
         else:
             return descriptionType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_title(self): return self.title
-    def set_title(self, title): self.title = title
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect1(self): return self.sect1
-    def set_sect1(self, sect1): self.sect1 = sect1
-    def add_sect1(self, value): self.sect1.append(value)
-    def insert_sect1(self, index, value): self.sect1[index] = value
-    def get_internal(self): return self.internal
-    def set_internal(self, internal): self.internal = internal
+
+    def get_title(self):
+        return self.title
+
+    def set_title(self, title):
+        self.title = title
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect1(self):
+        return self.sect1
+
+    def set_sect1(self, sect1):
+        self.sect1 = sect1
+
+    def add_sect1(self, value):
+        self.sect1.append(value)
+
+    def insert_sect1(self, index, value):
+        self.sect1[index] = value
+
+    def get_internal(self):
+        return self.internal
+
+    def set_internal(self, internal):
+        self.internal = internal
 
     def export(self, outfile, level, namespace_='', name_='descriptionType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='descriptionType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='descriptionType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -3163,10 +3937,10 @@ class descriptionType(GeneratedsSuper):
 
     def hasContent_(self):
         if (
-            self.title is not None or
-            self.para is not None or
-            self.sect1 is not None or
-            self.internal is not None
+            self.title is not None
+            or self.para is not None
+            or self.sect1 is not None
+            or self.internal is not None
         ):
             return True
         else:
@@ -3218,38 +3992,41 @@ class descriptionType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'title':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'title':
             childobj_ = docTitleType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'title', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'title', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect1':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect1':
             childobj_ = docSect1Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'sect1', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'sect1', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'internal':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'internal':
             childobj_ = docInternalType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'internal', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'internal', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class descriptionType
 
 
@@ -3257,7 +4034,17 @@ class enumvalueType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, prot=None, id=None, name=None, initializer=None, briefdescription=None, detaileddescription=None, mixedclass_=None, content_=None):
+    def __init__(
+        self,
+        prot=None,
+        id=None,
+        name=None,
+        initializer=None,
+        briefdescription=None,
+        detaileddescription=None,
+        mixedclass_=None,
+        content_=None,
+    ):
         self.prot = prot
         self.id = id
         if mixedclass_ is None:
@@ -3274,39 +4061,72 @@ class enumvalueType(GeneratedsSuper):
             return enumvalueType.subclass(*args_, **kwargs_)
         else:
             return enumvalueType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_name(self): return self.name
-    def set_name(self, name): self.name = name
-    def get_initializer(self): return self.initializer
-    def set_initializer(self, initializer): self.initializer = initializer
-    def get_briefdescription(self): return self.briefdescription
-    def set_briefdescription(
-        self, briefdescription): self.briefdescription = briefdescription
 
-    def get_detaileddescription(self): return self.detaileddescription
-    def set_detaileddescription(
-        self, detaileddescription): self.detaileddescription = detaileddescription
+    def get_name(self):
+        return self.name
 
-    def get_prot(self): return self.prot
-    def set_prot(self, prot): self.prot = prot
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+    def set_name(self, name):
+        self.name = name
+
+    def get_initializer(self):
+        return self.initializer
+
+    def set_initializer(self, initializer):
+        self.initializer = initializer
+
+    def get_briefdescription(self):
+        return self.briefdescription
+
+    def set_briefdescription(self, briefdescription):
+        self.briefdescription = briefdescription
+
+    def get_detaileddescription(self):
+        return self.detaileddescription
+
+    def set_detaileddescription(self, detaileddescription):
+        self.detaileddescription = detaileddescription
+
+    def get_prot(self):
+        return self.prot
+
+    def set_prot(self, prot):
+        self.prot = prot
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='enumvalueType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='enumvalueType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='enumvalueType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='enumvalueType'):
         if self.prot is not None:
-            outfile.write(' prot=%s' % (quote_attrib(self.prot), ))
+            outfile.write(' prot=%s' % (quote_attrib(self.prot),))
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='enumvalueType'):
         for item_ in self.content_:
@@ -3314,10 +4134,10 @@ class enumvalueType(GeneratedsSuper):
 
     def hasContent_(self):
         if (
-            self.name is not None or
-            self.initializer is not None or
-            self.briefdescription is not None or
-            self.detaileddescription is not None
+            self.name is not None
+            or self.initializer is not None
+            or self.briefdescription is not None
+            or self.detaileddescription is not None
         ):
             return True
         else:
@@ -3377,40 +4197,49 @@ class enumvalueType(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'name':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'name':
             value_ = []
             for text_ in child_.childNodes:
                 value_.append(text_.nodeValue)
             valuestr_ = ''.join(value_)
-            obj_ = self.mixedclass_(MixedContainer.CategorySimple,
-                                    MixedContainer.TypeString, 'name', valuestr_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategorySimple, MixedContainer.TypeString, 'name', valuestr_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'initializer':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'initializer':
             childobj_ = linkedTextType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'initializer', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'initializer', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'briefdescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'briefdescription':
             childobj_ = descriptionType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'briefdescription', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex,
+                MixedContainer.TypeNone,
+                'briefdescription',
+                childobj_,
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'detaileddescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'detaileddescription':
             childobj_ = descriptionType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'detaileddescription', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex,
+                MixedContainer.TypeNone,
+                'detaileddescription',
+                childobj_,
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class enumvalueType
 
 
@@ -3429,17 +4258,34 @@ class templateparamlistType(GeneratedsSuper):
             return templateparamlistType.subclass(*args_, **kwargs_)
         else:
             return templateparamlistType(*args_, **kwargs_)
-    factory = staticmethod(factory)
-    def get_param(self): return self.param
-    def set_param(self, param): self.param = param
-    def add_param(self, value): self.param.append(value)
-    def insert_param(self, index, value): self.param[index] = value
 
-    def export(self, outfile, level, namespace_='', name_='templateparamlistType', namespacedef_=''):
+    factory = staticmethod(factory)
+
+    def get_param(self):
+        return self.param
+
+    def set_param(self, param):
+        self.param = param
+
+    def add_param(self, value):
+        self.param.append(value)
+
+    def insert_param(self, index, value):
+        self.param[index] = value
+
+    def export(
+        self, outfile, level, namespace_='', name_='templateparamlistType', namespacedef_=''
+    ):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='templateparamlistType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='templateparamlistType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -3456,9 +4302,7 @@ class templateparamlistType(GeneratedsSuper):
             param_.export(outfile, level, namespace_, name_='param')
 
     def hasContent_(self):
-        if (
-            self.param is not None
-        ):
+        if self.param is not None:
             return True
         else:
             return False
@@ -3497,11 +4341,12 @@ class templateparamlistType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'param':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'param':
             obj_ = paramType.factory()
             obj_.build(child_)
             self.param.append(obj_)
+
+
 # end class templateparamlistType
 
 
@@ -3509,7 +4354,15 @@ class paramType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, type_=None, declname=None, defname=None, array=None, defval=None, briefdescription=None):
+    def __init__(
+        self,
+        type_=None,
+        declname=None,
+        defname=None,
+        array=None,
+        defval=None,
+        briefdescription=None,
+    ):
         self.type_ = type_
         self.declname = declname
         self.defname = defname
@@ -3522,25 +4375,55 @@ class paramType(GeneratedsSuper):
             return paramType.subclass(*args_, **kwargs_)
         else:
             return paramType(*args_, **kwargs_)
-    factory = staticmethod(factory)
-    def get_type(self): return self.type_
-    def set_type(self, type_): self.type_ = type_
-    def get_declname(self): return self.declname
-    def set_declname(self, declname): self.declname = declname
-    def get_defname(self): return self.defname
-    def set_defname(self, defname): self.defname = defname
-    def get_array(self): return self.array
-    def set_array(self, array): self.array = array
-    def get_defval(self): return self.defval
-    def set_defval(self, defval): self.defval = defval
-    def get_briefdescription(self): return self.briefdescription
 
-    def set_briefdescription(
-        self, briefdescription): self.briefdescription = briefdescription
+    factory = staticmethod(factory)
+
+    def get_type(self):
+        return self.type_
+
+    def set_type(self, type_):
+        self.type_ = type_
+
+    def get_declname(self):
+        return self.declname
+
+    def set_declname(self, declname):
+        self.declname = declname
+
+    def get_defname(self):
+        return self.defname
+
+    def set_defname(self, defname):
+        self.defname = defname
+
+    def get_array(self):
+        return self.array
+
+    def set_array(self, array):
+        self.array = array
+
+    def get_defval(self):
+        return self.defval
+
+    def set_defval(self, defval):
+        self.defval = defval
+
+    def get_briefdescription(self):
+        return self.briefdescription
+
+    def set_briefdescription(self, briefdescription):
+        self.briefdescription = briefdescription
 
     def export(self, outfile, level, namespace_='', name_='paramType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='paramType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -3558,30 +4441,53 @@ class paramType(GeneratedsSuper):
             self.type_.export(outfile, level, namespace_, name_='type')
         if self.declname is not None:
             showIndent(outfile, level)
-            outfile.write('<%sdeclname>%s</%sdeclname>\n' % (namespace_, self.format_string(
-                quote_xml(self.declname).encode(ExternalEncoding), input_name='declname'), namespace_))
+            outfile.write(
+                '<%sdeclname>%s</%sdeclname>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.declname).encode(ExternalEncoding), input_name='declname'
+                    ),
+                    namespace_,
+                )
+            )
         if self.defname is not None:
             showIndent(outfile, level)
-            outfile.write('<%sdefname>%s</%sdefname>\n' % (namespace_, self.format_string(
-                quote_xml(self.defname).encode(ExternalEncoding), input_name='defname'), namespace_))
+            outfile.write(
+                '<%sdefname>%s</%sdefname>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.defname).encode(ExternalEncoding), input_name='defname'
+                    ),
+                    namespace_,
+                )
+            )
         if self.array is not None:
             showIndent(outfile, level)
-            outfile.write('<%sarray>%s</%sarray>\n' % (namespace_, self.format_string(
-                quote_xml(self.array).encode(ExternalEncoding), input_name='array'), namespace_))
+            outfile.write(
+                '<%sarray>%s</%sarray>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.array).encode(ExternalEncoding), input_name='array'
+                    ),
+                    namespace_,
+                )
+            )
         if self.defval:
             self.defval.export(outfile, level, namespace_, name_='defval')
         if self.briefdescription:
-            self.briefdescription.export(
-                outfile, level, namespace_, name_='briefdescription')
+            self.briefdescription.export(outfile, level, namespace_, name_='briefdescription')
 
     def hasContent_(self):
         if (
-            self.type_ is not None or
-            self.declname is not None or
-            self.defname is not None or
-            self.array is not None or
-            self.defval is not None or
-            self.briefdescription is not None
+            self.type_ is not None
+            or self.declname is not None
+            or self.defname is not None
+            or self.array is not None
+            or self.defval is not None
+            or self.briefdescription is not None
         ):
             return True
         else:
@@ -3604,14 +4510,11 @@ class paramType(GeneratedsSuper):
             showIndent(outfile, level)
             outfile.write('),\n')
         showIndent(outfile, level)
-        outfile.write('declname=%s,\n' % quote_python(
-            self.declname).encode(ExternalEncoding))
+        outfile.write('declname=%s,\n' % quote_python(self.declname).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('defname=%s,\n' % quote_python(
-            self.defname).encode(ExternalEncoding))
+        outfile.write('defname=%s,\n' % quote_python(self.defname).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('array=%s,\n' % quote_python(
-            self.array).encode(ExternalEncoding))
+        outfile.write('array=%s,\n' % quote_python(self.array).encode(ExternalEncoding))
         if self.defval:
             showIndent(outfile, level)
             outfile.write('defval=model_.linkedTextType(\n')
@@ -3621,8 +4524,7 @@ class paramType(GeneratedsSuper):
         if self.briefdescription:
             showIndent(outfile, level)
             outfile.write('briefdescription=model_.descriptionType(\n')
-            self.briefdescription.exportLiteral(
-                outfile, level, name_='briefdescription')
+            self.briefdescription.exportLiteral(outfile, level, name_='briefdescription')
             showIndent(outfile, level)
             outfile.write('),\n')
 
@@ -3637,39 +4539,35 @@ class paramType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'type':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'type':
             obj_ = linkedTextType.factory()
             obj_.build(child_)
             self.set_type(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'declname':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'declname':
             declname_ = ''
             for text__content_ in child_.childNodes:
                 declname_ += text__content_.nodeValue
             self.declname = declname_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'defname':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'defname':
             defname_ = ''
             for text__content_ in child_.childNodes:
                 defname_ += text__content_.nodeValue
             self.defname = defname_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'array':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'array':
             array_ = ''
             for text__content_ in child_.childNodes:
                 array_ += text__content_.nodeValue
             self.array = array_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'defval':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'defval':
             obj_ = linkedTextType.factory()
             obj_.build(child_)
             self.set_defval(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'briefdescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'briefdescription':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_briefdescription(obj_)
+
+
 # end class paramType
 
 
@@ -3685,13 +4583,25 @@ class declname(GeneratedsSuper):
             return declname.subclass(*args_, **kwargs_)
         else:
             return declname(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='declname', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='declname')
         if self.hasContent_():
             outfile.write('>\n')
@@ -3714,9 +4624,7 @@ class declname(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -3750,6 +4658,8 @@ class declname(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class declname
 
 
@@ -3765,13 +4675,25 @@ class defname(GeneratedsSuper):
             return defname.subclass(*args_, **kwargs_)
         else:
             return defname(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='defname', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='defname')
         if self.hasContent_():
             outfile.write('>\n')
@@ -3794,9 +4716,7 @@ class defname(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -3830,6 +4750,8 @@ class defname(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class defname
 
 
@@ -3845,13 +4767,25 @@ class array(GeneratedsSuper):
             return array.subclass(*args_, **kwargs_)
         else:
             return array(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='array', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='array')
         if self.hasContent_():
             outfile.write('>\n')
@@ -3874,9 +4808,7 @@ class array(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -3910,6 +4842,8 @@ class array(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class array
 
 
@@ -3932,17 +4866,32 @@ class linkedTextType(GeneratedsSuper):
             return linkedTextType.subclass(*args_, **kwargs_)
         else:
             return linkedTextType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_ref(self): return self.ref
-    def set_ref(self, ref): self.ref = ref
-    def add_ref(self, value): self.ref.append(value)
-    def insert_ref(self, index, value): self.ref[index] = value
+
+    def get_ref(self):
+        return self.ref
+
+    def set_ref(self, ref):
+        self.ref = ref
+
+    def add_ref(self, value):
+        self.ref.append(value)
+
+    def insert_ref(self, index, value):
+        self.ref[index] = value
 
     def export(self, outfile, level, namespace_='', name_='linkedTextType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='linkedTextType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='linkedTextType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -3955,9 +4904,7 @@ class linkedTextType(GeneratedsSuper):
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.ref is not None
-        ):
+        if self.ref is not None:
             return True
         else:
             return False
@@ -3990,17 +4937,20 @@ class linkedTextType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'ref':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'ref':
             childobj_ = docRefTextType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'ref', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'ref', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class linkedTextType
 
 
@@ -4019,15 +4969,31 @@ class graphType(GeneratedsSuper):
             return graphType.subclass(*args_, **kwargs_)
         else:
             return graphType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_node(self): return self.node
-    def set_node(self, node): self.node = node
-    def add_node(self, value): self.node.append(value)
-    def insert_node(self, index, value): self.node[index] = value
+
+    def get_node(self):
+        return self.node
+
+    def set_node(self, node):
+        self.node = node
+
+    def add_node(self, value):
+        self.node.append(value)
+
+    def insert_node(self, index, value):
+        self.node[index] = value
 
     def export(self, outfile, level, namespace_='', name_='graphType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='graphType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -4045,9 +5011,7 @@ class graphType(GeneratedsSuper):
             node_.export(outfile, level, namespace_, name_='node')
 
     def hasContent_(self):
-        if (
-            self.node is not None
-        ):
+        if self.node is not None:
             return True
         else:
             return False
@@ -4086,11 +5050,12 @@ class graphType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'node':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'node':
             obj_ = nodeType.factory()
             obj_.build(child_)
             self.node.append(obj_)
+
+
 # end class graphType
 
 
@@ -4112,21 +5077,49 @@ class nodeType(GeneratedsSuper):
             return nodeType.subclass(*args_, **kwargs_)
         else:
             return nodeType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_label(self): return self.label
-    def set_label(self, label): self.label = label
-    def get_link(self): return self.link
-    def set_link(self, link): self.link = link
-    def get_childnode(self): return self.childnode
-    def set_childnode(self, childnode): self.childnode = childnode
-    def add_childnode(self, value): self.childnode.append(value)
-    def insert_childnode(self, index, value): self.childnode[index] = value
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+
+    def get_label(self):
+        return self.label
+
+    def set_label(self, label):
+        self.label = label
+
+    def get_link(self):
+        return self.link
+
+    def set_link(self, link):
+        self.link = link
+
+    def get_childnode(self):
+        return self.childnode
+
+    def set_childnode(self, childnode):
+        self.childnode = childnode
+
+    def add_childnode(self, value):
+        self.childnode.append(value)
+
+    def insert_childnode(self, index, value):
+        self.childnode[index] = value
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='nodeType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='nodeType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -4138,25 +5131,35 @@ class nodeType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='nodeType'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='nodeType'):
         if self.label is not None:
             showIndent(outfile, level)
-            outfile.write('<%slabel>%s</%slabel>\n' % (namespace_, self.format_string(
-                quote_xml(self.label).encode(ExternalEncoding), input_name='label'), namespace_))
+            outfile.write(
+                '<%slabel>%s</%slabel>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.label).encode(ExternalEncoding), input_name='label'
+                    ),
+                    namespace_,
+                )
+            )
         if self.link:
             self.link.export(outfile, level, namespace_, name_='link')
         for childnode_ in self.childnode:
             childnode_.export(outfile, level, namespace_, name_='childnode')
 
     def hasContent_(self):
-        if (
-            self.label is not None or
-            self.link is not None or
-            self.childnode is not None
-        ):
+        if self.label is not None or self.link is not None or self.childnode is not None:
             return True
         else:
             return False
@@ -4174,8 +5177,7 @@ class nodeType(GeneratedsSuper):
 
     def exportLiteralChildren(self, outfile, level, name_):
         showIndent(outfile, level)
-        outfile.write('label=%s,\n' % quote_python(
-            self.label).encode(ExternalEncoding))
+        outfile.write('label=%s,\n' % quote_python(self.label).encode(ExternalEncoding))
         if self.link:
             showIndent(outfile, level)
             outfile.write('link=model_.linkType(\n')
@@ -4207,22 +5209,21 @@ class nodeType(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'label':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'label':
             label_ = ''
             for text__content_ in child_.childNodes:
                 label_ += text__content_.nodeValue
             self.label = label_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'link':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'link':
             obj_ = linkType.factory()
             obj_.build(child_)
             self.set_link(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'childnode':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'childnode':
             obj_ = childnodeType.factory()
             obj_.build(child_)
             self.childnode.append(obj_)
+
+
 # end class nodeType
 
 
@@ -4238,13 +5239,25 @@ class label(GeneratedsSuper):
             return label.subclass(*args_, **kwargs_)
         else:
             return label(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='label', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='label')
         if self.hasContent_():
             outfile.write('>\n')
@@ -4267,9 +5280,7 @@ class label(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -4303,6 +5314,8 @@ class label(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class label
 
 
@@ -4323,21 +5336,44 @@ class childnodeType(GeneratedsSuper):
             return childnodeType.subclass(*args_, **kwargs_)
         else:
             return childnodeType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_edgelabel(self): return self.edgelabel
-    def set_edgelabel(self, edgelabel): self.edgelabel = edgelabel
-    def add_edgelabel(self, value): self.edgelabel.append(value)
-    def insert_edgelabel(self, index, value): self.edgelabel[index] = value
-    def get_relation(self): return self.relation
-    def set_relation(self, relation): self.relation = relation
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
+
+    def get_edgelabel(self):
+        return self.edgelabel
+
+    def set_edgelabel(self, edgelabel):
+        self.edgelabel = edgelabel
+
+    def add_edgelabel(self, value):
+        self.edgelabel.append(value)
+
+    def insert_edgelabel(self, index, value):
+        self.edgelabel[index] = value
+
+    def get_relation(self):
+        return self.relation
+
+    def set_relation(self, relation):
+        self.relation = relation
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
 
     def export(self, outfile, level, namespace_='', name_='childnodeType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='childnodeType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='childnodeType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -4348,21 +5384,33 @@ class childnodeType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='childnodeType'):
         if self.relation is not None:
-            outfile.write(' relation=%s' % (quote_attrib(self.relation), ))
+            outfile.write(' relation=%s' % (quote_attrib(self.relation),))
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='childnodeType'):
         for edgelabel_ in self.edgelabel:
             showIndent(outfile, level)
-            outfile.write('<%sedgelabel>%s</%sedgelabel>\n' % (namespace_, self.format_string(
-                quote_xml(edgelabel_).encode(ExternalEncoding), input_name='edgelabel'), namespace_))
+            outfile.write(
+                '<%sedgelabel>%s</%sedgelabel>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(edgelabel_).encode(ExternalEncoding), input_name='edgelabel'
+                    ),
+                    namespace_,
+                )
+            )
 
     def hasContent_(self):
-        if (
-            self.edgelabel is not None
-        ):
+        if self.edgelabel is not None:
             return True
         else:
             return False
@@ -4387,8 +5435,7 @@ class childnodeType(GeneratedsSuper):
         level += 1
         for edgelabel in self.edgelabel:
             showIndent(outfile, level)
-            outfile.write('%s,\n' % quote_python(
-                edgelabel).encode(ExternalEncoding))
+            outfile.write('%s,\n' % quote_python(edgelabel).encode(ExternalEncoding))
         level -= 1
         showIndent(outfile, level)
         outfile.write('],\n')
@@ -4407,12 +5454,13 @@ class childnodeType(GeneratedsSuper):
             self.refid = attrs.get('refid').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'edgelabel':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'edgelabel':
             edgelabel_ = ''
             for text__content_ in child_.childNodes:
                 edgelabel_ += text__content_.nodeValue
             self.edgelabel.append(edgelabel_)
+
+
 # end class childnodeType
 
 
@@ -4428,13 +5476,25 @@ class edgelabel(GeneratedsSuper):
             return edgelabel.subclass(*args_, **kwargs_)
         else:
             return edgelabel(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='edgelabel', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='edgelabel')
         if self.hasContent_():
             outfile.write('>\n')
@@ -4457,9 +5517,7 @@ class edgelabel(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -4493,6 +5551,8 @@ class edgelabel(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class edgelabel
 
 
@@ -4510,17 +5570,37 @@ class linkType(GeneratedsSuper):
             return linkType.subclass(*args_, **kwargs_)
         else:
             return linkType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def get_external(self): return self.external
-    def set_external(self, external): self.external = external
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def get_external(self):
+        return self.external
+
+    def set_external(self, external):
+        self.external = external
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='linkType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='linkType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -4532,11 +5612,23 @@ class linkType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='linkType'):
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
         if self.external is not None:
-            outfile.write(' external=%s' % (self.format_string(quote_attrib(
-                self.external).encode(ExternalEncoding), input_name='external'), ))
+            outfile.write(
+                ' external=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.external).encode(ExternalEncoding), input_name='external'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='linkType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -4548,9 +5640,7 @@ class linkType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -4592,6 +5682,8 @@ class linkType(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class linkType
 
 
@@ -4610,15 +5702,31 @@ class listingType(GeneratedsSuper):
             return listingType.subclass(*args_, **kwargs_)
         else:
             return listingType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_codeline(self): return self.codeline
-    def set_codeline(self, codeline): self.codeline = codeline
-    def add_codeline(self, value): self.codeline.append(value)
-    def insert_codeline(self, index, value): self.codeline[index] = value
+
+    def get_codeline(self):
+        return self.codeline
+
+    def set_codeline(self, codeline):
+        self.codeline = codeline
+
+    def add_codeline(self, value):
+        self.codeline.append(value)
+
+    def insert_codeline(self, index, value):
+        self.codeline[index] = value
 
     def export(self, outfile, level, namespace_='', name_='listingType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='listingType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -4636,9 +5744,7 @@ class listingType(GeneratedsSuper):
             codeline_.export(outfile, level, namespace_, name_='codeline')
 
     def hasContent_(self):
-        if (
-            self.codeline is not None
-        ):
+        if self.codeline is not None:
             return True
         else:
             return False
@@ -4677,11 +5783,12 @@ class listingType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'codeline':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'codeline':
             obj_ = codelineType.factory()
             obj_.build(child_)
             self.codeline.append(obj_)
+
+
 # end class listingType
 
 
@@ -4704,23 +5811,55 @@ class codelineType(GeneratedsSuper):
             return codelineType.subclass(*args_, **kwargs_)
         else:
             return codelineType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_highlight(self): return self.highlight
-    def set_highlight(self, highlight): self.highlight = highlight
-    def add_highlight(self, value): self.highlight.append(value)
-    def insert_highlight(self, index, value): self.highlight[index] = value
-    def get_external(self): return self.external
-    def set_external(self, external): self.external = external
-    def get_lineno(self): return self.lineno
-    def set_lineno(self, lineno): self.lineno = lineno
-    def get_refkind(self): return self.refkind
-    def set_refkind(self, refkind): self.refkind = refkind
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
+
+    def get_highlight(self):
+        return self.highlight
+
+    def set_highlight(self, highlight):
+        self.highlight = highlight
+
+    def add_highlight(self, value):
+        self.highlight.append(value)
+
+    def insert_highlight(self, index, value):
+        self.highlight[index] = value
+
+    def get_external(self):
+        return self.external
+
+    def set_external(self, external):
+        self.external = external
+
+    def get_lineno(self):
+        return self.lineno
+
+    def set_lineno(self, lineno):
+        self.lineno = lineno
+
+    def get_refkind(self):
+        return self.refkind
+
+    def set_refkind(self, refkind):
+        self.refkind = refkind
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
 
     def export(self, outfile, level, namespace_='', name_='codelineType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='codelineType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -4732,24 +5871,27 @@ class codelineType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='codelineType'):
         if self.external is not None:
-            outfile.write(' external=%s' % (quote_attrib(self.external), ))
+            outfile.write(' external=%s' % (quote_attrib(self.external),))
         if self.lineno is not None:
-            outfile.write(' lineno="%s"' % self.format_integer(
-                self.lineno, input_name='lineno'))
+            outfile.write(' lineno="%s"' % self.format_integer(self.lineno, input_name='lineno'))
         if self.refkind is not None:
-            outfile.write(' refkind=%s' % (quote_attrib(self.refkind), ))
+            outfile.write(' refkind=%s' % (quote_attrib(self.refkind),))
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='codelineType'):
         for highlight_ in self.highlight:
             highlight_.export(outfile, level, namespace_, name_='highlight')
 
     def hasContent_(self):
-        if (
-            self.highlight is not None
-        ):
+        if self.highlight is not None:
             return True
         else:
             return False
@@ -4809,11 +5951,12 @@ class codelineType(GeneratedsSuper):
             self.refid = attrs.get('refid').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'highlight':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'highlight':
             obj_ = highlightType.factory()
             obj_.build(child_)
             self.highlight.append(obj_)
+
+
 # end class codelineType
 
 
@@ -4837,40 +5980,64 @@ class highlightType(GeneratedsSuper):
             return highlightType.subclass(*args_, **kwargs_)
         else:
             return highlightType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_sp(self): return self.sp
-    def set_sp(self, sp): self.sp = sp
-    def add_sp(self, value): self.sp.append(value)
-    def insert_sp(self, index, value): self.sp[index] = value
-    def get_ref(self): return self.ref
-    def set_ref(self, ref): self.ref = ref
-    def add_ref(self, value): self.ref.append(value)
-    def insert_ref(self, index, value): self.ref[index] = value
-    def get_class(self): return self.classxx
-    def set_class(self, classxx): self.classxx = classxx
+
+    def get_sp(self):
+        return self.sp
+
+    def set_sp(self, sp):
+        self.sp = sp
+
+    def add_sp(self, value):
+        self.sp.append(value)
+
+    def insert_sp(self, index, value):
+        self.sp[index] = value
+
+    def get_ref(self):
+        return self.ref
+
+    def set_ref(self, ref):
+        self.ref = ref
+
+    def add_ref(self, value):
+        self.ref.append(value)
+
+    def insert_ref(self, index, value):
+        self.ref[index] = value
+
+    def get_class(self):
+        return self.classxx
+
+    def set_class(self, classxx):
+        self.classxx = classxx
 
     def export(self, outfile, level, namespace_='', name_='highlightType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='highlightType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='highlightType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='highlightType'):
         if self.classxx is not None:
-            outfile.write(' class=%s' % (quote_attrib(self.classxx), ))
+            outfile.write(' class=%s' % (quote_attrib(self.classxx),))
 
     def exportChildren(self, outfile, level, namespace_='', name_='highlightType'):
         for item_ in self.content_:
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.sp is not None or
-            self.ref is not None
-        ):
+        if self.sp is not None or self.ref is not None:
             return True
         else:
             return False
@@ -4912,26 +6079,29 @@ class highlightType(GeneratedsSuper):
             self.classxx = attrs.get('class').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sp':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sp':
             value_ = []
             for text_ in child_.childNodes:
                 value_.append(text_.nodeValue)
             valuestr_ = ''.join(value_)
-            obj_ = self.mixedclass_(MixedContainer.CategorySimple,
-                                    MixedContainer.TypeString, 'sp', valuestr_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategorySimple, MixedContainer.TypeString, 'sp', valuestr_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'ref':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'ref':
             childobj_ = docRefTextType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'ref', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'ref', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class highlightType
 
 
@@ -4947,13 +6117,25 @@ class sp(GeneratedsSuper):
             return sp.subclass(*args_, **kwargs_)
         else:
             return sp(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='sp', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='sp')
         if self.hasContent_():
             outfile.write('>\n')
@@ -4976,9 +6158,7 @@ class sp(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -5012,6 +6192,8 @@ class sp(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class sp
 
 
@@ -5019,7 +6201,16 @@ class referenceType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, endline=None, startline=None, refid=None, compoundref=None, valueOf_='', mixedclass_=None, content_=None):
+    def __init__(
+        self,
+        endline=None,
+        startline=None,
+        refid=None,
+        compoundref=None,
+        valueOf_='',
+        mixedclass_=None,
+        content_=None,
+    ):
         self.endline = endline
         self.startline = startline
         self.refid = refid
@@ -5038,40 +6229,80 @@ class referenceType(GeneratedsSuper):
             return referenceType.subclass(*args_, **kwargs_)
         else:
             return referenceType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_endline(self): return self.endline
-    def set_endline(self, endline): self.endline = endline
-    def get_startline(self): return self.startline
-    def set_startline(self, startline): self.startline = startline
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def get_compoundref(self): return self.compoundref
-    def set_compoundref(self, compoundref): self.compoundref = compoundref
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_endline(self):
+        return self.endline
+
+    def set_endline(self, endline):
+        self.endline = endline
+
+    def get_startline(self):
+        return self.startline
+
+    def set_startline(self, startline):
+        self.startline = startline
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def get_compoundref(self):
+        return self.compoundref
+
+    def set_compoundref(self, compoundref):
+        self.compoundref = compoundref
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='referenceType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='referenceType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='referenceType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='referenceType'):
         if self.endline is not None:
-            outfile.write(' endline="%s"' % self.format_integer(
-                self.endline, input_name='endline'))
+            outfile.write(' endline="%s"' % self.format_integer(self.endline, input_name='endline'))
         if self.startline is not None:
-            outfile.write(' startline="%s"' % self.format_integer(
-                self.startline, input_name='startline'))
+            outfile.write(
+                ' startline="%s"' % self.format_integer(self.startline, input_name='startline')
+            )
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
         if self.compoundref is not None:
-            outfile.write(' compoundref=%s' % (self.format_string(quote_attrib(
-                self.compoundref).encode(ExternalEncoding), input_name='compoundref'), ))
+            outfile.write(
+                ' compoundref=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.compoundref).encode(ExternalEncoding),
+                        input_name='compoundref',
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='referenceType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -5083,9 +6314,7 @@ class referenceType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -5140,13 +6369,16 @@ class referenceType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class referenceType
 
 
@@ -5154,7 +6386,9 @@ class locationType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, bodystart=None, line=None, bodyend=None, bodyfile=None, file=None, valueOf_=''):
+    def __init__(
+        self, bodystart=None, line=None, bodyend=None, bodyfile=None, file=None, valueOf_=''
+    ):
         self.bodystart = bodystart
         self.line = line
         self.bodyend = bodyend
@@ -5167,23 +6401,55 @@ class locationType(GeneratedsSuper):
             return locationType.subclass(*args_, **kwargs_)
         else:
             return locationType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_bodystart(self): return self.bodystart
-    def set_bodystart(self, bodystart): self.bodystart = bodystart
-    def get_line(self): return self.line
-    def set_line(self, line): self.line = line
-    def get_bodyend(self): return self.bodyend
-    def set_bodyend(self, bodyend): self.bodyend = bodyend
-    def get_bodyfile(self): return self.bodyfile
-    def set_bodyfile(self, bodyfile): self.bodyfile = bodyfile
-    def get_file(self): return self.file
-    def set_file(self, file): self.file = file
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_bodystart(self):
+        return self.bodystart
+
+    def set_bodystart(self, bodystart):
+        self.bodystart = bodystart
+
+    def get_line(self):
+        return self.line
+
+    def set_line(self, line):
+        self.line = line
+
+    def get_bodyend(self):
+        return self.bodyend
+
+    def set_bodyend(self, bodyend):
+        self.bodyend = bodyend
+
+    def get_bodyfile(self):
+        return self.bodyfile
+
+    def set_bodyfile(self, bodyfile):
+        self.bodyfile = bodyfile
+
+    def get_file(self):
+        return self.file
+
+    def set_file(self, file):
+        self.file = file
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='locationType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='locationType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -5195,20 +6461,31 @@ class locationType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='locationType'):
         if self.bodystart is not None:
-            outfile.write(' bodystart="%s"' % self.format_integer(
-                self.bodystart, input_name='bodystart'))
+            outfile.write(
+                ' bodystart="%s"' % self.format_integer(self.bodystart, input_name='bodystart')
+            )
         if self.line is not None:
-            outfile.write(' line="%s"' % self.format_integer(
-                self.line, input_name='line'))
+            outfile.write(' line="%s"' % self.format_integer(self.line, input_name='line'))
         if self.bodyend is not None:
-            outfile.write(' bodyend="%s"' % self.format_integer(
-                self.bodyend, input_name='bodyend'))
+            outfile.write(' bodyend="%s"' % self.format_integer(self.bodyend, input_name='bodyend'))
         if self.bodyfile is not None:
-            outfile.write(' bodyfile=%s' % (self.format_string(quote_attrib(
-                self.bodyfile).encode(ExternalEncoding), input_name='bodyfile'), ))
+            outfile.write(
+                ' bodyfile=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.bodyfile).encode(ExternalEncoding), input_name='bodyfile'
+                    ),
+                )
+            )
         if self.file is not None:
-            outfile.write(' file=%s' % (self.format_string(quote_attrib(
-                self.file).encode(ExternalEncoding), input_name='file'), ))
+            outfile.write(
+                ' file=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.file).encode(ExternalEncoding), input_name='file'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='locationType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -5220,9 +6497,7 @@ class locationType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -5288,6 +6563,8 @@ class locationType(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class locationType
 
 
@@ -5295,7 +6572,16 @@ class docSect1Type(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, id=None, title=None, para=None, sect2=None, internal=None, mixedclass_=None, content_=None):
+    def __init__(
+        self,
+        id=None,
+        title=None,
+        para=None,
+        sect2=None,
+        internal=None,
+        mixedclass_=None,
+        content_=None,
+    ):
         self.id = id
         if mixedclass_ is None:
             self.mixedclass_ = MixedContainer
@@ -5311,25 +6597,61 @@ class docSect1Type(GeneratedsSuper):
             return docSect1Type.subclass(*args_, **kwargs_)
         else:
             return docSect1Type(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_title(self): return self.title
-    def set_title(self, title): self.title = title
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect2(self): return self.sect2
-    def set_sect2(self, sect2): self.sect2 = sect2
-    def add_sect2(self, value): self.sect2.append(value)
-    def insert_sect2(self, index, value): self.sect2[index] = value
-    def get_internal(self): return self.internal
-    def set_internal(self, internal): self.internal = internal
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+
+    def get_title(self):
+        return self.title
+
+    def set_title(self, title):
+        self.title = title
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect2(self):
+        return self.sect2
+
+    def set_sect2(self, sect2):
+        self.sect2 = sect2
+
+    def add_sect2(self, value):
+        self.sect2.append(value)
+
+    def insert_sect2(self, index, value):
+        self.sect2[index] = value
+
+    def get_internal(self):
+        return self.internal
+
+    def set_internal(self, internal):
+        self.internal = internal
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='docSect1Type', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docSect1Type')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -5337,8 +6659,14 @@ class docSect1Type(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docSect1Type'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docSect1Type'):
         for item_ in self.content_:
@@ -5346,10 +6674,10 @@ class docSect1Type(GeneratedsSuper):
 
     def hasContent_(self):
         if (
-            self.title is not None or
-            self.para is not None or
-            self.sect2 is not None or
-            self.internal is not None
+            self.title is not None
+            or self.para is not None
+            or self.sect2 is not None
+            or self.internal is not None
         ):
             return True
         else:
@@ -5404,38 +6732,41 @@ class docSect1Type(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'title':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'title':
             childobj_ = docTitleType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'title', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'title', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect2':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect2':
             childobj_ = docSect2Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'sect2', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'sect2', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'internal':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'internal':
             childobj_ = docInternalS1Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'internal', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'internal', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docSect1Type
 
 
@@ -5443,7 +6774,16 @@ class docSect2Type(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, id=None, title=None, para=None, sect3=None, internal=None, mixedclass_=None, content_=None):
+    def __init__(
+        self,
+        id=None,
+        title=None,
+        para=None,
+        sect3=None,
+        internal=None,
+        mixedclass_=None,
+        content_=None,
+    ):
         self.id = id
         if mixedclass_ is None:
             self.mixedclass_ = MixedContainer
@@ -5459,25 +6799,61 @@ class docSect2Type(GeneratedsSuper):
             return docSect2Type.subclass(*args_, **kwargs_)
         else:
             return docSect2Type(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_title(self): return self.title
-    def set_title(self, title): self.title = title
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect3(self): return self.sect3
-    def set_sect3(self, sect3): self.sect3 = sect3
-    def add_sect3(self, value): self.sect3.append(value)
-    def insert_sect3(self, index, value): self.sect3[index] = value
-    def get_internal(self): return self.internal
-    def set_internal(self, internal): self.internal = internal
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+
+    def get_title(self):
+        return self.title
+
+    def set_title(self, title):
+        self.title = title
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect3(self):
+        return self.sect3
+
+    def set_sect3(self, sect3):
+        self.sect3 = sect3
+
+    def add_sect3(self, value):
+        self.sect3.append(value)
+
+    def insert_sect3(self, index, value):
+        self.sect3[index] = value
+
+    def get_internal(self):
+        return self.internal
+
+    def set_internal(self, internal):
+        self.internal = internal
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='docSect2Type', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docSect2Type')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -5485,8 +6861,14 @@ class docSect2Type(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docSect2Type'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docSect2Type'):
         for item_ in self.content_:
@@ -5494,10 +6876,10 @@ class docSect2Type(GeneratedsSuper):
 
     def hasContent_(self):
         if (
-            self.title is not None or
-            self.para is not None or
-            self.sect3 is not None or
-            self.internal is not None
+            self.title is not None
+            or self.para is not None
+            or self.sect3 is not None
+            or self.internal is not None
         ):
             return True
         else:
@@ -5552,38 +6934,41 @@ class docSect2Type(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'title':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'title':
             childobj_ = docTitleType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'title', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'title', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect3':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect3':
             childobj_ = docSect3Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'sect3', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'sect3', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'internal':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'internal':
             childobj_ = docInternalS2Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'internal', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'internal', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docSect2Type
 
 
@@ -5591,7 +6976,16 @@ class docSect3Type(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, id=None, title=None, para=None, sect4=None, internal=None, mixedclass_=None, content_=None):
+    def __init__(
+        self,
+        id=None,
+        title=None,
+        para=None,
+        sect4=None,
+        internal=None,
+        mixedclass_=None,
+        content_=None,
+    ):
         self.id = id
         if mixedclass_ is None:
             self.mixedclass_ = MixedContainer
@@ -5607,25 +7001,61 @@ class docSect3Type(GeneratedsSuper):
             return docSect3Type.subclass(*args_, **kwargs_)
         else:
             return docSect3Type(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_title(self): return self.title
-    def set_title(self, title): self.title = title
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect4(self): return self.sect4
-    def set_sect4(self, sect4): self.sect4 = sect4
-    def add_sect4(self, value): self.sect4.append(value)
-    def insert_sect4(self, index, value): self.sect4[index] = value
-    def get_internal(self): return self.internal
-    def set_internal(self, internal): self.internal = internal
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+
+    def get_title(self):
+        return self.title
+
+    def set_title(self, title):
+        self.title = title
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect4(self):
+        return self.sect4
+
+    def set_sect4(self, sect4):
+        self.sect4 = sect4
+
+    def add_sect4(self, value):
+        self.sect4.append(value)
+
+    def insert_sect4(self, index, value):
+        self.sect4[index] = value
+
+    def get_internal(self):
+        return self.internal
+
+    def set_internal(self, internal):
+        self.internal = internal
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='docSect3Type', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docSect3Type')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -5633,8 +7063,14 @@ class docSect3Type(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docSect3Type'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docSect3Type'):
         for item_ in self.content_:
@@ -5642,10 +7078,10 @@ class docSect3Type(GeneratedsSuper):
 
     def hasContent_(self):
         if (
-            self.title is not None or
-            self.para is not None or
-            self.sect4 is not None or
-            self.internal is not None
+            self.title is not None
+            or self.para is not None
+            or self.sect4 is not None
+            or self.internal is not None
         ):
             return True
         else:
@@ -5700,38 +7136,41 @@ class docSect3Type(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'title':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'title':
             childobj_ = docTitleType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'title', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'title', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect4':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect4':
             childobj_ = docSect4Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'sect4', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'sect4', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'internal':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'internal':
             childobj_ = docInternalS3Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'internal', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'internal', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docSect3Type
 
 
@@ -5739,7 +7178,9 @@ class docSect4Type(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, id=None, title=None, para=None, internal=None, mixedclass_=None, content_=None):
+    def __init__(
+        self, id=None, title=None, para=None, internal=None, mixedclass_=None, content_=None
+    ):
         self.id = id
         if mixedclass_ is None:
             self.mixedclass_ = MixedContainer
@@ -5755,21 +7196,49 @@ class docSect4Type(GeneratedsSuper):
             return docSect4Type.subclass(*args_, **kwargs_)
         else:
             return docSect4Type(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_title(self): return self.title
-    def set_title(self, title): self.title = title
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_internal(self): return self.internal
-    def set_internal(self, internal): self.internal = internal
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+
+    def get_title(self):
+        return self.title
+
+    def set_title(self, title):
+        self.title = title
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_internal(self):
+        return self.internal
+
+    def set_internal(self, internal):
+        self.internal = internal
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='docSect4Type', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docSect4Type')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -5777,19 +7246,21 @@ class docSect4Type(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docSect4Type'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docSect4Type'):
         for item_ in self.content_:
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.title is not None or
-            self.para is not None or
-            self.internal is not None
-        ):
+        if self.title is not None or self.para is not None or self.internal is not None:
             return True
         else:
             return False
@@ -5837,31 +7308,34 @@ class docSect4Type(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'title':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'title':
             childobj_ = docTitleType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'title', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'title', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'internal':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'internal':
             childobj_ = docInternalS4Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'internal', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'internal', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docSect4Type
 
 
@@ -5884,21 +7358,44 @@ class docInternalType(GeneratedsSuper):
             return docInternalType.subclass(*args_, **kwargs_)
         else:
             return docInternalType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect1(self): return self.sect1
-    def set_sect1(self, sect1): self.sect1 = sect1
-    def add_sect1(self, value): self.sect1.append(value)
-    def insert_sect1(self, index, value): self.sect1[index] = value
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect1(self):
+        return self.sect1
+
+    def set_sect1(self, sect1):
+        self.sect1 = sect1
+
+    def add_sect1(self, value):
+        self.sect1.append(value)
+
+    def insert_sect1(self, index, value):
+        self.sect1[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docInternalType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docInternalType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docInternalType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -5911,10 +7408,7 @@ class docInternalType(GeneratedsSuper):
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.para is not None or
-            self.sect1 is not None
-        ):
+        if self.para is not None or self.sect1 is not None:
             return True
         else:
             return False
@@ -5953,24 +7447,27 @@ class docInternalType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect1':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect1':
             childobj_ = docSect1Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'sect1', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'sect1', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docInternalType
 
 
@@ -5993,21 +7490,44 @@ class docInternalS1Type(GeneratedsSuper):
             return docInternalS1Type.subclass(*args_, **kwargs_)
         else:
             return docInternalS1Type(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect2(self): return self.sect2
-    def set_sect2(self, sect2): self.sect2 = sect2
-    def add_sect2(self, value): self.sect2.append(value)
-    def insert_sect2(self, index, value): self.sect2[index] = value
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect2(self):
+        return self.sect2
+
+    def set_sect2(self, sect2):
+        self.sect2 = sect2
+
+    def add_sect2(self, value):
+        self.sect2.append(value)
+
+    def insert_sect2(self, index, value):
+        self.sect2[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docInternalS1Type', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docInternalS1Type')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docInternalS1Type')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -6020,10 +7540,7 @@ class docInternalS1Type(GeneratedsSuper):
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.para is not None or
-            self.sect2 is not None
-        ):
+        if self.para is not None or self.sect2 is not None:
             return True
         else:
             return False
@@ -6062,24 +7579,27 @@ class docInternalS1Type(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect2':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect2':
             childobj_ = docSect2Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'sect2', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'sect2', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docInternalS1Type
 
 
@@ -6102,21 +7622,44 @@ class docInternalS2Type(GeneratedsSuper):
             return docInternalS2Type.subclass(*args_, **kwargs_)
         else:
             return docInternalS2Type(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect3(self): return self.sect3
-    def set_sect3(self, sect3): self.sect3 = sect3
-    def add_sect3(self, value): self.sect3.append(value)
-    def insert_sect3(self, index, value): self.sect3[index] = value
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect3(self):
+        return self.sect3
+
+    def set_sect3(self, sect3):
+        self.sect3 = sect3
+
+    def add_sect3(self, value):
+        self.sect3.append(value)
+
+    def insert_sect3(self, index, value):
+        self.sect3[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docInternalS2Type', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docInternalS2Type')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docInternalS2Type')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -6129,10 +7672,7 @@ class docInternalS2Type(GeneratedsSuper):
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.para is not None or
-            self.sect3 is not None
-        ):
+        if self.para is not None or self.sect3 is not None:
             return True
         else:
             return False
@@ -6171,24 +7711,27 @@ class docInternalS2Type(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect3':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect3':
             childobj_ = docSect3Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'sect3', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'sect3', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docInternalS2Type
 
 
@@ -6211,21 +7754,44 @@ class docInternalS3Type(GeneratedsSuper):
             return docInternalS3Type.subclass(*args_, **kwargs_)
         else:
             return docInternalS3Type(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect3(self): return self.sect3
-    def set_sect3(self, sect3): self.sect3 = sect3
-    def add_sect3(self, value): self.sect3.append(value)
-    def insert_sect3(self, index, value): self.sect3[index] = value
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect3(self):
+        return self.sect3
+
+    def set_sect3(self, sect3):
+        self.sect3 = sect3
+
+    def add_sect3(self, value):
+        self.sect3.append(value)
+
+    def insert_sect3(self, index, value):
+        self.sect3[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docInternalS3Type', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docInternalS3Type')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docInternalS3Type')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -6238,10 +7804,7 @@ class docInternalS3Type(GeneratedsSuper):
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.para is not None or
-            self.sect3 is not None
-        ):
+        if self.para is not None or self.sect3 is not None:
             return True
         else:
             return False
@@ -6280,24 +7843,27 @@ class docInternalS3Type(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect3':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect3':
             childobj_ = docSect4Type.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'sect3', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'sect3', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docInternalS3Type
 
 
@@ -6320,17 +7886,32 @@ class docInternalS4Type(GeneratedsSuper):
             return docInternalS4Type.subclass(*args_, **kwargs_)
         else:
             return docInternalS4Type(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docInternalS4Type', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docInternalS4Type')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docInternalS4Type')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -6343,9 +7924,7 @@ class docInternalS4Type(GeneratedsSuper):
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.para is not None
-        ):
+        if self.para is not None:
             return True
         else:
             return False
@@ -6378,17 +7957,20 @@ class docInternalS4Type(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             childobj_ = docParaType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'para', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'para', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docInternalS4Type
 
 
@@ -6411,13 +7993,25 @@ class docTitleType(GeneratedsSuper):
             return docTitleType.subclass(*args_, **kwargs_)
         else:
             return docTitleType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docTitleType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docTitleType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -6436,9 +8030,7 @@ class docTitleType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -6469,13 +8061,16 @@ class docTitleType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docTitleType
 
 
@@ -6498,13 +8093,25 @@ class docParaType(GeneratedsSuper):
             return docParaType.subclass(*args_, **kwargs_)
         else:
             return docParaType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docParaType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docParaType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -6523,9 +8130,7 @@ class docParaType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -6556,13 +8161,16 @@ class docParaType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docParaType
 
 
@@ -6585,15 +8193,26 @@ class docMarkupType(GeneratedsSuper):
             return docMarkupType.subclass(*args_, **kwargs_)
         else:
             return docMarkupType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docMarkupType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docMarkupType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docMarkupType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -6611,9 +8230,7 @@ class docMarkupType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -6644,13 +8261,16 @@ class docMarkupType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docMarkupType
 
 
@@ -6674,15 +8294,31 @@ class docURLLink(GeneratedsSuper):
             return docURLLink.subclass(*args_, **kwargs_)
         else:
             return docURLLink(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_url(self): return self.url
-    def set_url(self, url): self.url = url
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_url(self):
+        return self.url
+
+    def set_url(self, url):
+        self.url = url
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docURLLink', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docURLLink')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -6690,8 +8326,14 @@ class docURLLink(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docURLLink'):
         if self.url is not None:
-            outfile.write(' url=%s' % (self.format_string(quote_attrib(
-                self.url).encode(ExternalEncoding), input_name='url'), ))
+            outfile.write(
+                ' url=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.url).encode(ExternalEncoding), input_name='url'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docURLLink'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -6703,9 +8345,7 @@ class docURLLink(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -6739,13 +8379,16 @@ class docURLLink(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docURLLink
 
 
@@ -6769,25 +8412,46 @@ class docAnchorType(GeneratedsSuper):
             return docAnchorType.subclass(*args_, **kwargs_)
         else:
             return docAnchorType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docAnchorType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docAnchorType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docAnchorType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docAnchorType'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docAnchorType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -6799,9 +8463,7 @@ class docAnchorType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -6835,13 +8497,16 @@ class docAnchorType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docAnchorType
 
 
@@ -6865,25 +8530,46 @@ class docFormulaType(GeneratedsSuper):
             return docFormulaType.subclass(*args_, **kwargs_)
         else:
             return docFormulaType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docFormulaType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docFormulaType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docFormulaType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docFormulaType'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docFormulaType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -6895,9 +8581,7 @@ class docFormulaType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -6931,13 +8615,16 @@ class docFormulaType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docFormulaType
 
 
@@ -6954,17 +8641,32 @@ class docIndexEntryType(GeneratedsSuper):
             return docIndexEntryType.subclass(*args_, **kwargs_)
         else:
             return docIndexEntryType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_primaryie(self): return self.primaryie
-    def set_primaryie(self, primaryie): self.primaryie = primaryie
-    def get_secondaryie(self): return self.secondaryie
-    def set_secondaryie(self, secondaryie): self.secondaryie = secondaryie
+
+    def get_primaryie(self):
+        return self.primaryie
+
+    def set_primaryie(self, primaryie):
+        self.primaryie = primaryie
+
+    def get_secondaryie(self):
+        return self.secondaryie
+
+    def set_secondaryie(self, secondaryie):
+        self.secondaryie = secondaryie
 
     def export(self, outfile, level, namespace_='', name_='docIndexEntryType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docIndexEntryType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docIndexEntryType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -6979,18 +8681,32 @@ class docIndexEntryType(GeneratedsSuper):
     def exportChildren(self, outfile, level, namespace_='', name_='docIndexEntryType'):
         if self.primaryie is not None:
             showIndent(outfile, level)
-            outfile.write('<%sprimaryie>%s</%sprimaryie>\n' % (namespace_, self.format_string(
-                quote_xml(self.primaryie).encode(ExternalEncoding), input_name='primaryie'), namespace_))
+            outfile.write(
+                '<%sprimaryie>%s</%sprimaryie>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.primaryie).encode(ExternalEncoding), input_name='primaryie'
+                    ),
+                    namespace_,
+                )
+            )
         if self.secondaryie is not None:
             showIndent(outfile, level)
-            outfile.write('<%ssecondaryie>%s</%ssecondaryie>\n' % (namespace_, self.format_string(
-                quote_xml(self.secondaryie).encode(ExternalEncoding), input_name='secondaryie'), namespace_))
+            outfile.write(
+                '<%ssecondaryie>%s</%ssecondaryie>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(self.secondaryie).encode(ExternalEncoding),
+                        input_name='secondaryie',
+                    ),
+                    namespace_,
+                )
+            )
 
     def hasContent_(self):
-        if (
-            self.primaryie is not None or
-            self.secondaryie is not None
-        ):
+        if self.primaryie is not None or self.secondaryie is not None:
             return True
         else:
             return False
@@ -7006,11 +8722,9 @@ class docIndexEntryType(GeneratedsSuper):
 
     def exportLiteralChildren(self, outfile, level, name_):
         showIndent(outfile, level)
-        outfile.write('primaryie=%s,\n' % quote_python(
-            self.primaryie).encode(ExternalEncoding))
+        outfile.write('primaryie=%s,\n' % quote_python(self.primaryie).encode(ExternalEncoding))
         showIndent(outfile, level)
-        outfile.write('secondaryie=%s,\n' % quote_python(
-            self.secondaryie).encode(ExternalEncoding))
+        outfile.write('secondaryie=%s,\n' % quote_python(self.secondaryie).encode(ExternalEncoding))
 
     def build(self, node_):
         attrs = node_.attributes
@@ -7023,18 +8737,18 @@ class docIndexEntryType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'primaryie':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'primaryie':
             primaryie_ = ''
             for text__content_ in child_.childNodes:
                 primaryie_ += text__content_.nodeValue
             self.primaryie = primaryie_
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'secondaryie':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'secondaryie':
             secondaryie_ = ''
             for text__content_ in child_.childNodes:
                 secondaryie_ += text__content_.nodeValue
             self.secondaryie = secondaryie_
+
+
 # end class docIndexEntryType
 
 
@@ -7053,15 +8767,31 @@ class docListType(GeneratedsSuper):
             return docListType.subclass(*args_, **kwargs_)
         else:
             return docListType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_listitem(self): return self.listitem
-    def set_listitem(self, listitem): self.listitem = listitem
-    def add_listitem(self, value): self.listitem.append(value)
-    def insert_listitem(self, index, value): self.listitem[index] = value
+
+    def get_listitem(self):
+        return self.listitem
+
+    def set_listitem(self, listitem):
+        self.listitem = listitem
+
+    def add_listitem(self, value):
+        self.listitem.append(value)
+
+    def insert_listitem(self, index, value):
+        self.listitem[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docListType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docListType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -7079,9 +8809,7 @@ class docListType(GeneratedsSuper):
             listitem_.export(outfile, level, namespace_, name_='listitem')
 
     def hasContent_(self):
-        if (
-            self.listitem is not None
-        ):
+        if self.listitem is not None:
             return True
         else:
             return False
@@ -7120,11 +8848,12 @@ class docListType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'listitem':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'listitem':
             obj_ = docListItemType.factory()
             obj_.build(child_)
             self.listitem.append(obj_)
+
+
 # end class docListType
 
 
@@ -7143,17 +8872,32 @@ class docListItemType(GeneratedsSuper):
             return docListItemType.subclass(*args_, **kwargs_)
         else:
             return docListItemType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docListItemType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docListItemType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docListItemType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -7170,9 +8914,7 @@ class docListItemType(GeneratedsSuper):
             para_.export(outfile, level, namespace_, name_='para')
 
     def hasContent_(self):
-        if (
-            self.para is not None
-        ):
+        if self.para is not None:
             return True
         else:
             return False
@@ -7211,11 +8953,12 @@ class docListItemType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             obj_ = docParaType.factory()
             obj_.build(child_)
             self.para.append(obj_)
+
+
 # end class docListItemType
 
 
@@ -7236,21 +8979,44 @@ class docSimpleSectType(GeneratedsSuper):
             return docSimpleSectType.subclass(*args_, **kwargs_)
         else:
             return docSimpleSectType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_title(self): return self.title
-    def set_title(self, title): self.title = title
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_kind(self): return self.kind
-    def set_kind(self, kind): self.kind = kind
+
+    def get_title(self):
+        return self.title
+
+    def set_title(self, title):
+        self.title = title
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_kind(self):
+        return self.kind
+
+    def set_kind(self, kind):
+        self.kind = kind
 
     def export(self, outfile, level, namespace_='', name_='docSimpleSectType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docSimpleSectType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docSimpleSectType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -7261,7 +9027,7 @@ class docSimpleSectType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docSimpleSectType'):
         if self.kind is not None:
-            outfile.write(' kind=%s' % (quote_attrib(self.kind), ))
+            outfile.write(' kind=%s' % (quote_attrib(self.kind),))
 
     def exportChildren(self, outfile, level, namespace_='', name_='docSimpleSectType'):
         if self.title:
@@ -7270,10 +9036,7 @@ class docSimpleSectType(GeneratedsSuper):
             para_.export(outfile, level, namespace_, name_='para')
 
     def hasContent_(self):
-        if (
-            self.title is not None or
-            self.para is not None
-        ):
+        if self.title is not None or self.para is not None:
             return True
         else:
             return False
@@ -7321,16 +9084,16 @@ class docSimpleSectType(GeneratedsSuper):
             self.kind = attrs.get('kind').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'title':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'title':
             obj_ = docTitleType.factory()
             obj_.build(child_)
             self.set_title(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             obj_ = docParaType.factory()
             obj_.build(child_)
             self.para.append(obj_)
+
+
 # end class docSimpleSectType
 
 
@@ -7346,15 +9109,26 @@ class docVarListEntryType(GeneratedsSuper):
             return docVarListEntryType.subclass(*args_, **kwargs_)
         else:
             return docVarListEntryType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_term(self): return self.term
-    def set_term(self, term): self.term = term
+
+    def get_term(self):
+        return self.term
+
+    def set_term(self, term):
+        self.term = term
 
     def export(self, outfile, level, namespace_='', name_='docVarListEntryType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docVarListEntryType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docVarListEntryType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -7368,12 +9142,15 @@ class docVarListEntryType(GeneratedsSuper):
 
     def exportChildren(self, outfile, level, namespace_='', name_='docVarListEntryType'):
         if self.term:
-            self.term.export(outfile, level, namespace_, name_='term', )
+            self.term.export(
+                outfile,
+                level,
+                namespace_,
+                name_='term',
+            )
 
     def hasContent_(self):
-        if (
-            self.term is not None
-        ):
+        if self.term is not None:
             return True
         else:
             return False
@@ -7406,11 +9183,12 @@ class docVarListEntryType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'term':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'term':
             obj_ = docTitleType.factory()
             obj_.build(child_)
             self.set_term(obj_)
+
+
 # end class docVarListEntryType
 
 
@@ -7426,15 +9204,26 @@ class docVariableListType(GeneratedsSuper):
             return docVariableListType.subclass(*args_, **kwargs_)
         else:
             return docVariableListType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docVariableListType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docVariableListType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docVariableListType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -7456,9 +9245,7 @@ class docVariableListType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -7492,6 +9279,8 @@ class docVariableListType(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docVariableListType
 
 
@@ -7499,7 +9288,9 @@ class docRefTextType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, refid=None, kindref=None, external=None, valueOf_='', mixedclass_=None, content_=None):
+    def __init__(
+        self, refid=None, kindref=None, external=None, valueOf_='', mixedclass_=None, content_=None
+    ):
         self.refid = refid
         self.kindref = kindref
         self.external = external
@@ -7517,34 +9308,69 @@ class docRefTextType(GeneratedsSuper):
             return docRefTextType.subclass(*args_, **kwargs_)
         else:
             return docRefTextType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_refid(self): return self.refid
-    def set_refid(self, refid): self.refid = refid
-    def get_kindref(self): return self.kindref
-    def set_kindref(self, kindref): self.kindref = kindref
-    def get_external(self): return self.external
-    def set_external(self, external): self.external = external
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_refid(self):
+        return self.refid
+
+    def set_refid(self, refid):
+        self.refid = refid
+
+    def get_kindref(self):
+        return self.kindref
+
+    def set_kindref(self, kindref):
+        self.kindref = kindref
+
+    def get_external(self):
+        return self.external
+
+    def set_external(self, external):
+        self.external = external
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docRefTextType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docRefTextType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docRefTextType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docRefTextType'):
         if self.refid is not None:
-            outfile.write(' refid=%s' % (self.format_string(quote_attrib(
-                self.refid).encode(ExternalEncoding), input_name='refid'), ))
+            outfile.write(
+                ' refid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.refid).encode(ExternalEncoding), input_name='refid'
+                    ),
+                )
+            )
         if self.kindref is not None:
-            outfile.write(' kindref=%s' % (quote_attrib(self.kindref), ))
+            outfile.write(' kindref=%s' % (quote_attrib(self.kindref),))
         if self.external is not None:
-            outfile.write(' external=%s' % (self.format_string(quote_attrib(
-                self.external).encode(ExternalEncoding), input_name='external'), ))
+            outfile.write(
+                ' external=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.external).encode(ExternalEncoding), input_name='external'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docRefTextType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -7556,9 +9382,7 @@ class docRefTextType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -7602,13 +9426,16 @@ class docRefTextType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docRefTextType
 
 
@@ -7630,21 +9457,49 @@ class docTableType(GeneratedsSuper):
             return docTableType.subclass(*args_, **kwargs_)
         else:
             return docTableType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_row(self): return self.row
-    def set_row(self, row): self.row = row
-    def add_row(self, value): self.row.append(value)
-    def insert_row(self, index, value): self.row[index] = value
-    def get_caption(self): return self.caption
-    def set_caption(self, caption): self.caption = caption
-    def get_rows(self): return self.rows
-    def set_rows(self, rows): self.rows = rows
-    def get_cols(self): return self.cols
-    def set_cols(self, cols): self.cols = cols
+
+    def get_row(self):
+        return self.row
+
+    def set_row(self, row):
+        self.row = row
+
+    def add_row(self, value):
+        self.row.append(value)
+
+    def insert_row(self, index, value):
+        self.row[index] = value
+
+    def get_caption(self):
+        return self.caption
+
+    def set_caption(self, caption):
+        self.caption = caption
+
+    def get_rows(self):
+        return self.rows
+
+    def set_rows(self, rows):
+        self.rows = rows
+
+    def get_cols(self):
+        return self.cols
+
+    def set_cols(self, cols):
+        self.cols = cols
 
     def export(self, outfile, level, namespace_='', name_='docTableType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docTableType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -7656,11 +9511,9 @@ class docTableType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docTableType'):
         if self.rows is not None:
-            outfile.write(' rows="%s"' % self.format_integer(
-                self.rows, input_name='rows'))
+            outfile.write(' rows="%s"' % self.format_integer(self.rows, input_name='rows'))
         if self.cols is not None:
-            outfile.write(' cols="%s"' % self.format_integer(
-                self.cols, input_name='cols'))
+            outfile.write(' cols="%s"' % self.format_integer(self.cols, input_name='cols'))
 
     def exportChildren(self, outfile, level, namespace_='', name_='docTableType'):
         for row_ in self.row:
@@ -7669,10 +9522,7 @@ class docTableType(GeneratedsSuper):
             self.caption.export(outfile, level, namespace_, name_='caption')
 
     def hasContent_(self):
-        if (
-            self.row is not None or
-            self.caption is not None
-        ):
+        if self.row is not None or self.caption is not None:
             return True
         else:
             return False
@@ -7731,16 +9581,16 @@ class docTableType(GeneratedsSuper):
                 raise ValueError('Bad integer attribute (cols): %s' % exp)
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'row':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'row':
             obj_ = docRowType.factory()
             obj_.build(child_)
             self.row.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'caption':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'caption':
             obj_ = docCaptionType.factory()
             obj_.build(child_)
             self.set_caption(obj_)
+
+
 # end class docTableType
 
 
@@ -7759,15 +9609,31 @@ class docRowType(GeneratedsSuper):
             return docRowType.subclass(*args_, **kwargs_)
         else:
             return docRowType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_entry(self): return self.entry
-    def set_entry(self, entry): self.entry = entry
-    def add_entry(self, value): self.entry.append(value)
-    def insert_entry(self, index, value): self.entry[index] = value
+
+    def get_entry(self):
+        return self.entry
+
+    def set_entry(self, entry):
+        self.entry = entry
+
+    def add_entry(self, value):
+        self.entry.append(value)
+
+    def insert_entry(self, index, value):
+        self.entry[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docRowType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docRowType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -7785,9 +9651,7 @@ class docRowType(GeneratedsSuper):
             entry_.export(outfile, level, namespace_, name_='entry')
 
     def hasContent_(self):
-        if (
-            self.entry is not None
-        ):
+        if self.entry is not None:
             return True
         else:
             return False
@@ -7826,11 +9690,12 @@ class docRowType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'entry':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'entry':
             obj_ = docEntryType.factory()
             obj_.build(child_)
             self.entry.append(obj_)
+
+
 # end class docRowType
 
 
@@ -7850,17 +9715,37 @@ class docEntryType(GeneratedsSuper):
             return docEntryType.subclass(*args_, **kwargs_)
         else:
             return docEntryType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_thead(self): return self.thead
-    def set_thead(self, thead): self.thead = thead
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_thead(self):
+        return self.thead
+
+    def set_thead(self, thead):
+        self.thead = thead
 
     def export(self, outfile, level, namespace_='', name_='docEntryType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docEntryType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -7872,16 +9757,14 @@ class docEntryType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docEntryType'):
         if self.thead is not None:
-            outfile.write(' thead=%s' % (quote_attrib(self.thead), ))
+            outfile.write(' thead=%s' % (quote_attrib(self.thead),))
 
     def exportChildren(self, outfile, level, namespace_='', name_='docEntryType'):
         for para_ in self.para:
             para_.export(outfile, level, namespace_, name_='para')
 
     def hasContent_(self):
-        if (
-            self.para is not None
-        ):
+        if self.para is not None:
             return True
         else:
             return False
@@ -7923,11 +9806,12 @@ class docEntryType(GeneratedsSuper):
             self.thead = attrs.get('thead').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             obj_ = docParaType.factory()
             obj_.build(child_)
             self.para.append(obj_)
+
+
 # end class docEntryType
 
 
@@ -7950,15 +9834,26 @@ class docCaptionType(GeneratedsSuper):
             return docCaptionType.subclass(*args_, **kwargs_)
         else:
             return docCaptionType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docCaptionType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docCaptionType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docCaptionType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
@@ -7976,9 +9871,7 @@ class docCaptionType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -8009,13 +9902,16 @@ class docCaptionType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docCaptionType
 
 
@@ -8039,25 +9935,39 @@ class docHeadingType(GeneratedsSuper):
             return docHeadingType.subclass(*args_, **kwargs_)
         else:
             return docHeadingType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_level(self): return self.level
-    def set_level(self, level): self.level = level
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_level(self):
+        return self.level
+
+    def set_level(self, level):
+        self.level = level
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docHeadingType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docHeadingType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docHeadingType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docHeadingType'):
         if self.level is not None:
-            outfile.write(' level="%s"' % self.format_integer(
-                self.level, input_name='level'))
+            outfile.write(' level="%s"' % self.format_integer(self.level, input_name='level'))
 
     def exportChildren(self, outfile, level, namespace_='', name_='docHeadingType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -8069,9 +9979,7 @@ class docHeadingType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -8108,13 +10016,16 @@ class docHeadingType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docHeadingType
 
 
@@ -8122,7 +10033,16 @@ class docImageType(GeneratedsSuper):
     subclass = None
     superclass = None
 
-    def __init__(self, width=None, type_=None, name=None, height=None, valueOf_='', mixedclass_=None, content_=None):
+    def __init__(
+        self,
+        width=None,
+        type_=None,
+        name=None,
+        height=None,
+        valueOf_='',
+        mixedclass_=None,
+        content_=None,
+    ):
         self.width = width
         self.type_ = type_
         self.name = name
@@ -8141,21 +10061,49 @@ class docImageType(GeneratedsSuper):
             return docImageType.subclass(*args_, **kwargs_)
         else:
             return docImageType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_width(self): return self.width
-    def set_width(self, width): self.width = width
-    def get_type(self): return self.type_
-    def set_type(self, type_): self.type_ = type_
-    def get_name(self): return self.name
-    def set_name(self, name): self.name = name
-    def get_height(self): return self.height
-    def set_height(self, height): self.height = height
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_width(self):
+        return self.width
+
+    def set_width(self, width):
+        self.width = width
+
+    def get_type(self):
+        return self.type_
+
+    def set_type(self, type_):
+        self.type_ = type_
+
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
+    def get_height(self):
+        return self.height
+
+    def set_height(self, height):
+        self.height = height
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docImageType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docImageType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -8163,16 +10111,34 @@ class docImageType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docImageType'):
         if self.width is not None:
-            outfile.write(' width=%s' % (self.format_string(quote_attrib(
-                self.width).encode(ExternalEncoding), input_name='width'), ))
+            outfile.write(
+                ' width=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.width).encode(ExternalEncoding), input_name='width'
+                    ),
+                )
+            )
         if self.type_ is not None:
-            outfile.write(' type=%s' % (quote_attrib(self.type_), ))
+            outfile.write(' type=%s' % (quote_attrib(self.type_),))
         if self.name is not None:
-            outfile.write(' name=%s' % (self.format_string(quote_attrib(
-                self.name).encode(ExternalEncoding), input_name='name'), ))
+            outfile.write(
+                ' name=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.name).encode(ExternalEncoding), input_name='name'
+                    ),
+                )
+            )
         if self.height is not None:
-            outfile.write(' height=%s' % (self.format_string(quote_attrib(
-                self.height).encode(ExternalEncoding), input_name='height'), ))
+            outfile.write(
+                ' height=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.height).encode(ExternalEncoding), input_name='height'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docImageType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -8184,9 +10150,7 @@ class docImageType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -8235,13 +10199,16 @@ class docImageType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docImageType
 
 
@@ -8265,25 +10232,46 @@ class docDotFileType(GeneratedsSuper):
             return docDotFileType.subclass(*args_, **kwargs_)
         else:
             return docDotFileType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_name(self): return self.name
-    def set_name(self, name): self.name = name
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docDotFileType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docDotFileType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docDotFileType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docDotFileType'):
         if self.name is not None:
-            outfile.write(' name=%s' % (self.format_string(quote_attrib(
-                self.name).encode(ExternalEncoding), input_name='name'), ))
+            outfile.write(
+                ' name=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.name).encode(ExternalEncoding), input_name='name'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docDotFileType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -8295,9 +10283,7 @@ class docDotFileType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -8331,13 +10317,16 @@ class docDotFileType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docDotFileType
 
 
@@ -8361,25 +10350,46 @@ class docTocItemType(GeneratedsSuper):
             return docTocItemType.subclass(*args_, **kwargs_)
         else:
             return docTocItemType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docTocItemType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docTocItemType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docTocItemType')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
         outfile.write('</%s%s>\n' % (namespace_, name_))
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docTocItemType'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docTocItemType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -8391,9 +10401,7 @@ class docTocItemType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -8427,13 +10435,16 @@ class docTocItemType(GeneratedsSuper):
 
     def buildChildren(self, child_, nodeName_):
         if child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
         if child_.nodeType == Node.TEXT_NODE:
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docTocItemType
 
 
@@ -8452,17 +10463,32 @@ class docTocListType(GeneratedsSuper):
             return docTocListType.subclass(*args_, **kwargs_)
         else:
             return docTocListType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_tocitem(self): return self.tocitem
-    def set_tocitem(self, tocitem): self.tocitem = tocitem
-    def add_tocitem(self, value): self.tocitem.append(value)
-    def insert_tocitem(self, index, value): self.tocitem[index] = value
+
+    def get_tocitem(self):
+        return self.tocitem
+
+    def set_tocitem(self, tocitem):
+        self.tocitem = tocitem
+
+    def add_tocitem(self, value):
+        self.tocitem.append(value)
+
+    def insert_tocitem(self, index, value):
+        self.tocitem[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docTocListType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docTocListType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docTocListType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -8479,9 +10505,7 @@ class docTocListType(GeneratedsSuper):
             tocitem_.export(outfile, level, namespace_, name_='tocitem')
 
     def hasContent_(self):
-        if (
-            self.tocitem is not None
-        ):
+        if self.tocitem is not None:
             return True
         else:
             return False
@@ -8520,11 +10544,12 @@ class docTocListType(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'tocitem':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'tocitem':
             obj_ = docTocItemType.factory()
             obj_.build(child_)
             self.tocitem.append(obj_)
+
+
 # end class docTocListType
 
 
@@ -8544,19 +10569,38 @@ class docLanguageType(GeneratedsSuper):
             return docLanguageType.subclass(*args_, **kwargs_)
         else:
             return docLanguageType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_langid(self): return self.langid
-    def set_langid(self, langid): self.langid = langid
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_langid(self):
+        return self.langid
+
+    def set_langid(self, langid):
+        self.langid = langid
 
     def export(self, outfile, level, namespace_='', name_='docLanguageType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docLanguageType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docLanguageType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -8567,17 +10611,21 @@ class docLanguageType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docLanguageType'):
         if self.langid is not None:
-            outfile.write(' langid=%s' % (self.format_string(quote_attrib(
-                self.langid).encode(ExternalEncoding), input_name='langid'), ))
+            outfile.write(
+                ' langid=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.langid).encode(ExternalEncoding), input_name='langid'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docLanguageType'):
         for para_ in self.para:
             para_.export(outfile, level, namespace_, name_='para')
 
     def hasContent_(self):
-        if (
-            self.para is not None
-        ):
+        if self.para is not None:
             return True
         else:
             return False
@@ -8619,11 +10667,12 @@ class docLanguageType(GeneratedsSuper):
             self.langid = attrs.get('langid').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             obj_ = docParaType.factory()
             obj_.build(child_)
             self.para.append(obj_)
+
+
 # end class docLanguageType
 
 
@@ -8643,23 +10692,38 @@ class docParamListType(GeneratedsSuper):
             return docParamListType.subclass(*args_, **kwargs_)
         else:
             return docParamListType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_parameteritem(self): return self.parameteritem
-    def set_parameteritem(
-        self, parameteritem): self.parameteritem = parameteritem
 
-    def add_parameteritem(self, value): self.parameteritem.append(value)
-    def insert_parameteritem(
-        self, index, value): self.parameteritem[index] = value
+    def get_parameteritem(self):
+        return self.parameteritem
 
-    def get_kind(self): return self.kind
-    def set_kind(self, kind): self.kind = kind
+    def set_parameteritem(self, parameteritem):
+        self.parameteritem = parameteritem
+
+    def add_parameteritem(self, value):
+        self.parameteritem.append(value)
+
+    def insert_parameteritem(self, index, value):
+        self.parameteritem[index] = value
+
+    def get_kind(self):
+        return self.kind
+
+    def set_kind(self, kind):
+        self.kind = kind
 
     def export(self, outfile, level, namespace_='', name_='docParamListType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docParamListType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docParamListType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -8670,17 +10734,14 @@ class docParamListType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docParamListType'):
         if self.kind is not None:
-            outfile.write(' kind=%s' % (quote_attrib(self.kind), ))
+            outfile.write(' kind=%s' % (quote_attrib(self.kind),))
 
     def exportChildren(self, outfile, level, namespace_='', name_='docParamListType'):
         for parameteritem_ in self.parameteritem:
-            parameteritem_.export(
-                outfile, level, namespace_, name_='parameteritem')
+            parameteritem_.export(outfile, level, namespace_, name_='parameteritem')
 
     def hasContent_(self):
-        if (
-            self.parameteritem is not None
-        ):
+        if self.parameteritem is not None:
             return True
         else:
             return False
@@ -8722,11 +10783,12 @@ class docParamListType(GeneratedsSuper):
             self.kind = attrs.get('kind').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'parameteritem':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'parameteritem':
             obj_ = docParamListItem.factory()
             obj_.build(child_)
             self.parameteritem.append(obj_)
+
+
 # end class docParamListType
 
 
@@ -8746,27 +10808,38 @@ class docParamListItem(GeneratedsSuper):
             return docParamListItem.subclass(*args_, **kwargs_)
         else:
             return docParamListItem(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_parameternamelist(self): return self.parameternamelist
 
-    def set_parameternamelist(
-        self, parameternamelist): self.parameternamelist = parameternamelist
+    def get_parameternamelist(self):
+        return self.parameternamelist
 
-    def add_parameternamelist(
-        self, value): self.parameternamelist.append(value)
-    def insert_parameternamelist(
-        self, index, value): self.parameternamelist[index] = value
+    def set_parameternamelist(self, parameternamelist):
+        self.parameternamelist = parameternamelist
 
-    def get_parameterdescription(self): return self.parameterdescription
+    def add_parameternamelist(self, value):
+        self.parameternamelist.append(value)
 
-    def set_parameterdescription(
-        self, parameterdescription): self.parameterdescription = parameterdescription
+    def insert_parameternamelist(self, index, value):
+        self.parameternamelist[index] = value
+
+    def get_parameterdescription(self):
+        return self.parameterdescription
+
+    def set_parameterdescription(self, parameterdescription):
+        self.parameterdescription = parameterdescription
 
     def export(self, outfile, level, namespace_='', name_='docParamListItem', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docParamListItem')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docParamListItem')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -8780,17 +10853,17 @@ class docParamListItem(GeneratedsSuper):
 
     def exportChildren(self, outfile, level, namespace_='', name_='docParamListItem'):
         for parameternamelist_ in self.parameternamelist:
-            parameternamelist_.export(
-                outfile, level, namespace_, name_='parameternamelist')
+            parameternamelist_.export(outfile, level, namespace_, name_='parameternamelist')
         if self.parameterdescription:
             self.parameterdescription.export(
-                outfile, level, namespace_, name_='parameterdescription', )
+                outfile,
+                level,
+                namespace_,
+                name_='parameterdescription',
+            )
 
     def hasContent_(self):
-        if (
-            self.parameternamelist is not None or
-            self.parameterdescription is not None
-        ):
+        if self.parameternamelist is not None or self.parameterdescription is not None:
             return True
         else:
             return False
@@ -8811,8 +10884,7 @@ class docParamListItem(GeneratedsSuper):
         for parameternamelist in self.parameternamelist:
             showIndent(outfile, level)
             outfile.write('model_.parameternamelist(\n')
-            parameternamelist.exportLiteral(
-                outfile, level, name_='parameternamelist')
+            parameternamelist.exportLiteral(outfile, level, name_='parameternamelist')
             showIndent(outfile, level)
             outfile.write('),\n')
         level -= 1
@@ -8821,8 +10893,7 @@ class docParamListItem(GeneratedsSuper):
         if self.parameterdescription:
             showIndent(outfile, level)
             outfile.write('parameterdescription=model_.descriptionType(\n')
-            self.parameterdescription.exportLiteral(
-                outfile, level, name_='parameterdescription')
+            self.parameterdescription.exportLiteral(outfile, level, name_='parameterdescription')
             showIndent(outfile, level)
             outfile.write('),\n')
 
@@ -8837,16 +10908,16 @@ class docParamListItem(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'parameternamelist':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'parameternamelist':
             obj_ = docParamNameList.factory()
             obj_.build(child_)
             self.parameternamelist.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'parameterdescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'parameterdescription':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_parameterdescription(obj_)
+
+
 # end class docParamListItem
 
 
@@ -8865,21 +10936,32 @@ class docParamNameList(GeneratedsSuper):
             return docParamNameList.subclass(*args_, **kwargs_)
         else:
             return docParamNameList(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_parametername(self): return self.parametername
-    def set_parametername(
-        self, parametername): self.parametername = parametername
 
-    def add_parametername(self, value): self.parametername.append(value)
+    def get_parametername(self):
+        return self.parametername
 
-    def insert_parametername(
-        self, index, value): self.parametername[index] = value
+    def set_parametername(self, parametername):
+        self.parametername = parametername
+
+    def add_parametername(self, value):
+        self.parametername.append(value)
+
+    def insert_parametername(self, index, value):
+        self.parametername[index] = value
 
     def export(self, outfile, level, namespace_='', name_='docParamNameList', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docParamNameList')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docParamNameList')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -8893,13 +10975,10 @@ class docParamNameList(GeneratedsSuper):
 
     def exportChildren(self, outfile, level, namespace_='', name_='docParamNameList'):
         for parametername_ in self.parametername:
-            parametername_.export(
-                outfile, level, namespace_, name_='parametername')
+            parametername_.export(outfile, level, namespace_, name_='parametername')
 
     def hasContent_(self):
-        if (
-            self.parametername is not None
-        ):
+        if self.parametername is not None:
             return True
         else:
             return False
@@ -8938,11 +11017,12 @@ class docParamNameList(GeneratedsSuper):
         pass
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'parametername':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'parametername':
             obj_ = docParamName.factory()
             obj_.build(child_)
             self.parametername.append(obj_)
+
+
 # end class docParamNameList
 
 
@@ -8966,15 +11046,31 @@ class docParamName(GeneratedsSuper):
             return docParamName.subclass(*args_, **kwargs_)
         else:
             return docParamName(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_ref(self): return self.ref
-    def set_ref(self, ref): self.ref = ref
-    def get_direction(self): return self.direction
-    def set_direction(self, direction): self.direction = direction
+
+    def get_ref(self):
+        return self.ref
+
+    def set_ref(self, ref):
+        self.ref = ref
+
+    def get_direction(self):
+        return self.direction
+
+    def set_direction(self, direction):
+        self.direction = direction
 
     def export(self, outfile, level, namespace_='', name_='docParamName', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docParamName')
         outfile.write('>')
         self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -8982,16 +11078,14 @@ class docParamName(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docParamName'):
         if self.direction is not None:
-            outfile.write(' direction=%s' % (quote_attrib(self.direction), ))
+            outfile.write(' direction=%s' % (quote_attrib(self.direction),))
 
     def exportChildren(self, outfile, level, namespace_='', name_='docParamName'):
         for item_ in self.content_:
             item_.export(outfile, level, item_.name, namespace_)
 
     def hasContent_(self):
-        if (
-            self.ref is not None
-        ):
+        if self.ref is not None:
             return True
         else:
             return False
@@ -9027,17 +11121,20 @@ class docParamName(GeneratedsSuper):
             self.direction = attrs.get('direction').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'ref':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'ref':
             childobj_ = docRefTextType.factory()
             childobj_.build(child_)
-            obj_ = self.mixedclass_(MixedContainer.CategoryComplex,
-                                    MixedContainer.TypeNone, 'ref', childobj_)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryComplex, MixedContainer.TypeNone, 'ref', childobj_
+            )
             self.content_.append(obj_)
         elif child_.nodeType == Node.TEXT_NODE:
-            obj_ = self.mixedclass_(MixedContainer.CategoryText,
-                                    MixedContainer.TypeNone, '', child_.nodeValue)
+            obj_ = self.mixedclass_(
+                MixedContainer.CategoryText, MixedContainer.TypeNone, '', child_.nodeValue
+            )
             self.content_.append(obj_)
+
+
 # end class docParamName
 
 
@@ -9058,23 +11155,44 @@ class docXRefSectType(GeneratedsSuper):
             return docXRefSectType.subclass(*args_, **kwargs_)
         else:
             return docXRefSectType(*args_, **kwargs_)
-    factory = staticmethod(factory)
-    def get_xreftitle(self): return self.xreftitle
-    def set_xreftitle(self, xreftitle): self.xreftitle = xreftitle
-    def add_xreftitle(self, value): self.xreftitle.append(value)
-    def insert_xreftitle(self, index, value): self.xreftitle[index] = value
-    def get_xrefdescription(self): return self.xrefdescription
-    def set_xrefdescription(
-        self, xrefdescription): self.xrefdescription = xrefdescription
 
-    def get_id(self): return self.id
-    def set_id(self, id): self.id = id
+    factory = staticmethod(factory)
+
+    def get_xreftitle(self):
+        return self.xreftitle
+
+    def set_xreftitle(self, xreftitle):
+        self.xreftitle = xreftitle
+
+    def add_xreftitle(self, value):
+        self.xreftitle.append(value)
+
+    def insert_xreftitle(self, index, value):
+        self.xreftitle[index] = value
+
+    def get_xrefdescription(self):
+        return self.xrefdescription
+
+    def set_xrefdescription(self, xrefdescription):
+        self.xrefdescription = xrefdescription
+
+    def get_id(self):
+        return self.id
+
+    def set_id(self, id):
+        self.id = id
 
     def export(self, outfile, level, namespace_='', name_='docXRefSectType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
-        self.exportAttributes(outfile, level, namespace_,
-                              name_='docXRefSectType')
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
+        self.exportAttributes(outfile, level, namespace_, name_='docXRefSectType')
         if self.hasContent_():
             outfile.write('>\n')
             self.exportChildren(outfile, level + 1, namespace_, name_)
@@ -9085,23 +11203,38 @@ class docXRefSectType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docXRefSectType'):
         if self.id is not None:
-            outfile.write(' id=%s' % (self.format_string(quote_attrib(
-                self.id).encode(ExternalEncoding), input_name='id'), ))
+            outfile.write(
+                ' id=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.id).encode(ExternalEncoding), input_name='id'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docXRefSectType'):
         for xreftitle_ in self.xreftitle:
             showIndent(outfile, level)
-            outfile.write('<%sxreftitle>%s</%sxreftitle>\n' % (namespace_, self.format_string(
-                quote_xml(xreftitle_).encode(ExternalEncoding), input_name='xreftitle'), namespace_))
+            outfile.write(
+                '<%sxreftitle>%s</%sxreftitle>\n'
+                % (
+                    namespace_,
+                    self.format_string(
+                        quote_xml(xreftitle_).encode(ExternalEncoding), input_name='xreftitle'
+                    ),
+                    namespace_,
+                )
+            )
         if self.xrefdescription:
             self.xrefdescription.export(
-                outfile, level, namespace_, name_='xrefdescription', )
+                outfile,
+                level,
+                namespace_,
+                name_='xrefdescription',
+            )
 
     def hasContent_(self):
-        if (
-            self.xreftitle is not None or
-            self.xrefdescription is not None
-        ):
+        if self.xreftitle is not None or self.xrefdescription is not None:
             return True
         else:
             return False
@@ -9123,16 +11256,14 @@ class docXRefSectType(GeneratedsSuper):
         level += 1
         for xreftitle in self.xreftitle:
             showIndent(outfile, level)
-            outfile.write('%s,\n' % quote_python(
-                xreftitle).encode(ExternalEncoding))
+            outfile.write('%s,\n' % quote_python(xreftitle).encode(ExternalEncoding))
         level -= 1
         showIndent(outfile, level)
         outfile.write('],\n')
         if self.xrefdescription:
             showIndent(outfile, level)
             outfile.write('xrefdescription=model_.descriptionType(\n')
-            self.xrefdescription.exportLiteral(
-                outfile, level, name_='xrefdescription')
+            self.xrefdescription.exportLiteral(outfile, level, name_='xrefdescription')
             showIndent(outfile, level)
             outfile.write('),\n')
 
@@ -9148,17 +11279,17 @@ class docXRefSectType(GeneratedsSuper):
             self.id = attrs.get('id').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'xreftitle':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'xreftitle':
             xreftitle_ = ''
             for text__content_ in child_.childNodes:
                 xreftitle_ += text__content_.nodeValue
             self.xreftitle.append(xreftitle_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'xrefdescription':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'xrefdescription':
             obj_ = descriptionType.factory()
             obj_.build(child_)
             self.set_xrefdescription(obj_)
+
+
 # end class docXRefSectType
 
 
@@ -9183,23 +11314,55 @@ class docCopyType(GeneratedsSuper):
             return docCopyType.subclass(*args_, **kwargs_)
         else:
             return docCopyType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_para(self): return self.para
-    def set_para(self, para): self.para = para
-    def add_para(self, value): self.para.append(value)
-    def insert_para(self, index, value): self.para[index] = value
-    def get_sect1(self): return self.sect1
-    def set_sect1(self, sect1): self.sect1 = sect1
-    def add_sect1(self, value): self.sect1.append(value)
-    def insert_sect1(self, index, value): self.sect1[index] = value
-    def get_internal(self): return self.internal
-    def set_internal(self, internal): self.internal = internal
-    def get_link(self): return self.link
-    def set_link(self, link): self.link = link
+
+    def get_para(self):
+        return self.para
+
+    def set_para(self, para):
+        self.para = para
+
+    def add_para(self, value):
+        self.para.append(value)
+
+    def insert_para(self, index, value):
+        self.para[index] = value
+
+    def get_sect1(self):
+        return self.sect1
+
+    def set_sect1(self, sect1):
+        self.sect1 = sect1
+
+    def add_sect1(self, value):
+        self.sect1.append(value)
+
+    def insert_sect1(self, index, value):
+        self.sect1[index] = value
+
+    def get_internal(self):
+        return self.internal
+
+    def set_internal(self, internal):
+        self.internal = internal
+
+    def get_link(self):
+        return self.link
+
+    def set_link(self, link):
+        self.link = link
 
     def export(self, outfile, level, namespace_='', name_='docCopyType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docCopyType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -9211,8 +11374,14 @@ class docCopyType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docCopyType'):
         if self.link is not None:
-            outfile.write(' link=%s' % (self.format_string(quote_attrib(
-                self.link).encode(ExternalEncoding), input_name='link'), ))
+            outfile.write(
+                ' link=%s'
+                % (
+                    self.format_string(
+                        quote_attrib(self.link).encode(ExternalEncoding), input_name='link'
+                    ),
+                )
+            )
 
     def exportChildren(self, outfile, level, namespace_='', name_='docCopyType'):
         for para_ in self.para:
@@ -9223,11 +11392,7 @@ class docCopyType(GeneratedsSuper):
             self.internal.export(outfile, level, namespace_, name_='internal')
 
     def hasContent_(self):
-        if (
-            self.para is not None or
-            self.sect1 is not None or
-            self.internal is not None
-        ):
+        if self.para is not None or self.sect1 is not None or self.internal is not None:
             return True
         else:
             return False
@@ -9287,21 +11452,20 @@ class docCopyType(GeneratedsSuper):
             self.link = attrs.get('link').value
 
     def buildChildren(self, child_, nodeName_):
-        if child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'para':
+        if child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'para':
             obj_ = docParaType.factory()
             obj_.build(child_)
             self.para.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'sect1':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'sect1':
             obj_ = docSect1Type.factory()
             obj_.build(child_)
             self.sect1.append(obj_)
-        elif child_.nodeType == Node.ELEMENT_NODE and \
-                nodeName_ == 'internal':
+        elif child_.nodeType == Node.ELEMENT_NODE and nodeName_ == 'internal':
             obj_ = docInternalType.factory()
             obj_.build(child_)
             self.set_internal(obj_)
+
+
 # end class docCopyType
 
 
@@ -9318,15 +11482,31 @@ class docCharType(GeneratedsSuper):
             return docCharType.subclass(*args_, **kwargs_)
         else:
             return docCharType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def get_char(self): return self.char
-    def set_char(self, char): self.char = char
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def get_char(self):
+        return self.char
+
+    def set_char(self, char):
+        self.char = char
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docCharType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docCharType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -9338,7 +11518,7 @@ class docCharType(GeneratedsSuper):
 
     def exportAttributes(self, outfile, level, namespace_='', name_='docCharType'):
         if self.char is not None:
-            outfile.write(' char=%s' % (quote_attrib(self.char), ))
+            outfile.write(' char=%s' % (quote_attrib(self.char),))
 
     def exportChildren(self, outfile, level, namespace_='', name_='docCharType'):
         if self.valueOf_.find('![CDATA') > -1:
@@ -9350,9 +11530,7 @@ class docCharType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -9389,6 +11567,8 @@ class docCharType(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docCharType
 
 
@@ -9404,13 +11584,25 @@ class docEmptyType(GeneratedsSuper):
             return docEmptyType.subclass(*args_, **kwargs_)
         else:
             return docEmptyType(*args_, **kwargs_)
+
     factory = staticmethod(factory)
-    def getValueOf_(self): return self.valueOf_
-    def setValueOf_(self, valueOf_): self.valueOf_ = valueOf_
+
+    def getValueOf_(self):
+        return self.valueOf_
+
+    def setValueOf_(self, valueOf_):
+        self.valueOf_ = valueOf_
 
     def export(self, outfile, level, namespace_='', name_='docEmptyType', namespacedef_=''):
         showIndent(outfile, level)
-        outfile.write('<%s%s %s' % (namespace_, name_, namespacedef_, ))
+        outfile.write(
+            '<%s%s %s'
+            % (
+                namespace_,
+                name_,
+                namespacedef_,
+            )
+        )
         self.exportAttributes(outfile, level, namespace_, name_='docEmptyType')
         if self.hasContent_():
             outfile.write('>\n')
@@ -9433,9 +11625,7 @@ class docEmptyType(GeneratedsSuper):
             outfile.write(quote_xml('%s' % self.valueOf_))
 
     def hasContent_(self):
-        if (
-            self.valueOf_ is not None
-        ):
+        if self.valueOf_ is not None:
             return True
         else:
             return False
@@ -9469,6 +11659,8 @@ class docEmptyType(GeneratedsSuper):
             self.valueOf_ += child_.nodeValue
         elif child_.nodeType == Node.CDATA_SECTION_NODE:
             self.valueOf_ += '![CDATA[' + child_.nodeValue + ']]'
+
+
 # end class docEmptyType
 
 
@@ -9492,8 +11684,7 @@ def parse(inFileName):
     # Enable Python to collect the space used by the DOM.
     doc = None
     sys.stdout.write('<?xml version="1.0" ?>\n')
-    rootObj.export(sys.stdout, 0, name_="doxygen",
-                   namespacedef_='')
+    rootObj.export(sys.stdout, 0, name_="doxygen", namespacedef_='')
     return rootObj
 
 
@@ -9505,8 +11696,7 @@ def parseString(inString):
     # Enable Python to collect the space used by the DOM.
     doc = None
     sys.stdout.write('<?xml version="1.0" ?>\n')
-    rootObj.export(sys.stdout, 0, name_="doxygen",
-                   namespacedef_='')
+    rootObj.export(sys.stdout, 0, name_="doxygen", namespacedef_='')
     return rootObj
 
 
@@ -9534,5 +11724,5 @@ def main():
 
 if __name__ == '__main__':
     main()
-    #import pdb
+    # import pdb
     # pdb.run('main()')

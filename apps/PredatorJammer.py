@@ -32,9 +32,18 @@ from core_utils import ConfigManager, parse_scientific_notation
 
 # --- New modular imports ---
 from gui.theme import (
-    get_theme, STATUS_OFFLINE, STATUS_ONLINE, STATUS_ACTIVE, STATUS_SILENT,
-    group_style, input_style, highlight_input, danger_button, safe_button,
-    apply_button_style, log_style,
+    get_theme,
+    STATUS_OFFLINE,
+    STATUS_ONLINE,
+    STATUS_ACTIVE,
+    STATUS_SILENT,
+    group_style,
+    input_style,
+    highlight_input,
+    danger_button,
+    safe_button,
+    apply_button_style,
+    log_style,
 )
 from gui.validation_dashboard import ValidationDashboard
 from session.presets import PresetManager
@@ -61,15 +70,25 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.burned_channels = []  # Shadow list of C++ targets
 
         # Load defaults from config
-        default_serial = self.config_manager.get("hardware", "tx_usrp_serial", "34573DD")
-        self.samp_rate = self.config_manager.get("hardware", "default_sample_rate_hz", 2e6)
-        self.center_freq = self.config_manager.get("hardware", "default_center_freq_hz", 915e6)
+        default_serial = self.config_manager.get(
+            "hardware", "tx_usrp_serial", "34573DD"
+        )
+        self.samp_rate = self.config_manager.get(
+            "hardware", "default_sample_rate_hz", 2e6
+        )
+        self.center_freq = self.config_manager.get(
+            "hardware", "default_center_freq_hz", 915e6
+        )
         self.rx_gain = self.config_manager.get("rf_defaults", "rx_gain", 40)
         self.tx_gain = self.config_manager.get("rf_defaults", "tx_gain", 50)
         self.tx_level = -10.0
         self.tx_sink_type = "UHD"
-        self.sh_serial = self.config_manager.get("hardware", "signal_hound_serial", "24248760")
-        self.secondary_serial = self.config_manager.get("hardware", "tx_secondary_serial", "")
+        self.sh_serial = self.config_manager.get(
+            "hardware", "signal_hound_serial", "24248760"
+        )
+        self.secondary_serial = self.config_manager.get(
+            "hardware", "tx_secondary_serial", ""
+        )
         self.tx2_offset = 0.0
         self.dual_tx_enabled = False
         self.bw_expand_enabled = False
@@ -113,7 +132,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         # Apply theme
         self.theme = get_theme()
         c = self.theme["colors"]
-        self.setStyleSheet(f"QWidget {{ background-color: {c['bg_primary']}; color: {c['text_primary']}; }}")
+        self.setStyleSheet(
+            f"QWidget {{ background-color: {c['bg_primary']}; color: {c['text_primary']}; }}"
+        )
 
         # --- Main Layout ---
         self.root_layout = Qt.QVBoxLayout(self)
@@ -135,7 +156,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self._build_history_panel()
 
         # --- Blocks (initially None) ---
-        self.source_node = self.interdictor = self.sink = self.file_sink = self.sim_src = None
+        self.source_node = self.interdictor = self.sink = self.file_sink = (
+            self.sim_src
+        ) = None
 
         # Load calibration matrix and presets
         self.load_calibration()
@@ -153,7 +176,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
     # ============================================================
 
     def _build_header(self, default_serial):
-        c = self.theme["colors"]
+        _c = self.theme["colors"]
         self.header = Qt.QHBoxLayout()
         self.root_layout.addLayout(self.header)
 
@@ -172,7 +195,16 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         tuning_layout.addWidget(self.samp_input)
         tuning_layout.addWidget(Qt.QLabel("Band:"))
         self.band_combo = Qt.QComboBox()
-        self.band_combo.addItems(["Custom", "ISM 915", "WiFi 2.4 (Ch 1)", "WiFi 2.4 (Ch 6)", "WiFi 2.4 (Ch 11)", "WiFi 5.8 (Ch 149)"])
+        self.band_combo.addItems(
+            [
+                "Custom",
+                "ISM 915",
+                "WiFi 2.4 (Ch 1)",
+                "WiFi 2.4 (Ch 6)",
+                "WiFi 2.4 (Ch 11)",
+                "WiFi 5.8 (Ch 149)",
+            ]
+        )
         self.band_combo.currentTextChanged.connect(self.on_band_change)
         tuning_layout.addWidget(self.band_combo)
 
@@ -193,7 +225,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.sidebar_scroll = Qt.QScrollArea()
         self.sidebar_scroll.setWidgetResizable(True)
         self.sidebar_scroll.setMinimumWidth(400)
-        self.sidebar_scroll.setStyleSheet(f"QScrollArea {{ border: 1px solid {c['border']}; }}")
+        self.sidebar_scroll.setStyleSheet(
+            f"QScrollArea {{ border: 1px solid {c['border']}; }}"
+        )
         self.middle_split.addWidget(self.sidebar_scroll, stretch=1)
 
         self.sidebar_container = Qt.QWidget()
@@ -219,7 +253,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def _build_hardware_tab(self):
         c = self.theme["colors"]
-        default_serial = self.config_manager.get("hardware", "tx_usrp_serial", "34573DD")
+        default_serial = self.config_manager.get(
+            "hardware", "tx_usrp_serial", "34573DD"
+        )
 
         hw_tab = Qt.QWidget()
         hw_layout = Qt.QVBoxLayout(hw_tab)
@@ -245,7 +281,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         hw_disc_grid.addWidget(self.connect_btn, 1, 1)
 
         self.sink_type_combo = Qt.QComboBox()
-        self.sink_type_combo.addItems(["UHD (USRP)", "SoapySDR (Signal Hound)", "Sidekiq S4 (Soapy)"])
+        self.sink_type_combo.addItems(
+            ["UHD (USRP)", "SoapySDR (Signal Hound)", "Sidekiq S4 (Soapy)"]
+        )
         self.sink_type_combo.currentTextChanged.connect(self.on_sink_type_change)
         hw_disc_grid.addWidget(Qt.QLabel("TX Sink:"), 2, 0)
         hw_disc_grid.addWidget(self.sink_type_combo, 2, 1)
@@ -356,7 +394,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.sec_grid.addWidget(self.tx2_gain_slider, 5, 1)
 
         self.tx2_template_combo = Qt.QComboBox()
-        self.tx2_template_combo.addItems(list(BaseWaveforms.waveform_definitions.keys()))
+        self.tx2_template_combo.addItems(
+            list(BaseWaveforms.waveform_definitions.keys())
+        )
         self.tx2_template_combo.currentTextChanged.connect(self.on_tx2_template_change)
         self.sec_grid.addWidget(Qt.QLabel("TX2 Warhead:"), 6, 0)
         self.sec_grid.addWidget(self.tx2_template_combo, 6, 1)
@@ -480,7 +520,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         prot_layout.addStretch()
 
     def _build_warhead_section(self):
-        c = self.theme["colors"]
+        _c = self.theme["colors"]
         template_box = Qt.QGroupBox("Warhead Selection")
         template_box.setStyleSheet(f"QGroupBox {{ {group_style(self.theme)} }}")
         template_layout = Qt.QVBoxLayout(template_box)
@@ -498,8 +538,12 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def _build_waterfall(self):
         self.waterfall = qtgui.waterfall_sink_c(
-            1024, window.WIN_BLACKMAN_hARRIS, self.center_freq, self.samp_rate,
-            "Active Tactical Waterfall", 1
+            1024,
+            window.WIN_BLACKMAN_hARRIS,
+            self.center_freq,
+            self.samp_rate,
+            "Active Tactical Waterfall",
+            1,
         )
         self.waterfall.set_intensity_range(-120, 20)
         self.pyqt_widget = sip.wrapinstance(self.waterfall.qwidget(), Qt.QWidget)
@@ -539,7 +583,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self._sim_lcg_state = 1
         a = 1103515245
         c = 12345
-        m = 2 ** 31
+        m = 2**31
         self._sim_lcg_state = (a * self._sim_lcg_state + c) % m
         channels = [-0.4, -0.2, 0, 0.2, 0.4]
         hop_idx = int((self._sim_lcg_state / m) * len(channels))
@@ -585,7 +629,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.stop()
             self.wait()
             self.disconnect_all()
-            self.hw_source = self.interdictor = self.sink = self.sink2 = self.file_sink = self.sim_src = None
+            self.hw_source = self.interdictor = self.sink = self.sink2 = (
+                self.file_sink
+            ) = self.sim_src = None
             self.hardware_connected = False
             self.connect_btn.setText("CONNECT")
             self.status_label.setText("OFFLINE")
@@ -596,7 +642,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if self.hardware_connected and self.serial:
             self.hw_source = uhd.usrp_source(
                 device_addr=f"serial={self.serial}",
-                stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=list(range(1)))
+                stream_args=uhd.stream_args(
+                    cpu_format="fc32", args="", channels=list(range(1))
+                ),
             )
             self.hw_source.set_samp_rate(self.samp_rate)
             self.hw_source.set_center_freq(self.center_freq, 0)
@@ -605,7 +653,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.hw_source = analog.noise_source_c(analog.GR_GAUSSIAN, 0.001, 0)
 
         if self.sim_mode:
-            self.sim_src = analog.sig_source_c(self.samp_rate, analog.GR_COS_WAVE, 0, 0.5, 0)
+            self.sim_src = analog.sig_source_c(
+                self.samp_rate, analog.GR_COS_WAVE, 0, 0.5, 0
+            )
             self.mixer = blocks.add_cc()
             self.connect(self.hw_source, (self.mixer, 0))
             self.connect(self.sim_src, (self.mixer, 1))
@@ -616,74 +666,127 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
         try:
             from gnuradio.techniquemaker import interdictor_cpp
+
             self.sys_logger.info("Initializing Dual-Warhead C++ Matrix.")
             self.interdictor = interdictor_cpp(
-                technique=self.template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw,
-                reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell,
-                num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq,
-                jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw,
-                preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration,
-                clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled,
-                stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst,
-                stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
-                output_mode="Auto-Surgical" if self.hydra_auto_surgical else "Continuous (Stream)"
+                technique=self.template,
+                sample_rate_hz=self.samp_rate,
+                bandwidth_hz=self.bw,
+                reactive_threshold_db=self.threshold,
+                reactive_dwell_ms=self.dwell,
+                num_targets=self.num_targets,
+                manual_mode=self.manual_mode,
+                manual_freq=self.manual_freq,
+                jamming_enabled=self.interdiction_enabled,
+                adaptive_bw=self.adaptive_bw,
+                preamble_sabotage=self.preamble_sabotage,
+                sabotage_duration_ms=self.sabotage_duration,
+                clock_pull_drift_hz_s=self.clock_pull,
+                stutter_enabled=self.stutter_enabled,
+                stutter_clean_count=self.stutter_clean,
+                stutter_burst_count=self.stutter_burst,
+                stutter_randomize=self.stutter_randomize,
+                frame_duration_ms=self.frame_dur,
+                output_mode="Auto-Surgical"
+                if self.hydra_auto_surgical
+                else "Continuous (Stream)",
             )
             self.interdictor2 = None
             if self.dual_tx_enabled:
                 self.interdictor2 = interdictor_cpp(
-                    technique=self.tx2_template, sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw,
-                    reactive_threshold_db=self.tx2_threshold, reactive_dwell_ms=self.dwell,
-                    num_targets=self.tx2_targets, manual_mode=self.manual_mode, manual_freq=0.0,
-                    jamming_enabled=self.tx2_interdiction_enabled, adaptive_bw=self.adaptive_bw,
-                    preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration,
-                    clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled,
-                    stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst,
-                    stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
-                    output_mode="Continuous (Stream)"
+                    technique=self.tx2_template,
+                    sample_rate_hz=self.samp_rate,
+                    bandwidth_hz=self.bw,
+                    reactive_threshold_db=self.tx2_threshold,
+                    reactive_dwell_ms=self.dwell,
+                    num_targets=self.tx2_targets,
+                    manual_mode=self.manual_mode,
+                    manual_freq=0.0,
+                    jamming_enabled=self.tx2_interdiction_enabled,
+                    adaptive_bw=self.adaptive_bw,
+                    preamble_sabotage=self.preamble_sabotage,
+                    sabotage_duration_ms=self.sabotage_duration,
+                    clock_pull_drift_hz_s=self.clock_pull,
+                    stutter_enabled=self.stutter_enabled,
+                    stutter_clean_count=self.stutter_clean,
+                    stutter_burst_count=self.stutter_burst,
+                    stutter_randomize=self.stutter_randomize,
+                    frame_duration_ms=self.frame_dur,
+                    output_mode="Continuous (Stream)",
                 )
         except ImportError as e:
             self.sys_logger.warning(f"Dual-Warhead Fallback: {e}")
             self.interdictor = techniquepdu(
-                technique="Reactive Jammer", warhead_technique=self.template,
-                sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw,
-                reactive_threshold_db=self.threshold, reactive_dwell_ms=self.dwell,
-                num_targets=self.num_targets, manual_mode=self.manual_mode, manual_freq=self.manual_freq,
-                jamming_enabled=self.interdiction_enabled, adaptive_bw=self.adaptive_bw,
-                preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration,
-                clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled,
-                stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst,
-                stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
-                output_mode="Continuous (Stream)"
+                technique="Reactive Jammer",
+                warhead_technique=self.template,
+                sample_rate_hz=self.samp_rate,
+                bandwidth_hz=self.bw,
+                reactive_threshold_db=self.threshold,
+                reactive_dwell_ms=self.dwell,
+                num_targets=self.num_targets,
+                manual_mode=self.manual_mode,
+                manual_freq=self.manual_freq,
+                jamming_enabled=self.interdiction_enabled,
+                adaptive_bw=self.adaptive_bw,
+                preamble_sabotage=self.preamble_sabotage,
+                sabotage_duration_ms=self.sabotage_duration,
+                clock_pull_drift_hz_s=self.clock_pull,
+                stutter_enabled=self.stutter_enabled,
+                stutter_clean_count=self.stutter_clean,
+                stutter_burst_count=self.stutter_burst,
+                stutter_randomize=self.stutter_randomize,
+                frame_duration_ms=self.frame_dur,
+                output_mode="Continuous (Stream)",
             )
             self.interdictor2 = None
             if self.dual_tx_enabled:
                 self.interdictor2 = techniquepdu(
-                    technique="Reactive Jammer", warhead_technique=self.tx2_template,
-                    sample_rate_hz=self.samp_rate, bandwidth_hz=self.bw,
-                    reactive_threshold_db=self.tx2_threshold, reactive_dwell_ms=self.dwell,
-                    num_targets=self.tx2_targets, manual_mode=self.manual_mode, manual_freq=0.0,
-                    jamming_enabled=self.tx2_interdiction_enabled, adaptive_bw=self.adaptive_bw,
-                    preamble_sabotage=self.preamble_sabotage, sabotage_duration_ms=self.sabotage_duration,
-                    clock_pull_drift_hz_s=self.clock_pull, stutter_enabled=self.stutter_enabled,
-                    stutter_clean_count=self.stutter_clean, stutter_burst_count=self.stutter_burst,
-                    stutter_randomize=self.stutter_randomize, frame_duration_ms=self.frame_dur,
-                    output_mode="Continuous (Stream)"
+                    technique="Reactive Jammer",
+                    warhead_technique=self.tx2_template,
+                    sample_rate_hz=self.samp_rate,
+                    bandwidth_hz=self.bw,
+                    reactive_threshold_db=self.tx2_threshold,
+                    reactive_dwell_ms=self.dwell,
+                    num_targets=self.tx2_targets,
+                    manual_mode=self.manual_mode,
+                    manual_freq=0.0,
+                    jamming_enabled=self.tx2_interdiction_enabled,
+                    adaptive_bw=self.adaptive_bw,
+                    preamble_sabotage=self.preamble_sabotage,
+                    sabotage_duration_ms=self.sabotage_duration,
+                    clock_pull_drift_hz_s=self.clock_pull,
+                    stutter_enabled=self.stutter_enabled,
+                    stutter_clean_count=self.stutter_clean,
+                    stutter_burst_count=self.stutter_burst,
+                    stutter_randomize=self.stutter_randomize,
+                    frame_duration_ms=self.frame_dur,
+                    output_mode="Continuous (Stream)",
                 )
 
         if self.hardware_connected:
             if self.tx_sink_type == "UHD":
                 self.sink = uhd.usrp_sink(
                     device_addr=f"serial={self.serial}",
-                    stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=list(range(1)))
+                    stream_args=uhd.stream_args(
+                        cpu_format="fc32", args="", channels=list(range(1))
+                    ),
                 )
                 self.sink.set_samp_rate(self.samp_rate)
                 self.sink.set_center_freq(self.center_freq, 0)
                 self.sink.set_gain(self.tx_gain, 0)
                 self.connect(self.interdictor, self.sink)
             elif self.tx_sink_type == "SoapySDR" or self.tx_sink_type == "Sidekiq":
-                driver = "driver=vsg60" if self.tx_sink_type == "SoapySDR" else "driver=sidekiq"
+                driver = (
+                    "driver=vsg60"
+                    if self.tx_sink_type == "SoapySDR"
+                    else "driver=sidekiq"
+                )
                 sh_serial = self.sh_serial_input.text()
-                connect_str = f"{driver},serial={sh_serial}" if self.tx_sink_type == "SoapySDR" else driver
+                connect_str = (
+                    f"{driver},serial={sh_serial}"
+                    if self.tx_sink_type == "SoapySDR"
+                    else driver
+                )
                 self.sink = soapy.sink(connect_str, "fc32", 1, "", "", [""], [""])
                 self.sink.set_sample_rate(0, self.samp_rate)
                 self.sink.set_frequency(0, self.center_freq)
@@ -697,13 +800,17 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
                         time.sleep(2.0)
                         self.sink2 = uhd.usrp_sink(
                             device_addr=f"serial={sec_serial}",
-                            stream_args=uhd.stream_args(cpu_format="fc32", args="", channels=list(range(1)))
+                            stream_args=uhd.stream_args(
+                                cpu_format="fc32", args="", channels=list(range(1))
+                            ),
                         )
                         self.sink2.set_samp_rate(self.samp_rate)
                         self.sink2.set_center_freq(self.tx2_freq, 0)
                         self.sink2.set_gain(self.tx2_gain, 0)
                         self.connect(self.interdictor2, self.sink2)
-                        self.sys_logger.info(f"Secondary Warhead deployed on USRP {sec_serial}")
+                        self.sys_logger.info(
+                            f"Secondary Warhead deployed on USRP {sec_serial}"
+                        )
         else:
             self.sink = blocks.null_sink(gr.sizeof_gr_complex)
             self.connect(self.interdictor, self.sink)
@@ -729,12 +836,12 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         if hasattr(self.interdictor, "set_look_through_ms"):
             try:
                 self.interdictor.set_look_through_ms(float(self.look_input.text()))
-            except:
+            except (ValueError, TypeError):
                 pass
         if hasattr(self.interdictor, "set_jam_cycle_ms"):
             try:
                 self.interdictor.set_jam_cycle_ms(float(self.cycle_input.text()))
-            except:
+            except (ValueError, TypeError):
                 pass
 
         self.update_dynamic_params()
@@ -774,13 +881,15 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             val = float(self.samp_input.text())
             limit = 40e6 if self.tx_sink_type == "SoapySDR" else 20e6
             if val > limit:
-                self.sys_logger.warning(f"Sample rate {val/1e6}M exceeds limit for {self.tx_sink_type}. Clipping.")
+                self.sys_logger.warning(
+                    f"Sample rate {val / 1e6}M exceeds limit for {self.tx_sink_type}. Clipping."
+                )
                 val = limit
                 self.samp_input.setText(str(int(val)))
             self.samp_rate = val
             self.waterfall.set_frequency_range(self.center_freq, self.samp_rate)
-        except:
-            pass
+        except (ValueError, TypeError) as e:
+            self.sys_logger.warning(f"Invalid sample rate: {e}")
 
     def on_sink_type_change(self, text):
         if "Sidekiq" in text:
@@ -809,8 +918,8 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             if self.sink and self.tx_sink_type in ["SoapySDR", "Sidekiq"]:
                 self.sink.set_gain(0, self.tx_level)
             self.update_cal_display()
-        except:
-            pass
+        except (ValueError, TypeError) as e:
+            self.sys_logger.warning(f"Invalid TX level: {e}")
 
     def on_dual_tx_toggle(self, checked):
         self.dual_tx_enabled = checked
@@ -828,7 +937,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.init_blocks()
             self.start()
             self.update_dynamic_params()
-        if hasattr(self, 'interdictor2') and self.interdictor2:
+        if hasattr(self, "interdictor2") and self.interdictor2:
             self.interdictor2.set_jamming_enabled(checked)
         self.secondary_serial_combo.setEnabled(checked)
         self.sync_cb.setEnabled(checked)
@@ -868,9 +977,11 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.tx2_freq = float(self.tx2_freq_input.text())
             if hasattr(self, "sink2") and self.sink2:
                 self.sink2.set_center_freq(self.tx2_freq, 0)
-            self.sys_logger.info(f"TX2 Center Frequency updated: {self.tx2_freq/1e6} MHz")
-        except:
-            pass
+            self.sys_logger.info(
+                f"TX2 Center Frequency updated: {self.tx2_freq / 1e6} MHz"
+            )
+        except (ValueError, TypeError) as e:
+            self.sys_logger.warning(f"Invalid TX2 frequency: {e}")
 
     def on_tx2_gain_change(self, val):
         self.tx2_gain = val
@@ -888,7 +999,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             "WiFi 2.4 (Ch 1)": 2412e6,
             "WiFi 2.4 (Ch 6)": 2437e6,
             "WiFi 2.4 (Ch 11)": 2462e6,
-            "WiFi 5.8 (Ch 149)": 5745e6
+            "WiFi 5.8 (Ch 149)": 5745e6,
         }
         if band in bands:
             self.center_freq = bands[band]
@@ -912,8 +1023,14 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             cpp_targets = self.interdictor.get_targets()
             if self.sticky_denial:
                 self.burned_channels = cpp_targets
-            new_report = [f"{t.center_freq/1e3:8.1f} kHz | {t.bandwidth/1e3:4.1f}k" for t in cpp_targets]
-            existing_report = [self.history_list.item(i).text() for i in range(self.history_list.count())]
+            new_report = [
+                f"{t.center_freq / 1e3:8.1f} kHz | {t.bandwidth / 1e3:4.1f}k"
+                for t in cpp_targets
+            ]
+            existing_report = [
+                self.history_list.item(i).text()
+                for i in range(self.history_list.count())
+            ]
             if new_report != existing_report:
                 self.history_list.clear()
                 self.history_list.addItems(new_report)
@@ -924,7 +1041,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
     def on_hydra_toggle(self, checked):
         self.hydra_auto_surgical = checked
         if self.interdictor:
-            self.interdictor.set_output_mode("Auto-Surgical" if checked else "Continuous (Stream)")
+            self.interdictor.set_output_mode(
+                "Auto-Surgical" if checked else "Continuous (Stream)"
+            )
 
     def on_predictive_toggle(self, checked):
         if self.interdictor and hasattr(self.interdictor, "set_predictive_tracking"):
@@ -946,7 +1065,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             ms = float(self.look_input.text())
             if self.interdictor:
                 self.interdictor.set_look_through_ms(ms)
-        except:
+        except (ValueError, TypeError):
             pass
 
     def on_jam_cycle_change(self):
@@ -954,7 +1073,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             ms = float(self.cycle_input.text())
             if self.interdictor:
                 self.interdictor.set_jam_cycle_ms(ms)
-        except:
+        except (ValueError, TypeError):
             pass
 
     def on_rx_gain_change(self, value):
@@ -978,7 +1097,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.clock_pull = float(self.pull_input.text())
             if self.interdictor:
                 self.interdictor.set_clock_pull_drift_hz_s(self.clock_pull)
-        except:
+        except (ValueError, TypeError):
             pass
 
     def on_adapt_toggle(self, checked):
@@ -996,7 +1115,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.sabotage_duration = float(self.sab_input.text())
             if self.interdictor:
                 self.interdictor.set_sabotage_duration_ms(self.sabotage_duration)
-        except:
+        except (ValueError, TypeError):
             pass
 
     def on_stutter_toggle(self, checked):
@@ -1009,7 +1128,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.stutter_clean = int(self.stutter_clean_input.text())
             if self.interdictor:
                 self.interdictor.set_stutter_clean_count(self.stutter_clean)
-        except:
+        except (ValueError, TypeError):
             pass
 
     def on_stutter_burst_change(self):
@@ -1017,7 +1136,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.stutter_burst = int(self.stutter_burst_input.text())
             if self.interdictor:
                 self.interdictor.set_stutter_burst_count(self.stutter_burst)
-        except:
+        except (ValueError, TypeError):
             pass
 
     def on_targets_change(self, val):
@@ -1052,7 +1171,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def on_manual_freq_change(self, val):
         self.manual_freq = float(val)
-        self.manual_label.setText(f"Offset: {val/1e3:.1f} kHz")
+        self.manual_label.setText(f"Offset: {val / 1e3:.1f} kHz")
         if self.interdictor:
             self.interdictor.set_manual_freq(self.manual_freq)
 
@@ -1068,7 +1187,7 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             self.frame_dur = float(self.frame_input.text())
             if self.interdictor:
                 self.interdictor.set_frame_duration_ms(self.frame_dur)
-        except:
+        except (ValueError, TypeError):
             pass
 
     # --- Calibration ---
@@ -1078,12 +1197,17 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
                 with open("config/calibration_matrix.json", "r") as f:
                     raw = json.load(f)
                     m = raw.get("matrix", {})
-                    self.cal_data = {float(k): {float(gk): gv for gk, gv in v.items()} for k, v in m.items()}
-            except:
+                    self.cal_data = {
+                        float(k): {float(gk): gv for gk, gv in v.items()}
+                        for k, v in m.items()
+                    }
+            except (json.JSONDecodeError, IOError, KeyError, ValueError):
                 self.cal_data = {}
 
     def update_cal_display(self):
-        self.cal_label.setText(self.cal_manager.format_label(self.center_freq, self.tx_gain))
+        self.cal_label.setText(
+            self.cal_manager.format_label(self.center_freq, self.tx_gain)
+        )
 
     # --- Presets ---
     def load_presets_from_file(self):
@@ -1091,22 +1215,35 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
         self.preset_combo.addItems(self.preset_manager.names)
 
     def save_current_preset(self):
-        name, ok = QtWidgets.QInputDialog.getText(self, "Save Preset", "Enter Preset Name:")
+        name, ok = QtWidgets.QInputDialog.getText(
+            self, "Save Preset", "Enter Preset Name:"
+        )
         if ok and name:
             data = {
-                "rx_gain": self.rx_gain, "tx_gain": self.tx_gain,
-                "threshold": self.threshold, "template": self.template,
-                "num_targets": self.num_targets, "center_freq": self.center_freq,
-                "samp_rate": self.samp_rate, "adaptive_bw": self.adaptive_bw,
-                "preamble_sabotage": self.preamble_sabotage, "clock_pull": self.clock_pull,
-                "stutter_enabled": self.stutter_enabled, "stutter_clean": self.stutter_clean,
-                "stutter_burst": self.stutter_burst, "stutter_randomize": self.stutter_randomize,
-                "frame_dur": self.frame_dur, "tx_sink_type": self.tx_sink_type,
-                "tx_level": self.tx_level, "dual_tx_enabled": self.dual_tx_enabled,
+                "rx_gain": self.rx_gain,
+                "tx_gain": self.tx_gain,
+                "threshold": self.threshold,
+                "template": self.template,
+                "num_targets": self.num_targets,
+                "center_freq": self.center_freq,
+                "samp_rate": self.samp_rate,
+                "adaptive_bw": self.adaptive_bw,
+                "preamble_sabotage": self.preamble_sabotage,
+                "clock_pull": self.clock_pull,
+                "stutter_enabled": self.stutter_enabled,
+                "stutter_clean": self.stutter_clean,
+                "stutter_burst": self.stutter_burst,
+                "stutter_randomize": self.stutter_randomize,
+                "frame_dur": self.frame_dur,
+                "tx_sink_type": self.tx_sink_type,
+                "tx_level": self.tx_level,
+                "dual_tx_enabled": self.dual_tx_enabled,
                 "secondary_serial": self.secondary_serial_combo.currentText(),
-                "bw_expand": self.bw_expand_enabled, "sync_tx1": self.sync_tx1,
-                "tx2_freq": self.tx2_freq, "tx2_gain": self.tx2_gain,
-                "tx2_template": self.tx2_template
+                "bw_expand": self.bw_expand_enabled,
+                "sync_tx1": self.sync_tx1,
+                "tx2_freq": self.tx2_freq,
+                "tx2_gain": self.tx2_gain,
+                "tx2_template": self.tx2_template,
             }
             self.preset_manager.save(name, data)
             self.load_presets_from_file()
@@ -1170,26 +1307,34 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             return
         self.current_template_kwargs = {
             "sample_rate_hz": self.samp_rate,
-            "technique_length_seconds": 0.1
+            "technique_length_seconds": 0.1,
         }
         for p in wf_def["params"]:
             if p["name"] in ["sample_rate_hz", "technique_length_seconds"]:
                 continue
             default_val = p.get("default", "0")
             try:
-                self.current_template_kwargs[p["name"]] = float(default_val) if "." in default_val else int(default_val)
+                self.current_template_kwargs[p["name"]] = (
+                    float(default_val) if "." in default_val else int(default_val)
+                )
             except ValueError:
                 self.current_template_kwargs[p["name"]] = default_val
             if p["type"] == "entry":
                 w = Qt.QLineEdit(default_val)
                 w.setStyleSheet(input_style(self.theme))
-                w.editingFinished.connect(lambda n=p["name"], widget=w: self.on_dynamic_change(n, widget.text()))
+                w.editingFinished.connect(
+                    lambda n=p["name"], widget=w: self.on_dynamic_change(
+                        n, widget.text()
+                    )
+                )
                 self.param_layout.addRow(p["title"], w)
             elif p["type"] == "options":
                 w = Qt.QComboBox()
                 w.addItems(p["choices"])
                 w.setCurrentText(default_val)
-                w.currentTextChanged.connect(lambda val, n=p["name"]: self.on_dynamic_change(n, val))
+                w.currentTextChanged.connect(
+                    lambda val, n=p["name"]: self.on_dynamic_change(n, val)
+                )
                 self.param_layout.addRow(p["title"], w)
         self.generate_and_load_waveform()
 
@@ -1203,7 +1348,9 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
 
     def generate_and_load_waveform(self):
         try:
-            if not self.interdictor or not hasattr(self.interdictor, "set_base_waveform"):
+            if not self.interdictor or not hasattr(
+                self.interdictor, "set_base_waveform"
+            ):
                 return
             wf_def = BaseWaveforms.waveform_definitions.get(self.template)
             if not wf_def:
@@ -1214,12 +1361,18 @@ class PredatorJammer(gr.top_block, Qt.QWidget):
             kwargs.setdefault("bandwidth_hz", self.bw)
             kwargs.setdefault("sample_rate_hz", self.samp_rate)
             import inspect
+
             sig = inspect.signature(func)
             valid_kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
             # Check all required positional args are present
             for name, param in sig.parameters.items():
-                if param.default is inspect.Parameter.empty and name not in valid_kwargs:
-                    self.sys_logger.warning(f"generate_and_load_waveform: missing required param '{name}' for {func.__name__}")
+                if (
+                    param.default is inspect.Parameter.empty
+                    and name not in valid_kwargs
+                ):
+                    self.sys_logger.warning(
+                        f"generate_and_load_waveform: missing required param '{name}' for {func.__name__}"
+                    )
                     if name == "bandwidth_hz":
                         valid_kwargs[name] = self.bw
                     elif name == "sample_rate_hz":

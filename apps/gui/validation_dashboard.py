@@ -25,6 +25,7 @@ except ImportError:
 # Validation Dashboard Widget
 # ---------------------------------------------------------------------------
 
+
 class ValidationDashboard(Qt.QWidget):
     """Tab widget: waveform validation, spectrum, test runner, metrics."""
 
@@ -91,6 +92,7 @@ class ValidationDashboard(Qt.QWidget):
 
         try:
             import inspect
+
             sig = inspect.signature(defn["func"])
             valid = {k: v for k, v in kwargs.items() if k in sig.parameters}
             out = defn["func"](**valid)
@@ -200,10 +202,16 @@ class ValidationDashboard(Qt.QWidget):
 
         tests = [
             ("Narrowband Noise", lambda: BaseWaveforms.narrowband_noise_creator(bw, sr, dur)),
-            ("Differential Comb", lambda: BaseWaveforms.differential_comb_creator(30_000, 10, sr, dur)),
+            (
+                "Differential Comb",
+                lambda: BaseWaveforms.differential_comb_creator(30_000, 10, sr, dur),
+            ),
             ("LFM Chirp", lambda: BaseWaveforms.lfm_chirp(-500_000, 500_000, sr, dur)),
             ("OFDM Noise", lambda: BaseWaveforms.ofdm_shaped_noise(64, 48, 16, sr, dur)),
-            ("FHSS Noise", lambda: BaseWaveforms.fhss_noise("-200000 0 200000", 0.002, bw, sr, dur)),
+            (
+                "FHSS Noise",
+                lambda: BaseWaveforms.fhss_noise("-200000 0 200000", 0.002, bw, sr, dur),
+            ),
             ("RRC Modulated", lambda: BaseWaveforms.rrc_modulated_noise(50_000, sr, 0.35, dur)),
             ("Swept Noise", lambda: BaseWaveforms.swept_noise_creator(500_000, bw, sr, dur)),
             ("Noise Tones", lambda: BaseWaveforms.noise_tones("-100000 0 100000", 10_000, sr, dur)),
