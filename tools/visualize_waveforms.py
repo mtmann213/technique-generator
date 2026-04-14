@@ -66,6 +66,16 @@ def generate_waveform(tech_name: str, sample_rate: float = 2e6, duration: float 
         kwargs["num_subcarriers"] = 48
     if tech_name == "Song Maker":
         kwargs["bandwidth_hz"] = 100000
+    if tech_name == "GPS Spoof":
+        kwargs["satellite_prn"] = 1
+    if tech_name == "Repeat Jammer":
+        # Provide a default dummy capture (will generate noise)
+        kwargs["capture_file"] = "/dev/null"
+    if tech_name == "Bluetooth Hop":
+        kwargs["sample_rate_hz"] = 2e6
+    if tech_name == "LoRa Disruption":
+        kwargs["center_freq_hz"] = 915e6
+        kwargs["bandwidth_hz"] = 125000
 
     import inspect
 

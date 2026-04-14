@@ -581,6 +581,223 @@ def songMaker(
     )
 
 
+def repeat_jammer(
+    capture_file: str,
+    repeat_count: int,
+    sample_rate_hz: float,
+    technique_length_seconds: float,
+    target_value: float = 1.0,
+    normalization_type: Literal["peak", "rms"] = "peak",
+) -> NDArray[np.complex128]:
+    """Replay captured signal samples from a file for deception attacks.
+
+    Args:
+        capture_file: Path to binary file containing complex samples (.bin, .cf32)
+        repeat_count: Number of times to repeat the captured signal
+        sample_rate_hz: Sample rate (for output length calculation)
+        technique_length_seconds: Total output length in seconds
+        target_value: Target amplitude for normalization
+        normalization_type: Peak or RMS normalization
+    """
+    try:
+        samples = np.fromfile(capture_file, dtype=np.complex64)
+    except Exception:
+        samples = np.array([], dtype=np.complex128)
+
+    if len(samples) == 0:
+        time = _create_time_array(sample_rate_hz, technique_length_seconds)
+        samples = np.exp(1j * 2 * np.pi * 100e3 * time) * 0.5
+
+    repeats_needed = math.ceil(
+        (sample_rate_hz * technique_length_seconds) / len(samples)
+    )
+    repeated = np.tile(samples, min(repeat_count, repeats_needed + 1))
+    total = math.floor(sample_rate_hz * technique_length_seconds)
+    return _normalize_signal(repeated[:total], target_value, normalization_type)
+
+
+def gps_spoof(
+    satellite_prn: int,
+    sample_rate_hz: float,
+    technique_length_seconds: float,
+    target_value: float = 1.0,
+    normalization_type: Literal["peak", "rms"] = "peak",
+) -> NDArray[np.complex128]:
+    """Generate GPS L1 C/A code for spoofing attacks.
+
+    Args:
+        satellite_prn: PRN number (1-32, default satellites)
+        sample_rate_hz: Sample rate
+        technique_length_seconds: Output duration
+        target_value: Target amplitude
+        normalization_type: Normalization type
+    """
+    valid_prns = list(_gps_code_taps.keys())
+    if satellite_prn not in valid_prns:
+        satellite_prn = valid_prns[0]
+
+    chip_rate = 1.023e6
+    code_length = 1023
+    carrier_freq = 1575.42e6
+    samples_per_chip = int(sample_rate_hz / chip_rate)
+
+    prn_code = _generate_gps_ca_code(satellite_prn)
+    code_samples = np.repeat(prn_code, samples_per_chip)
+
+    num_epochs = int(math.ceil(sample_rate_hz * technique_length_seconds / code_length))
+    epoched = np.tile(code_samples, num_epochs)
+
+    time = _create_time_array(sample_rate_hz, technique_length_seconds)
+    carrier = np.exp(1j * 2 * np.pi * carrier_freq * time)
+    out = epoched[: len(time)] * carrier[: len(epoched)]
+
+    return _normalize_signal(out, target_value, normalization_type)
+
+
+def _generate_gps_ca_code(prn: int) -> np.ndarray:
+    """Generate GPS C/A code for given PRN (1-32).
+
+    Uses simplified linear feedback shift register implementation.
+    For PRNs not in the tap list, uses a default generator.
+    """
+    if prn not in _gps_code_taps:
+        prn = 1
+
+    g1 = np.ones(10, dtype=int)
+    g2 = np.ones(10, dtype=int)
+
+    code = np.zeros(1023, dtype=int)
+    taps = _gps_code_taps.get(prn, (2, 6))
+
+    for i in range(1023):
+        code[i] = g1[9] ^ g2[9]
+        g1_new = g1[2] ^ g1[9]
+        g2_new = g2[taps[0] - 1] ^ g2[taps[1] - 1]
+        g1 = np.roll(g1, -1)
+        g1[0] = g1_new
+        g2 = np.roll(g2, -1)
+        g2[0] = g2_new
+
+    return 2 * code.astype(np.float32) - 1
+
+
+_gps_code_taps = {
+    1: (2, 6),
+    6: (1, 3),
+    10: (2, 5),
+    15: (1, 5),
+    20: (1, 4),
+    24: (3, 5),
+    25: (1, 2),
+    26: (3, 4),
+}
+
+
+def bluetooth_hop(
+    sample_rate_hz: float,
+    technique_length_seconds: float,
+    target_value: float = 1.0,
+    normalization_type: Literal["peak", "rms"] = "peak",
+) -> NDArray[np.complex128]:
+    """Generate Bluetooth FHSS disruption waveform.
+
+    2.4GHz ISM band (2400-2483MHz), 1600 hops/sec (625us interval).
+
+    Args:
+        sample_rate_hz: Sample rate
+        technique_length_seconds: Duration
+        target_value: Target amplitude
+        normalization_type: Normalization type
+    """
+    total_samples = math.floor(sample_rate_hz * technique_length_seconds)
+    hop_rate = 1600
+    num_hops = int(hop_rate * technique_length_seconds)
+    samples_per_hop = sample_rate_hz / hop_rate
+
+    out = np.zeros(total_samples, dtype=np.complex128)
+
+    for hop in range(num_hops):
+        freq_offset = np.random.uniform(-40e6, 40e6)
+        hop_freq = 2.427e9 + freq_offset
+
+        hop_start = int(hop * samples_per_hop)
+        hop_end = min(int((hop + 1) * samples_per_hop), total_samples)
+        hop_samples = hop_end - hop_start
+
+        if hop_samples <= 0:
+            break
+
+        time = np.arange(hop_samples) / sample_rate_hz
+        hop_signal = (
+            np.exp(1j * 2 * np.pi * hop_freq * time)
+            * (np.random.randn(hop_samples) + 1j * np.random.randn(hop_samples))
+            * 0.1
+        )
+
+        out[hop_start:hop_end] += hop_signal
+
+    return _normalize_signal(out, target_value, normalization_type)
+
+
+def lora_disruption(
+    center_freq_hz: float,
+    bandwidth_hz: float,
+    sample_rate_hz: float,
+    technique_length_seconds: float,
+    target_value: float = 1.0,
+    normalization_type: Literal["peak", "rms"] = "peak",
+) -> NDArray[np.complex128]:
+    """Generate LoRa disruption by sweeping across chirp channels.
+
+    Target: 868-870MHz (EU) or 902-928MHz (US) bands.
+    LoRa uses 125kHz, 250kHz, or 500kHz bandwidth channels.
+
+    Args:
+        center_freq_hz: 868e6 or 915e6
+        bandwidth_hz: 125000, 250000, or 500000
+        sample_rate_hz: Sample rate
+        technique_length_seconds: Duration
+        target_value: Target amplitude
+        normalization_type: Normalization type
+    """
+    total_samples = math.floor(sample_rate_hz * technique_length_seconds)
+
+    num_channels = int(2e6 / bandwidth_hz)
+    samples_per_channel = int(sample_rate_hz / (bandwidth_hz * 2))
+
+    out = np.zeros(total_samples, dtype=np.complex128)
+
+    time = np.arange(total_samples) / sample_rate_hz
+
+    base_freqs = [
+        center_freq_hz - 1e6,
+        center_freq_hz - 0.5e6,
+        center_freq_hz,
+        center_freq_hz + 0.5e6,
+        center_freq_hz + 1e6,
+    ]
+    freq_idx = 0
+
+    for i in range(0, total_samples, samples_per_channel):
+        freq = base_freqs[freq_idx % len(base_freqs)]
+        freq_idx += 1
+
+        end_idx = min(i + samples_per_channel, total_samples)
+        chunk_time = time[i:end_idx]
+
+        chirp_rate = bandwidth_hz / 0.1
+        chirp_signal = (
+            np.exp(
+                1j * 2 * np.pi * (freq * chunk_time + 0.5 * chirp_rate * chunk_time**2)
+            )
+            * 0.3
+        )
+
+        out[i:end_idx] = chirp_signal
+
+    return _normalize_signal(out, target_value, normalization_type)
+
+
 def wifi_preamble(
     sample_rate_hz: float,
     technique_length_seconds: float,
@@ -1212,6 +1429,108 @@ waveform_definitions = {
                 "type": "options",
                 "choices": ["802.11b", "802.11g"],
                 "default": "802.11b",
+            },
+        ],
+    },
+    # === NEW TECHNIQUES ===
+    "Repeat Jammer": {
+        "func": repeat_jammer,
+        "params": [
+            {
+                "name": "capture_file",
+                "title": "Capture File",
+                "type": "entry",
+                "default": "captured_signal.bin",
+            },
+            {
+                "name": "repeat_count",
+                "title": "Repeat Count",
+                "type": "entry",
+                "default": "3",
+            },
+            {
+                "name": "sample_rate_hz",
+                "title": "Sample Rate (Hz)",
+                "type": "entry",
+                "default": "2000000",
+            },
+            {
+                "name": "technique_length_seconds",
+                "title": "Length (s)",
+                "type": "entry",
+                "default": "0.1",
+            },
+        ],
+    },
+    "GPS Spoof": {
+        "func": gps_spoof,
+        "params": [
+            {
+                "name": "satellite_prn",
+                "title": "PRN (Satellite)",
+                "type": "options",
+                "choices": ["1", "6", "10", "15", "20", "24", "25", "26"],
+                "default": "1",
+            },
+            {
+                "name": "sample_rate_hz",
+                "title": "Sample Rate (Hz)",
+                "type": "entry",
+                "default": "2000000",
+            },
+            {
+                "name": "technique_length_seconds",
+                "title": "Length (s)",
+                "type": "entry",
+                "default": "0.02",
+            },
+        ],
+    },
+    "Bluetooth Hop": {
+        "func": bluetooth_hop,
+        "params": [
+            {
+                "name": "sample_rate_hz",
+                "title": "Sample Rate (Hz)",
+                "type": "entry",
+                "default": "2000000",
+            },
+            {
+                "name": "technique_length_seconds",
+                "title": "Length (s)",
+                "type": "entry",
+                "default": "0.1",
+            },
+        ],
+    },
+    "LoRa Disruption": {
+        "func": lora_disruption,
+        "params": [
+            {
+                "name": "center_freq_hz",
+                "title": "Center Freq (Hz)",
+                "type": "options",
+                "choices": ["868000000", "915000000"],
+                "default": "915000000",
+            },
+            {
+                "name": "bandwidth_hz",
+                "title": "Bandwidth (Hz)",
+                "type": "options",
+                "choices": ["125000", "250000", "500000"],
+                "default": "125000",
+            },
+            {
+                "name": "sample_rate_hz",
+                "title": "Sample Rate (Hz)",
+                "type": "entry",
+                "default": "2000000",
+            },
+            {
+                "name": "technique_length_seconds",
+                "title": "Length (s)",
+                "type": "entry",
+                "default": "0.1",
             },
         ],
     },
