@@ -24,9 +24,9 @@ def _root_raised_cosine_filter(
                 + (1 - 2 / np.pi) * np.cos(np.pi / (4 * rolloff))
             )
         else:
-            numerator = np.sin(np.pi * ti_norm * (1 - rolloff)) + 4 * rolloff * ti_norm * np.cos(
-                np.pi * ti_norm * (1 + rolloff)
-            )
+            numerator = np.sin(
+                np.pi * ti_norm * (1 - rolloff)
+            ) + 4 * rolloff * ti_norm * np.cos(np.pi * ti_norm * (1 + rolloff))
             denominator = np.pi * ti_norm * (1 - (4 * rolloff * ti_norm) ** 2)
             h[i] = (1 / Ts) * (numerator / denominator)
     if np.sum(h**2) > 1e-9:
@@ -83,7 +83,9 @@ def _apply_spectral_shaping(
     elif filter_type == "rrc":
         sps = sample_rate_hz / bandwidth_hz
         num_taps = int(12 * sps) | 1
-        taps = _root_raised_cosine_filter(bandwidth_hz, sample_rate_hz, rolloff, num_taps)
+        taps = _root_raised_cosine_filter(
+            bandwidth_hz, sample_rate_hz, rolloff, num_taps
+        )
         return signal.lfilter(taps, 1.0, samples)
     return samples
 
@@ -107,7 +109,9 @@ def correlator_confusion(
     sps = max(1, int(sample_rate_hz / bandwidth_hz))
     zc_pulsed = np.zeros(N_zc * sps, dtype=np.complex128)
     zc_pulsed[::sps] = zc
-    taps = signal.firwin(31, min(bandwidth_hz / 2, sample_rate_hz / 2.1), fs=sample_rate_hz)
+    taps = signal.firwin(
+        31, min(bandwidth_hz / 2, sample_rate_hz / 2.1), fs=sample_rate_hz
+    )
     zc_final = signal.lfilter(taps, 1.0, zc_pulsed)
     curr_ptr = 0
     interval_samps = int(pulse_interval_ms * sample_rate_hz / 1000.0)
@@ -119,7 +123,9 @@ def correlator_confusion(
         out[curr_ptr : curr_ptr + len(zc_final)] = p_val
         jitter = 0
         if confusion_mode in ["timing_jitter", "both"]:
-            jitter = random.randint(-int(interval_samps * 0.2), int(interval_samps * 0.2))
+            jitter = random.randint(
+                -int(interval_samps * 0.2), int(interval_samps * 0.2)
+            )
         curr_ptr += max(len(zc_final), interval_samps + jitter)
     out = _apply_spectral_shaping(out, bandwidth_hz, sample_rate_hz, filter_type)
     return _normalize_signal(out, target_value, normalization_type)
@@ -173,7 +179,9 @@ def rrc_modulated_noise(
     noise = np.random.randn(num_samples)
     sps = sample_rate_hz / symbol_rate_hz
     num_taps = int(12 * sps) | 1
-    coeffs = _root_raised_cosine_filter(symbol_rate_hz, sample_rate_hz, rolloff, num_taps)
+    coeffs = _root_raised_cosine_filter(
+        symbol_rate_hz, sample_rate_hz, rolloff, num_taps
+    )
     out = signal.lfilter(coeffs, 1.0, noise)
     return _normalize_signal(out, target_value, normalization_type)
 
@@ -209,7 +217,9 @@ def swept_noise_creator(
             (time % effective_duration) - effective_duration / 2
         ) - (sweep_hz / 2)
     else:
-        freq = (sweep_hz / effective_duration) * (time % effective_duration) - (sweep_hz / 2)
+        freq = (sweep_hz / effective_duration) * (time % effective_duration) - (
+            sweep_hz / 2
+        )
     phase = np.cumsum(freq) / sample_rate_hz
     out = noise * np.exp(1j * 2 * np.pi * phase)
     return _normalize_signal(out, target_value, normalization_type)
@@ -236,8 +246,14 @@ def chunk_noise_creator(
         filter_type,
     )
     time = _create_time_array(sample_rate_hz, technique_length_seconds)
-    centers = np.linspace(-technique_width_hz / 2 + bw / 2, technique_width_hz / 2 - bw / 2, chunks)
-    indices = np.floor(time / technique_length_seconds * chunks).astype(int).clip(0, chunks - 1)
+    centers = np.linspace(
+        -technique_width_hz / 2 + bw / 2, technique_width_hz / 2 - bw / 2, chunks
+    )
+    indices = (
+        np.floor(time / technique_length_seconds * chunks)
+        .astype(int)
+        .clip(0, chunks - 1)
+    )
     order = np.arange(chunks)
     np.random.shuffle(order)
     out = noise * np.exp(1j * 2 * np.pi * centers[order[indices]] * time)
@@ -313,6 +329,7 @@ def swept_phasors(
     normalization_type: Literal["peak", "rms"] = "peak",
     filter_type: str = "none",
 ) -> NDArray:
+    tones = int(tones)  # Defensive: convert to int in case string is passed
     if sweep_rate_hz_s > 0:
         effective_duration = sweep_hz / sweep_rate_hz_s
     else:
@@ -337,6 +354,7 @@ def swept_cosines(
     normalization_type: Literal["peak", "rms"] = "peak",
     filter_type: str = "none",
 ) -> NDArray:
+    tones = int(tones)  # Defensive: convert to int in case string is passed
     if sweep_rate_hz_s > 0:
         effective_duration = sweep_hz / sweep_rate_hz_s
     else:
@@ -482,6 +500,8 @@ def ofdm_shaped_noise(
     normalization_type: Literal["peak", "rms"] = "peak",
     filter_type: str = "none",
 ) -> NDArray:
+    fft_size = int(fft_size)  # Defensive: convert to int in case string is passed
+    cp_length = int(cp_length)
     total = math.floor(sample_rate_hz * technique_length_seconds)
     sym_len = fft_size + cp_length
     parts = []
@@ -493,7 +513,9 @@ def ofdm_shaped_noise(
         ) / np.sqrt(2)
         td = np.fft.ifft(np.fft.ifftshift(fd))
         parts.append(np.concatenate([td[-cp_length:], td]))
-    return _normalize_signal(np.concatenate(parts)[:total], target_value, normalization_type)
+    return _normalize_signal(
+        np.concatenate(parts)[:total], target_value, normalization_type
+    )
 
 
 def songMaker(
@@ -669,7 +691,9 @@ def differential_comb_creator(
         phase_offset = random.uniform(0, 2 * np.pi)  # Randomize phase to lower PAPR
         out += np.exp(1j * (2 * np.pi * freq * time + phase_offset))
 
-    out = _apply_spectral_shaping(out, spike_spacing_hz * spike_count, sample_rate_hz, filter_type)
+    out = _apply_spectral_shaping(
+        out, spike_spacing_hz * spike_count, sample_rate_hz, filter_type
+    )
     return _normalize_signal(out, target_value, normalization_type)
 
 
